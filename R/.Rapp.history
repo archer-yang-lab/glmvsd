@@ -1,0 +1,2247 @@
+n<-150#
+d=p<-200
+beta<-c(10,5,5,2.5,2.5,1.25,1.25,0.675,0.675,0.3125,0.3125,rep(0,189))#
+b0<-c(1-as.numeric(beta==0))#
+#
+sigma<-matrix(0,d,d)#
+diag(sigma)<-1
+x<-mvrnorm(n,rep(0,d),sigma)#
+	e<-rnorm(n,0,2.5)#
+	y<-x%*%beta+e
+cor(y,x)
+n<-50#
+d=p<-60
+beta<-c(0,0,0,1,0,0,2.5,0,1,0,0,5,0,0,0,1,5,0,1,1,0,0,2.5,5,0,0,1,0,1,0,2.5,2.5,1,0,0,0,0,0,5,5,2.5,2.5,0,1,5,0,0,0,0,0,0,0,5,0,2.5,1,0,0,2.5,2.5)#
+b0<-as.numeric(beta!=0)
+sigma<-matrix(0,d,d)#
+ for(i in 1:d)#
+ {#
+    for(j in 1:d)#
+      {#
+       sigma[i,j]<-0.5^abs(i-j)#
+      }#
+ }
+x<-mvrnorm(n,rep(0,d),sigma)#
+	e<-rnorm(n,0,1)#
+	y<-x%*%beta+e
+cor(y,x)
+b0
+corr<-cor(y,x)
+corr[b0==1]
+as.vector(b0)
+as.matrix(b0)
+as.matrix(b0,nrow=1)
+b<-matrix(b0,nrow=1)
+b
+corr
+sort(corr)
+sort(abs(corr))
+cov(y,x)
+??covarince
+var(y,x)
+sort(abs(corr))[26]
+sort(abs(corr))[35]
+?sort
+sort(abs(corr),decreasing=T)[35]
+o<-sort(abs(corr),decreasing=T)[35]
+for(i in 1:length(b0)){}
+for(i in 1:length(b0)){
+}
+allset<-rep(0,length(b0))
+for(i in 1:length(b0)){
+if(abs(corr[i])>=o) allset[i]<-1
+}
+allset
+b0
+corr
+b
+pvalue<-rep(0,length(b0))
+for(i in 1:p){
+}
+?lm
+summary(lm(y~x[,1]))$p-value
+summary(lm(y~x[,1]))
+summary(lm(y~x[,1]))$Pv
+summary(lm(y~x[,1]))$Pr
+?summary
+coef(lm)[,4]
+coef(lm(y~x[,1]))[,4]
+lm.fit<-lm(y~x[,1])
+coef(lm.fit)
+lm.fit<-summary(lm(y~x[,1]))
+coef(lm.fit)
+coef(lm(y~x[,1]))[,4]
+coef(lm.fit)[,4]
+coef(lm.fit)[2,4]
+lm.fit<-summary(lm(y~x[,4]))
+coef(lm.fit)[2,4]
+for(i in 1:p){
+lm.fit<-summary(lm(y~x[,i]))
+pvalue[i]<-coef(lm.fit)[2,4]
+}
+pvalue
+sort(pvalue)
+sort(pvalue,decreasing=T)
+sort(pvalue)[35]
+for(i in 1:p){
+if(pvalue[i]<sort(pvalue)[35]) }
+b<-rep(0,p)
+for(i in 1:p){
+if(pvalue[i]<sort(pvalue)[35]) b[i]<-1
+}
+b
+beta
+b
+b0
+pvalue
+library(MASS)#
+library(leaps)#
+library(glmnet)#
+library(ncvreg)
+lassofit<-glmnet(x=x,y=y,alpha=1,maxit=100000000)#
+scadfit<-ncvreg(X=x,y=y,family="gaussian",penalty="SCAD",max.iter=10000000)#
+mcpfit<-ncvreg(X=x,y=y,family="gaussian",penalty="MCP",max.iter=10000000)
+lasso.path<-t(as.matrix(lassofit$beta))#
+scad.path<-t(as.matrix(scadfit$beta[-1,]))#
+mcp.path<-t(as.matrix(mcpfit$beta[-1,]))
+beta.path<-rbind(lasso.path,scad.path,mcp.path)#
+	ind.path<-matrix((1-as.numeric(beta.path==0)),ncol=p)#
+	cand.mod=unique(ind.path)
+dim(cand.mod)
+cand.nonzero<-apply(cand.mod,1,sum)
+cand.nonzero
+o<-order(cand.nonzero)#
+	model.ordered<-cand.mod[o,]#
+	model<-model.ordered[apply(model.ordered,1,sum)<n.train,]#
+    nonzero<-apply(model,1,sum)#
+    m<-dim(model)[1]
+n.train<-35
+o<-order(cand.nonzero)#
+	model.ordered<-cand.mod[o,]#
+	model<-model.ordered[apply(model.ordered,1,sum)<n.train,]#
+    nonzero<-apply(model,1,sum)#
+    m<-dim(model)[1]
+m
+cv.lasso<-cv.glmnet(x=x,y=y,nfolds=k,alpha=1,type.measure="mse",maxit=100000000)#
+coef.lasso<-coef(cv.lasso,s="lambda.min")[-1]#
+best.lasso<-(1-as.numeric(coef.lasso==0))#
+select.lasso<-sum(best.lasso)#
+true.diff.lasso<-sum(abs(best.lasso-b0))#
+cv.scad<-cv.ncvreg(X=x,y=y,nfolds=k,penalty="SCAD",family="gaussian",max.iter=10000000)#
+coef.scad<-scadfit$beta[,cv.scad$min]#
+best.scad<-matrix((1-as.numeric(coef.scad[-1]==0)),ncol=p)#
+select.scad<-sum(best.scad)#
+true.diff.scad<-sum(abs(best.scad-b0))#
+cv.mcp<-cv.ncvreg(X=x,y=y,nfolds=k,penalty="MCP",family="gaussian",max.iter=10000000)#
+coef.mcp<-mcpfit$beta[,cv.mcp$min]#
+best.mcp<-matrix((1-as.numeric(coef.mcp[-1]==0)),ncol=p)#
+select.mcp<-sum(best.mcp)#
+true.diff.mcp<-sum(abs(best.mcp-b0))
+k<-5
+cv.lasso<-cv.glmnet(x=x,y=y,nfolds=k,alpha=1,type.measure="mse",maxit=100000000)#
+coef.lasso<-coef(cv.lasso,s="lambda.min")[-1]#
+best.lasso<-(1-as.numeric(coef.lasso==0))#
+select.lasso<-sum(best.lasso)#
+true.diff.lasso<-sum(abs(best.lasso-b0))#
+cv.scad<-cv.ncvreg(X=x,y=y,nfolds=k,penalty="SCAD",family="gaussian",max.iter=10000000)#
+coef.scad<-scadfit$beta[,cv.scad$min]#
+best.scad<-matrix((1-as.numeric(coef.scad[-1]==0)),ncol=p)#
+select.scad<-sum(best.scad)#
+true.diff.scad<-sum(abs(best.scad-b0))#
+cv.mcp<-cv.ncvreg(X=x,y=y,nfolds=k,penalty="MCP",family="gaussian",max.iter=10000000)#
+coef.mcp<-mcpfit$beta[,cv.mcp$min]#
+best.mcp<-matrix((1-as.numeric(coef.mcp[-1]==0)),ncol=p)#
+select.mcp<-sum(best.mcp)#
+true.diff.mcp<-sum(abs(best.mcp-b0))
+n.sim<-100 #number of repetition#
+n.s<-100 #number of lambda in fitting lasso#
+psi<-1#
+n.train<-35
+D1<-matrix(rep(0,n.sim*m),ncol=m)#
+#
+	s1<-matrix(rep(0,n.sim*m),ncol=m)#
+#
+	for (i in 1:n.sim){#
+		train<-sample(n,n.train,replace=F)#
+		x.test<-x[-train,]#
+		y.test<-y[-train]#
+		x.train<-x[train,]#
+		y.train<-y[train]#
+#
+	      for (j in 1:m)#
+		  {#
+			if (sum(model[j,])==0) #
+	           {#
+	           LSL<-lm(y.train~1)#
+	           coef.train<-LSL$coef#
+	           pred<-one%*%coef.train#
+	           D1[i,j]<-sum((y.test-pred)^2)#
+	           s1[i,j]<-summary(LSL)$sigma#
+	           }#
+	           if (sum(model[j,])!=0)#
+	           {#
+	           mi.train<-matrix(x.train[,which(model[j,]==1)],ncol=nonzero[j])#
+	           mi.test<-matrix(x.test[,which(model[j,]==1)],ncol=nonzero[j])#
+	           LSL<-lm(y.train~mi.train)#
+	           coef.train<-LSL$coef#
+	           xnew<-cbind(one,mi.test)#
+	           pred<-xnew%*%coef.train#
+	           D1[i,j]<-sum((y.test-pred)^2)#
+	           s1[i,j]<-summary(LSL)$sigma#
+			}#
+		  }#
+	}#
+	D2<-NULL#
+	s2<-NULL#
+	cand.mod2<-NULL#
+#
+	for (j in 1:m)#
+	    {#
+	     if (all(is.na(D1[,j]))==FALSE&all(is.na(s1[,j]))==FALSE){#
+	     D2<-cbind(D2,D1[,j])#
+	     s2<-cbind(s2,s1[,j])#
+	     cand.mod2<-rbind(cand.mod2,model[j,])#
+	    }#
+	}#
+#
+	E<-matrix(rep(0,n.sim*dim(cand.mod2)[1]),nrow=n.sim)#
+#
+	for(i in 1:n.sim)#
+	  {#
+	   for (j in 1:dim(cand.mod2)[1])#
+	    {#
+	     E[i,j]<-(-n/2)*log(s2[i,j])-(s2[i,j]^(-2))*D2[i,j]/2#
+	    }#
+	  }#
+#
+	for(i in 1:n.sim)#
+	  {#
+	   E.max<-max(E[i,])#
+	   for (j in 1:dim(E)[2])#
+	    {#
+	    	E[i,j]<-E[i,j]-E.max#
+	    }#
+	  }
+numerator<-matrix(rep(0,n.sim*dim(cand.mod2)[1]),nrow=n.sim)#
+ for (i in 1:n.sim){#
+ for(j in 1:dim(E)[2]){#
+ if (exp(E[i,j])!=Inf&is.na(exp(E[i,j]))==FALSE) numerator[i,j]<-exp(E[i,j])#
+ }#
+ }#
+#
+	denominator<-apply(numerator,1,sum)#
+#
+	w<-numerator/denominator#
+#
+	weight.ARM<-round(apply(w,2,mean),5)#
+	pstar<-apply(cand.mod2,1,sum)#
+#
+	prior.arm<-rep(0,dim(D2)[2])#
+#
+	for (i in 1:dim(D2)[2]){#
+	 if(pstar[i]==0) {prior.arm[i]<-2*log(pstar[i]+2)/choose(p,pstar[i])}#
+	 if(pstar[i]!=0){#
+	 prior.arm[i]<-pstar[i]*log(exp(1)*p/pstar[i])+2*log(pstar[i]+2)}#
+	 }#
+#
+	E.prior<-matrix(rep(0,n.sim*dim(D2)[2]),nrow=n.sim)#
+#
+	for(i in 1:n.sim)#
+	  {#
+	   for (j in 1:dim(D2)[2])#
+	    {#
+	     E.prior[i,j]<-(-n/2)*log(s2[i,j])-(s2[i,j]^(-2))*D2[i,j]/2-psi*prior.arm[j]#
+	    }#
+	  }#
+#
+	for(i in 1:n.sim)#
+	  {#
+	   E.prior.max<-max(E.prior[i,])#
+	   for (j in 1:dim(E.prior)[2])#
+	    {#
+	    	E.prior[i,j]<-E.prior[i,j]-E.prior.max#
+	    }#
+	  }#
+#
+	numerator.prior<-matrix(rep(0,n.sim*dim(D2)[2]),nrow=n.sim)#
+#
+ for (i in 1:n.sim){#
+ for(j in 1:dim(E.prior)[2]){#
+ if (exp(E.prior[i,j])!=Inf&is.na(exp(E.prior[i,j]))==FALSE) numerator.prior[i,j]<-exp(E.prior[i,j])#
+ }#
+ }#
+	denominator.prior<-apply(numerator.prior,1,sum)#
+#
+	w.prior<-numerator.prior/denominator.prior#
+#
+	weight.arm.prior<-round(apply(w.prior,2,mean),5)#
+#
+	diff.lasso.LSL<-symdiff(cand.mod2,best.lasso)#
+#
+	diff.scad.LSL<-symdiff(cand.mod2,best.scad)#
+#
+	diff.mcp.LSL<-symdiff(cand.mod2,best.mcp)#
+#
+	missing.lasso.LSL1<-NULL  #In candidate model i but not in best.lasso#
+	missing.lasso.LSL2<-NULL  #In best.lasso but not in candidate model#
+	for(i in 1:dim(D2)[2])#
+	{#
+	missing.lasso.LSL1[i]<-sum(as.numeric(best.lasso-cand.mod2[i,]==-1))#
+	missing.lasso.LSL2[i]<-sum(as.numeric(best.lasso-cand.mod2[i,]==1))#
+	}#
+#
+	missing.scad.LSL1<-NULL  #In candidate model i but not in best.scad#
+	missing.scad.LSL2<-NULL  #In best.scad but not in candidate model#
+	for(i in 1:dim(D2)[2])#
+	{#
+	missing.scad.LSL1[i]<-sum(as.numeric(best.scad-cand.mod2[i,]==-1))#
+	missing.scad.LSL2[i]<-sum(as.numeric(best.scad-cand.mod2[i,]==1))#
+	}#
+#
+	missing.mcp.LSL1<-NULL  #In candidate model i but not in best.mcp#
+	missing.mcp.LSL2<-NULL  #In best.mcp but not in candidate model#
+	for(i in 1:dim(D2)[2])#
+	{#
+	missing.mcp.LSL1[i]<-sum(as.numeric(best.mcp-cand.mod2[i,]==-1))#
+	missing.mcp.LSL2[i]<-sum(as.numeric(best.mcp-cand.mod2[i,]==1))#
+	}#
+     ind.lasso.LSL<-weight.ARM%*%diff.lasso.LSL#
+     ind.scad.LSL<-weight.ARM%*%diff.scad.LSL#
+     ind.mcp.LSL<-weight.ARM%*%diff.mcp.LSL#
+#
+	ind.lasso.LSL.prior<-weight.arm.prior%*%diff.lasso.LSL#
+     ind.scad.LSL.prior<-weight.arm.prior%*%diff.scad.LSL#
+     ind.mcp.LSL.prior<-weight.arm.prior%*%diff.mcp.LSL#
+	indmiss.lasso.LSL1<-weight.ARM%*%missing.lasso.LSL1#
+	indmiss.lasso.LSL2<-weight.ARM%*%missing.lasso.LSL2#
+	indmiss.scad.LSL1<-weight.ARM%*%missing.scad.LSL1#
+	indmiss.scad.LSL2<-weight.ARM%*%missing.scad.LSL2#
+	indmiss.mcp.LSL1<-weight.ARM%*%missing.mcp.LSL1#
+	indmiss.mcp.LSL2<-weight.ARM%*%missing.mcp.LSL2#
+#
+	indmiss.lasso.LSL.prior1<-weight.arm.prior%*%missing.lasso.LSL1#
+	indmiss.lasso.LSL.prior2<-weight.arm.prior%*%missing.lasso.LSL2#
+	indmiss.scad.LSL.prior1<-weight.arm.prior%*%missing.scad.LSL1#
+	indmiss.scad.LSL.prior2<-weight.arm.prior%*%missing.scad.LSL2#
+	indmiss.mcp.LSL.prior1<-weight.arm.prior%*%missing.mcp.LSL1#
+	indmiss.mcp.LSL.prior2<-weight.arm.prior%*%missing.mcp.LSL2
+one<-matrix(rep(1,n-n.train),ncol=1)
+D1<-matrix(rep(0,n.sim*m),ncol=m)#
+#
+	s1<-matrix(rep(0,n.sim*m),ncol=m)#
+#
+	for (i in 1:n.sim){#
+		train<-sample(n,n.train,replace=F)#
+		x.test<-x[-train,]#
+		y.test<-y[-train]#
+		x.train<-x[train,]#
+		y.train<-y[train]#
+#
+	      for (j in 1:m)#
+		  {#
+			if (sum(model[j,])==0) #
+	           {#
+	           LSL<-lm(y.train~1)#
+	           coef.train<-LSL$coef#
+	           pred<-one%*%coef.train#
+	           D1[i,j]<-sum((y.test-pred)^2)#
+	           s1[i,j]<-summary(LSL)$sigma#
+	           }#
+	           if (sum(model[j,])!=0)#
+	           {#
+	           mi.train<-matrix(x.train[,which(model[j,]==1)],ncol=nonzero[j])#
+	           mi.test<-matrix(x.test[,which(model[j,]==1)],ncol=nonzero[j])#
+	           LSL<-lm(y.train~mi.train)#
+	           coef.train<-LSL$coef#
+	           xnew<-cbind(one,mi.test)#
+	           pred<-xnew%*%coef.train#
+	           D1[i,j]<-sum((y.test-pred)^2)#
+	           s1[i,j]<-summary(LSL)$sigma#
+			}#
+		  }#
+	}#
+	D2<-NULL#
+	s2<-NULL#
+	cand.mod2<-NULL#
+#
+	for (j in 1:m)#
+	    {#
+	     if (all(is.na(D1[,j]))==FALSE&all(is.na(s1[,j]))==FALSE){#
+	     D2<-cbind(D2,D1[,j])#
+	     s2<-cbind(s2,s1[,j])#
+	     cand.mod2<-rbind(cand.mod2,model[j,])#
+	    }#
+	}#
+#
+	E<-matrix(rep(0,n.sim*dim(cand.mod2)[1]),nrow=n.sim)#
+#
+	for(i in 1:n.sim)#
+	  {#
+	   for (j in 1:dim(cand.mod2)[1])#
+	    {#
+	     E[i,j]<-(-n/2)*log(s2[i,j])-(s2[i,j]^(-2))*D2[i,j]/2#
+	    }#
+	  }#
+#
+	for(i in 1:n.sim)#
+	  {#
+	   E.max<-max(E[i,])#
+	   for (j in 1:dim(E)[2])#
+	    {#
+	    	E[i,j]<-E[i,j]-E.max#
+	    }#
+	  }#
+	numerator<-matrix(rep(0,n.sim*dim(cand.mod2)[1]),nrow=n.sim)#
+ for (i in 1:n.sim){#
+ for(j in 1:dim(E)[2]){#
+ if (exp(E[i,j])!=Inf&is.na(exp(E[i,j]))==FALSE) numerator[i,j]<-exp(E[i,j])#
+ }#
+ }#
+#
+	denominator<-apply(numerator,1,sum)#
+#
+	w<-numerator/denominator#
+#
+	weight.ARM<-round(apply(w,2,mean),5)#
+	pstar<-apply(cand.mod2,1,sum)#
+#
+	prior.arm<-rep(0,dim(D2)[2])#
+#
+	for (i in 1:dim(D2)[2]){#
+	 if(pstar[i]==0) {prior.arm[i]<-2*log(pstar[i]+2)/choose(p,pstar[i])}#
+	 if(pstar[i]!=0){#
+	 prior.arm[i]<-pstar[i]*log(exp(1)*p/pstar[i])+2*log(pstar[i]+2)}#
+	 }#
+#
+	E.prior<-matrix(rep(0,n.sim*dim(D2)[2]),nrow=n.sim)#
+#
+	for(i in 1:n.sim)#
+	  {#
+	   for (j in 1:dim(D2)[2])#
+	    {#
+	     E.prior[i,j]<-(-n/2)*log(s2[i,j])-(s2[i,j]^(-2))*D2[i,j]/2-psi*prior.arm[j]#
+	    }#
+	  }#
+#
+	for(i in 1:n.sim)#
+	  {#
+	   E.prior.max<-max(E.prior[i,])#
+	   for (j in 1:dim(E.prior)[2])#
+	    {#
+	    	E.prior[i,j]<-E.prior[i,j]-E.prior.max#
+	    }#
+	  }#
+#
+	numerator.prior<-matrix(rep(0,n.sim*dim(D2)[2]),nrow=n.sim)#
+#
+ for (i in 1:n.sim){#
+ for(j in 1:dim(E.prior)[2]){#
+ if (exp(E.prior[i,j])!=Inf&is.na(exp(E.prior[i,j]))==FALSE) numerator.prior[i,j]<-exp(E.prior[i,j])#
+ }#
+ }#
+	denominator.prior<-apply(numerator.prior,1,sum)#
+#
+	w.prior<-numerator.prior/denominator.prior#
+#
+	weight.arm.prior<-round(apply(w.prior,2,mean),5)#
+#
+	diff.lasso.LSL<-symdiff(cand.mod2,best.lasso)#
+#
+	diff.scad.LSL<-symdiff(cand.mod2,best.scad)#
+#
+	diff.mcp.LSL<-symdiff(cand.mod2,best.mcp)#
+#
+	missing.lasso.LSL1<-NULL  #In candidate model i but not in best.lasso#
+	missing.lasso.LSL2<-NULL  #In best.lasso but not in candidate model#
+	for(i in 1:dim(D2)[2])#
+	{#
+	missing.lasso.LSL1[i]<-sum(as.numeric(best.lasso-cand.mod2[i,]==-1))#
+	missing.lasso.LSL2[i]<-sum(as.numeric(best.lasso-cand.mod2[i,]==1))#
+	}#
+#
+	missing.scad.LSL1<-NULL  #In candidate model i but not in best.scad#
+	missing.scad.LSL2<-NULL  #In best.scad but not in candidate model#
+	for(i in 1:dim(D2)[2])#
+	{#
+	missing.scad.LSL1[i]<-sum(as.numeric(best.scad-cand.mod2[i,]==-1))#
+	missing.scad.LSL2[i]<-sum(as.numeric(best.scad-cand.mod2[i,]==1))#
+	}#
+#
+	missing.mcp.LSL1<-NULL  #In candidate model i but not in best.mcp#
+	missing.mcp.LSL2<-NULL  #In best.mcp but not in candidate model#
+	for(i in 1:dim(D2)[2])#
+	{#
+	missing.mcp.LSL1[i]<-sum(as.numeric(best.mcp-cand.mod2[i,]==-1))#
+	missing.mcp.LSL2[i]<-sum(as.numeric(best.mcp-cand.mod2[i,]==1))#
+	}#
+     ind.lasso.LSL<-weight.ARM%*%diff.lasso.LSL#
+     ind.scad.LSL<-weight.ARM%*%diff.scad.LSL#
+     ind.mcp.LSL<-weight.ARM%*%diff.mcp.LSL#
+#
+	ind.lasso.LSL.prior<-weight.arm.prior%*%diff.lasso.LSL#
+     ind.scad.LSL.prior<-weight.arm.prior%*%diff.scad.LSL#
+     ind.mcp.LSL.prior<-weight.arm.prior%*%diff.mcp.LSL#
+	indmiss.lasso.LSL1<-weight.ARM%*%missing.lasso.LSL1#
+	indmiss.lasso.LSL2<-weight.ARM%*%missing.lasso.LSL2#
+	indmiss.scad.LSL1<-weight.ARM%*%missing.scad.LSL1#
+	indmiss.scad.LSL2<-weight.ARM%*%missing.scad.LSL2#
+	indmiss.mcp.LSL1<-weight.ARM%*%missing.mcp.LSL1#
+	indmiss.mcp.LSL2<-weight.ARM%*%missing.mcp.LSL2#
+#
+	indmiss.lasso.LSL.prior1<-weight.arm.prior%*%missing.lasso.LSL1#
+	indmiss.lasso.LSL.prior2<-weight.arm.prior%*%missing.lasso.LSL2#
+	indmiss.scad.LSL.prior1<-weight.arm.prior%*%missing.scad.LSL1#
+	indmiss.scad.LSL.prior2<-weight.arm.prior%*%missing.scad.LSL2#
+	indmiss.mcp.LSL.prior1<-weight.arm.prior%*%missing.mcp.LSL1#
+	indmiss.mcp.LSL.prior2<-weight.arm.prior%*%missing.mcp.LSL2
+symdiff<-function(x,y){#
+  dif<-NULL#
+  for(i in 1:dim(x)[1]){#
+      dif[i]<-sum(abs(x[i,]-y))#
+     }#
+  dif#
+}
+diff.lasso.LSL<-symdiff(cand.mod2,best.lasso)#
+#
+	diff.scad.LSL<-symdiff(cand.mod2,best.scad)#
+#
+	diff.mcp.LSL<-symdiff(cand.mod2,best.mcp)#
+#
+	missing.lasso.LSL1<-NULL  #In candidate model i but not in best.lasso#
+	missing.lasso.LSL2<-NULL  #In best.lasso but not in candidate model#
+	for(i in 1:dim(D2)[2])#
+	{#
+	missing.lasso.LSL1[i]<-sum(as.numeric(best.lasso-cand.mod2[i,]==-1))#
+	missing.lasso.LSL2[i]<-sum(as.numeric(best.lasso-cand.mod2[i,]==1))#
+	}#
+#
+	missing.scad.LSL1<-NULL  #In candidate model i but not in best.scad#
+	missing.scad.LSL2<-NULL  #In best.scad but not in candidate model#
+	for(i in 1:dim(D2)[2])#
+	{#
+	missing.scad.LSL1[i]<-sum(as.numeric(best.scad-cand.mod2[i,]==-1))#
+	missing.scad.LSL2[i]<-sum(as.numeric(best.scad-cand.mod2[i,]==1))#
+	}#
+#
+	missing.mcp.LSL1<-NULL  #In candidate model i but not in best.mcp#
+	missing.mcp.LSL2<-NULL  #In best.mcp but not in candidate model#
+	for(i in 1:dim(D2)[2])#
+	{#
+	missing.mcp.LSL1[i]<-sum(as.numeric(best.mcp-cand.mod2[i,]==-1))#
+	missing.mcp.LSL2[i]<-sum(as.numeric(best.mcp-cand.mod2[i,]==1))#
+	}#
+     ind.lasso.LSL<-weight.ARM%*%diff.lasso.LSL#
+     ind.scad.LSL<-weight.ARM%*%diff.scad.LSL#
+     ind.mcp.LSL<-weight.ARM%*%diff.mcp.LSL#
+#
+	ind.lasso.LSL.prior<-weight.arm.prior%*%diff.lasso.LSL#
+     ind.scad.LSL.prior<-weight.arm.prior%*%diff.scad.LSL#
+     ind.mcp.LSL.prior<-weight.arm.prior%*%diff.mcp.LSL#
+	indmiss.lasso.LSL1<-weight.ARM%*%missing.lasso.LSL1#
+	indmiss.lasso.LSL2<-weight.ARM%*%missing.lasso.LSL2#
+	indmiss.scad.LSL1<-weight.ARM%*%missing.scad.LSL1#
+	indmiss.scad.LSL2<-weight.ARM%*%missing.scad.LSL2#
+	indmiss.mcp.LSL1<-weight.ARM%*%missing.mcp.LSL1#
+	indmiss.mcp.LSL2<-weight.ARM%*%missing.mcp.LSL2#
+#
+	indmiss.lasso.LSL.prior1<-weight.arm.prior%*%missing.lasso.LSL1#
+	indmiss.lasso.LSL.prior2<-weight.arm.prior%*%missing.lasso.LSL2#
+	indmiss.scad.LSL.prior1<-weight.arm.prior%*%missing.scad.LSL1#
+	indmiss.scad.LSL.prior2<-weight.arm.prior%*%missing.scad.LSL2#
+	indmiss.mcp.LSL.prior1<-weight.arm.prior%*%missing.mcp.LSL1#
+	indmiss.mcp.LSL.prior2<-weight.arm.prior%*%missing.mcp.LSL2
+prior<-rep(0,m)#
+#
+	for (i in 1:m){#
+	 if(nonzero[i]==0) {prior[i]<-2*log(nonzero[i]+2)/choose(p,nonzero[i])}#
+	 if(nonzero[i]!=0){#
+	 prior[i]<-nonzero[i]*log(exp(1)*p/nonzero[i])+2*log(nonzero[i]+2)}#
+	 }	#
+#
+	AIC<-rep(0,m)#
+	AIC.prior<-rep(0,m)#
+#
+	for (i in 1:m){#
+	if(nonzero[i]==0){#
+	LSL<-lm(y~1) #
+	rss<-sum(summary(LSL)$res^2)#
+	AIC[i]<-n*log(rss/n)+nonzero[i]*2#
+	AIC.prior[i]<-n*log(rss/n)+nonzero[i]*2+psi*prior[i]#
+	}#
+	if(nonzero[i]!=0){#
+	x.new<-matrix(x[,which(model[i,]==1)],ncol=nonzero[i])#
+	LSL<-lm(y~x.new)#
+	rss<-sum(summary(LSL)$res^2)#
+	AIC[i]<-n*log(rss/n)+nonzero[i]*2#
+	AIC.prior[i]<-n*log(rss/n)+nonzero[i]*2+psi*prior[i]#
+	}#
+	}#
+	 AIC2<-NULL#
+	 AIC.prior2<-NULL#
+	 m2<-NULL#
+	 prior.temp<-NULL#
+#
+	 for(i in 1:m){#
+	 if (is.na(AIC[i])==FALSE&abs(AIC[i])!=Inf){#
+	 AIC2<-c(AIC2,AIC[i])#
+	 AIC.prior2<-c(AIC.prior2,AIC.prior[i])#
+	 m2<-rbind(m2,model[i,])#
+	 }#
+	 }#
+	AIC.new<-AIC2-min(AIC2)#
+	AIC.new.prior<-AIC.prior2-min(AIC.prior2)#
+#
+	weight.AIC<-round(exp(-AIC.new/2)/sum(exp(-AIC.new/2)),5)#
+	weight.AIC.prior<-round(exp(-AIC.new.prior/2)/sum(exp(-AIC.new.prior/2)),5)#
+	diff.lasso<-symdiff(m2,best.lasso)#
+     diff.scad<-symdiff(m2,best.scad)#
+     diff.mcp<-symdiff(m2,best.mcp)#
+	missing.lasso.AIC1<-NULL  #In candidate model i but not in best.lasso#
+	missing.lasso.AIC2<-NULL  #In best.lasso but not in candidate model#
+	for(i in 1:m)#
+	{#
+	missing.lasso.AIC1[i]<-sum(as.numeric(best.lasso-m2[i,]==-1))#
+	missing.lasso.AIC2[i]<-sum(as.numeric(best.lasso-m2[i,]==1))#
+	}#
+#
+	missing.scad.AIC1<-NULL  #In candidate model i but not in best.scad#
+	missing.scad.AIC2<-NULL  #In best.scad but not in candidate model#
+	for(i in 1:m)#
+	{#
+	missing.scad.AIC1[i]<-sum(as.numeric(best.scad-m2[i,]==-1))#
+	missing.scad.AIC2[i]<-sum(as.numeric(best.scad-m2[i,]==1))#
+	}#
+#
+	missing.mcp.AIC1<-NULL  #In candidate model i but not in best.mcp#
+	missing.mcp.AIC2<-NULL  #In best.mcp but not in candidate model#
+	for(i in 1:m)#
+	{#
+	missing.mcp.AIC1[i]<-sum(as.numeric(best.mcp-m2[i,]==-1))#
+	missing.mcp.AIC2[i]<-sum(as.numeric(best.mcp-m2[i,]==1))#
+	}#
+	ind.lasso.AIC<-weight.AIC%*%diff.lasso#
+	ind.scad.AIC<-weight.AIC%*%diff.scad#
+	ind.mcp.AIC<-weight.AIC%*%diff.mcp#
+#
+	ind.lasso.AIC.prior<-weight.AIC.prior%*%diff.lasso#
+	ind.scad.AIC.prior<-weight.AIC.prior%*%diff.scad#
+	ind.mcp.AIC.prior<-weight.AIC.prior%*%diff.mcp#
+#
+	indmiss.lasso.AIC1<-weight.AIC%*%missing.lasso.AIC1#
+	indmiss.lasso.AIC2<-weight.AIC%*%missing.lasso.AIC2#
+	indmiss.scad.AIC1<-weight.AIC%*%missing.scad.AIC1#
+	indmiss.scad.AIC2<-weight.AIC%*%missing.scad.AIC2#
+	indmiss.mcp.AIC1<-weight.AIC%*%missing.mcp.AIC1#
+	indmiss.mcp.AIC2<-weight.AIC%*%missing.mcp.AIC2#
+#
+	indmiss.lasso.AIC.prior1<-weight.AIC.prior%*%missing.lasso.AIC1#
+	indmiss.lasso.AIC.prior2<-weight.AIC.prior%*%missing.lasso.AIC2#
+	indmiss.scad.AIC.prior1<-weight.AIC.prior%*%missing.scad.AIC1#
+	indmiss.scad.AIC.prior2<-weight.AIC.prior%*%missing.scad.AIC2#
+	indmiss.mcp.AIC.prior1<-weight.AIC.prior%*%missing.mcp.AIC1#
+	indmiss.mcp.AIC.prior2<-weight.AIC.prior%*%missing.mcp.AIC2#
+	BIC<-rep(0,m)#
+	BIC.prior<-rep(0,m)#
+#
+	for (i in 1:m){#
+	if(nonzero[i]==0){#
+	LSL<-lm(y~1) #
+	rss<-sum(summary(LSL)$res^2)#
+	BIC[i]<-n*log(rss/n)+nonzero[i]*log(n)#
+	BIC.prior[i]<-n*log(rss/n)+nonzero[i]*log(n)+psi*prior[i]#
+	}#
+	if(nonzero[i]!=0){#
+	x.new<-matrix(x[,which(model[i,]==1)],ncol=nonzero[i])#
+	LSL<-lm(y~x.new)#
+	rss<-sum(summary(LSL)$res^2)#
+	BIC[i]<-n*log(rss/n)+nonzero[i]*log(n)#
+	BIC.prior[i]<-n*log(rss/n)+nonzero[i]*log(n)+psi*prior[i]#
+	}#
+	}#
+	 BIC2<-NULL#
+	 BIC.prior2<-NULL#
+	 m2<-NULL#
+	 prior.temp<-NULL#
+#
+	 for(i in 1:m){#
+	 if (is.na(BIC[i])==FALSE&abs(BIC[i])!=Inf){#
+	 BIC2<-c(BIC2,BIC[i])#
+	 BIC.prior2<-c(BIC.prior2,BIC.prior[i])#
+	 m2<-rbind(m2,model[i,])#
+	 }#
+	 }#
+	BIC.new<-BIC2-min(BIC2)#
+	BIC.new.prior<-BIC.prior2-min(BIC.prior2)#
+#
+	weight.BIC<-round(exp(-BIC.new/2)/sum(exp(-BIC.new/2)),5)#
+	weight.BIC.prior<-round(exp(-BIC.new.prior/2)/sum(exp(-BIC.new.prior/2)),5)#
+	diff.lasso<-symdiff(m2,best.lasso)#
+     diff.scad<-symdiff(m2,best.scad)#
+     diff.mcp<-symdiff(m2,best.mcp)#
+	missing.lasso.BIC1<-NULL  #In candidate model i but not in best.lasso#
+	missing.lasso.BIC2<-NULL  #In best.lasso but not in candidate model#
+	for(i in 1:m)#
+	{#
+	missing.lasso.BIC1[i]<-sum(as.numeric(best.lasso-m2[i,]==-1))#
+	missing.lasso.BIC2[i]<-sum(as.numeric(best.lasso-m2[i,]==1))#
+	}#
+#
+	missing.scad.BIC1<-NULL  #In candidate model i but not in best.scad#
+	missing.scad.BIC2<-NULL  #In best.scad but not in candidate model#
+	for(i in 1:m)#
+	{#
+	missing.scad.BIC1[i]<-sum(as.numeric(best.scad-m2[i,]==-1))#
+	missing.scad.BIC2[i]<-sum(as.numeric(best.scad-m2[i,]==1))#
+	}#
+#
+	missing.mcp.BIC1<-NULL  #In candidate model i but not in best.mcp#
+	missing.mcp.BIC2<-NULL  #In best.mcp but not in candidate model#
+	for(i in 1:m)#
+	{#
+	missing.mcp.BIC1[i]<-sum(as.numeric(best.mcp-m2[i,]==-1))#
+	missing.mcp.BIC2[i]<-sum(as.numeric(best.mcp-m2[i,]==1))#
+	}#
+	ind.lasso.BIC<-weight.BIC%*%diff.lasso#
+	ind.scad.BIC<-weight.BIC%*%diff.scad#
+	ind.mcp.BIC<-weight.BIC%*%diff.mcp#
+#
+	ind.lasso.BIC.prior<-weight.BIC.prior%*%diff.lasso#
+	ind.scad.BIC.prior<-weight.BIC.prior%*%diff.scad#
+	ind.mcp.BIC.prior<-weight.BIC.prior%*%diff.mcp#
+#
+	indmiss.lasso.BIC1<-weight.BIC%*%missing.lasso.BIC1#
+	indmiss.lasso.BIC2<-weight.BIC%*%missing.lasso.BIC2#
+	indmiss.scad.BIC1<-weight.BIC%*%missing.scad.BIC1#
+	indmiss.scad.BIC2<-weight.BIC%*%missing.scad.BIC2#
+	indmiss.mcp.BIC1<-weight.BIC%*%missing.mcp.BIC1#
+	indmiss.mcp.BIC2<-weight.BIC%*%missing.mcp.BIC2#
+#
+	indmiss.lasso.BIC.prior1<-weight.BIC.prior%*%missing.lasso.BIC1#
+	indmiss.lasso.BIC.prior2<-weight.BIC.prior%*%missing.lasso.BIC2#
+	indmiss.scad.BIC.prior1<-weight.BIC.prior%*%missing.scad.BIC1#
+	indmiss.scad.BIC.prior2<-weight.BIC.prior%*%missing.scad.BIC2#
+	indmiss.mcp.BIC.prior1<-weight.BIC.prior%*%missing.mcp.BIC1#
+	indmiss.mcp.BIC.prior2<-weight.BIC.prior%*%missing.mcp.BIC2#
+#
+TrueDiff<-c(true.diff.lasso,true.diff.scad,true.diff.mcp)#
+names(TrueDiff)<-c("Lasso","SCAD","MCP")#
+#
+select<-c(select.lasso,select.scad,select.mcp)#
+names(select)<-c("lasso","scad","mcp")#
+#
+index<-matrix(c(ind.lasso.LSL,ind.lasso.LSL.prior,ind.lasso.AIC,ind.lasso.AIC.prior,ind.lasso.BIC,ind.lasso.BIC.prior,ind.scad.LSL,ind.scad.LSL.prior,ind.scad.AIC,ind.scad.AIC.prior,ind.scad.BIC,ind.scad.BIC.prior,ind.mcp.LSL,ind.mcp.LSL.prior,ind.mcp.AIC,ind.mcp.AIC.prior,ind.mcp.BIC,ind.mcp.BIC.prior),ncol=6,byrow=T)#
+rownames(index)<-c("lasso","scad","mcp")#
+colnames(index)<-c("ARM","ARM with prior","AIC","AIC with prior","BIC","BIC with prior")#
+best<-matrix(c(best.lasso,best.scad,best.mcp),ncol=3,byrow=F)#
+colnames(best)<-c("lasso","scad","mcp")#
+#
+missing1<-matrix(c(indmiss.lasso.LSL1,indmiss.lasso.LSL.prior1,indmiss.lasso.AIC1,indmiss.lasso.AIC.prior1,indmiss.lasso.BIC1,indmiss.lasso.BIC.prior1,indmiss.scad.LSL1,indmiss.scad.LSL.prior1,indmiss.scad.AIC1,indmiss.scad.AIC.prior1,indmiss.scad.BIC1,indmiss.scad.BIC.prior1,indmiss.mcp.LSL1,indmiss.mcp.LSL.prior1,indmiss.mcp.AIC1,indmiss.mcp.AIC.prior1,indmiss.mcp.BIC1,indmiss.mcp.BIC.prior1),ncol=6,byrow=T)#
+rownames(missing1)<-c("lasso","scad","mcp")#
+colnames(missing1)<-c("ARM","ARM with prior","AIC","AIC with prior","BIC","BIC with prior")#
+#
+missing2<-matrix(c(indmiss.lasso.LSL2,indmiss.lasso.LSL.prior2,indmiss.lasso.AIC2,indmiss.lasso.AIC.prior2,indmiss.lasso.BIC2,indmiss.lasso.BIC.prior2,indmiss.scad.LSL2,indmiss.scad.LSL.prior2,indmiss.scad.AIC2,indmiss.scad.AIC.prior2,indmiss.scad.BIC2,indmiss.scad.BIC.prior2,indmiss.mcp.LSL2,indmiss.mcp.LSL.prior2,indmiss.mcp.AIC2,indmiss.mcp.AIC.prior2,indmiss.mcp.BIC2,indmiss.mcp.BIC.prior2),ncol=6,byrow=T)#
+rownames(missing2)<-c("lasso","scad","mcp")#
+colnames(missing2)<-c("ARM","ARM with prior","AIC","AIC with prior","BIC","BIC with prior")
+index
+TrueDiff
+weight.AR<
+>
+weight.ARM
+nonzero
+diff.lasso
+diff.lasso.LSL
+weight.AIC
+diff.scad
+diff.scad.LSL
+weight.ARM%*%diff.scad.LSL
+library(MASS)#
+library(leaps)#
+library(glmnet)#
+library(ncvreg)#
+#
+symdiff<-function(x,y){#
+  dif<-NULL#
+  for(i in 1:dim(x)[1]){#
+      dif[i]<-sum(abs(x[i,]-y))#
+     }#
+  dif#
+}
+n<-50#
+d=p<-60
+beta<-c(0,0,0,1,0,0,2.5,0,1,0,0,5,0,0,0,1,5,0,1,1,0,0,2.5,5,0,0,1,0,1,0,2.5,2.5,1,0,0,0,0,0,5,5,2.5,2.5,0,1,5,0,0,0,0,0,0,0,5,0,2.5,1,0,0,2.5,2.5)#
+b0<-as.numeric(beta!=0)#
+#
+n.sim<-100 #number of repetition#
+n.s<-100 #number of lambda in fitting lasso#
+psi<-1#
+n.train<-35#
+sigma<-matrix(0,d,d)#
+ for(i in 1:d)#
+ {#
+    for(j in 1:d)#
+      {#
+       sigma[i,j]<-0.5^abs(i-j)#
+      }#
+ }
+x<-mvrnorm(n,rep(0,d),sigma)#
+	e<-rnorm(n,0,3)#
+	y<-x%*%beta+e
+one<-matrix(rep(1,n-n.train),ncol=1)#
+#
+lassofit<-glmnet(x=x,y=y,alpha=1,maxit=100000000)#
+scadfit<-ncvreg(X=x,y=y,family="gaussian",penalty="SCAD",max.iter=10000000)#
+mcpfit<-ncvreg(X=x,y=y,family="gaussian",penalty="MCP",max.iter=10000000)#
+#
+cv.lasso<-cv.glmnet(x=x,y=y,nfolds=k,alpha=1,type.measure="mse",maxit=100000000)#
+coef.lasso<-coef(cv.lasso,s="lambda.min")[-1]#
+best.lasso<-(1-as.numeric(coef.lasso==0))#
+select.lasso<-sum(best.lasso)#
+true.diff.lasso<-sum(abs(best.lasso-b0))#
+cv.scad<-cv.ncvreg(X=x,y=y,nfolds=k,penalty="SCAD",family="gaussian",max.iter=10000000)#
+coef.scad<-scadfit$beta[,cv.scad$min]#
+best.scad<-matrix((1-as.numeric(coef.scad[-1]==0)),ncol=p)#
+select.scad<-sum(best.scad)#
+true.diff.scad<-sum(abs(best.scad-b0))
+lassofit<-glmnet(x=x,y=y,alpha=1,maxit=100000000)#
+scadfit<-ncvreg(X=x,y=y,family="gaussian",penalty="SCAD",max.iter=10000000)#
+mcpfit<-ncvreg(X=x,y=y,family="gaussian",penalty="MCP",max.iter=10000000)
+library(ncvreg)
+lassofit<-glmnet(x=x,y=y,alpha=1,maxit=100000000)#
+scadfit<-ncvreg(X=x,y=y,family="gaussian",penalty="SCAD",max.iter=10000000)#
+mcpfit<-ncvreg(X=x,y=y,family="gaussian",penalty="MCP",max.iter=10000000)
+?colsum
+?Colsum
+?colSum
+??colsum
+?leaps
+library(leaps)
+?leaps
+sigma<-c(0.01,0.05,0.1,0.25,0.5,0.75,1,1.5,2,2.5,3,3.5,4,4.5,5,7.5,10,12.5,15,17.5,20,22.5,25,27.5,30)  #
+#
+index<-1:25  #
+#
+select1<-c(15.23,15.00,15.00,15.58,15.07,15.21,15.00,15.00,15.58,15.06,15.45,15.00,15.00,15.58,15.11,30.8,15.00,15.00,15.58,15.16,47.17,15.00,15.00,15.58,15.2,48.26,15.78,15.66,15.58,15.07,48.26,18.97,17.63,15.55,14.27,47.17,23.84,18.66,14.5,12.62,45.27,22.45,17.53,12.67,11.64,42.63,23.78,17.40,11.62,11.2,40.70,25.23,17.24,11.02,10.66,38.67,24.98,17.21,10.36,10.14,37.06,25.17,17.34,9.4,9.64,36.52,25.64,17.17,8.61,9.14,35.67,25.76,16.53,7.74,8.58,29.41,19.51,12.96,3.05,6.03,21.99,15.68,9.42,1.5,4.06,17.23,11.04,6.36,1.07,3.09,12.15,8.31,4.82,1.02,2.29,9.15,6.55,3.65,1.01,2.06,6.63,4.95,2.65,1,1.91,5.09,4.72,2.46,1,1.81,4.29,4.29,1.88,1,1.76,3.86,3.59,1.76,1,1.71,3.39,3.39,1.63,1,1.6)
+select1<-matrix(select1,ncol=5,byrow=T) #
+colnames(select1)<-c("Lasso","Scad","MCP","Forward","stabsel")#
+select1<-as.data.frame(select1)
+select2<-c(14.97,28.32,27.49,16.45,2.16,14.97,28.33,26.89,16.45,2.16,14.96,27.95,26.78,16.43,2.15,14.96,27.70,27.48,16.38,2.13,15.05,25.60,26.59,16.2,2.16,16.81,24.23,23.21,13,2.08,20.93,17.18,18.14,10.36,2.05,21.36,10.18,10.12,7.36,1.95,19.91,6.80,6.78,5.87,1.89,18.92,4.98,4.56,4.87,1.74,18.01,4.47,4.14,4.17,1.55,17.18,4.18,3.94,3.82,1.42,16.22,4.12,3.90,3.57,1.34,15.62,4.21,3.89,3.49,1.23,15.21,4.07,4.12,3.38,1.22,13.41,4.33,3.83,3.15,0.99,12.50,4.45,3.87,3.12,0.87,11.91,4.69,4.27,3.09,0.85,11.62,5.09,4.50,3.12,0.91,11.20,5.64,4.79,3.14,0.86,10.97,6.21,4.99,3.03,0.83,10.73,6.76,5.30,2.93,0.81,10.43,7.13,5.25,2.57,0.78,9.88,7.14,5.36,2.46,0.76,9.51,6.60,4.87,2.12,0.79)
+selectstab2_075<-c(7.06,7.19,7.13,7.09,6.9,6.74,6.65,6.28,5.94,5.6,5.43,5.21,5.22,5.1,4.86,4.59,4.66,4.52,4.62,4.67,4.75,4.8,4.92,5.14,5.31)
+stabsel2_075<-matrix(vsdstab2_075,ncol=6,byrow=T) #
+colnames(stabsel2_075)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+stabsel2_075<-as.data.frame(stabsel2_075)
+select2<-matrix(select2,ncol=5,byrow=T) #
+colnames(select2)<-c("Lasso","Scad","MCP","Forward","stabsel") #
+select2<-as.data.fr
+select2<-matrix(select2,ncol=5,byrow=T) #
+colnames(select2)<-c("Lasso","Scad","MCP","Forward","stabsel") #
+select2<-as.data.frame(select2)
+select4<-c(3.02,3.01,3.01,3.1,2.97,3.03,3.49,3.42,3.1,2.97,3.18,3.54,3.51,3.1,2.96,5.17,3.71,3.65,3.1,2.97,5.30,3.74,3.66,3.1,2.95,5.34,3.76,3.63,3.1,2.95,5.33,3.77,3.66,3.1,2.94,5.33,3.81,3.75,3.1,2.9,5.36,4.07,3.93,3.03,2.67,5.33,4.37,4.71,2.96,2.46,5.33,4.48,4.26,2.7,2.27,5.23,4.48,4.30,2.38,1.92,5.16,4.45,4.28,2.13,1.67,5.04,4.53,4.16,1.9,1.53,4.97,4.35,4.11,1.59,1.4,4.20,3.61,3.04,1.09,0.88,3.37,2.49,2.45,1.02,0.62,2.57,1.96,1.78,1.01,0.5,2.03,1.67,1.33,1.01,0.37,1.80,1.56,1.14,1,0.32,1.47,1.39,1.02,1,0.27,1.35,1.18,0.90,1,0.27,1.26,1.12,0.89,1,0.24,1.17,1.11,0.85,1,0.24,1.08,1.13,0.85,1,0.21)
+selectstab4_075<-c(3.01,3,3,3,3.02,3.03,3,3.01,2.96,2.9,2.82,2.73,2.56,2.42,2.29,1.71,1.43,1.25,1.09,1.04,0.95,0.97,0.93,0.96,0.92)
+select4<-matrix(select4,ncol=5,byrow=T) #
+colnames(select4)<-c("Lasso","Scad","MCP","Forward","stabsel") #
+select4<-as.data.frame(select4)
+select5<-c(11.07,8.86,8.90,11.49,11.01,11.08,8.86,8.91,11.49,11.04,11.14,8.86,8.91,11.49,11.07,11.76,8.86,8.87,11.49,11.23,17.67,8.85,8.85,11.49,11.16,29.26,8.85,8.80,11.28,10.05,35.92,8.78,8.77,10.62,10.06,37.45,8.84,8.80,9.65,9.35,35.69,9.96,9.54,8.81,8.74,34.09,11.92,10.88,8.14,8.23,32.07,14.13,11.71,7.39,7.82,31.55,15.86,11.98,6.79,7.4,30.48,17.00,11.92,6.42,7.03,29.49,17.85,11.62,6.1,6.77,28.90,18.15,11.31,5.81,6.65,24.44,15.16,9.68,4.33,5.87,22.32,15.13,9.24,3.55,5.23,19.53,14.82,8.35,2.88,4.51,17.63,13.93,7.94,2.14,4.13,15.89,13.89,7.38,1.58,3.69,14.26,13.31,6.97,1.32,3.39,12.96,11.54,6.58,1.21,3.18,11.09,10.48,5.81,1.13,2.98,9.35,9.55,5.13,1.06,2.65,7.94,8.64,4.62,1.03,2.4)
+selectstab5_075<-c(12.87,13.53,14.34,15.9,17.01,17.23,16.78,16.61,16.57,16.15,16.16,15.99,15.87,15.52,15.39,14.84,14.37,14.36,14.04,13.89,13.8,13.63,13.19,13.14,13.06)
+select5<-matrix(select5,ncol=5,byrow=T) #
+colnames(select5)<-c("Lasso","Scad","MCP","Forward","stabsel") #
+select5<-as.data.frame(select5)
+select7<-c(3.01,3.00,3.00,3.34,3.03,3.03,3.00,3.00,3.34,3.04,3.25,3.00,3.00,3.34,3.06,9.29,3.00,3.00,3.34,3.1,10.83,3.21,3.12,3.34,3.16,11.10,3.83,3.52,3.34,3.15,11.15,4.23,3.83,3.34,3.16,11.21,5.58,4.30,3.31,3.2,11.51,6.21,4.46,3.06,3.14,11.11,6.89,4.43,2.77,2.93,10.85,6.50,4.52,2.17,2.61,10.74,5.80,4.08,1.83,2.4,10.66,5.98,3.82,1.59,2.02,10.35,6.19,3.77,1.44,1.8,9.46,5.81,3.38,1.26,1.58,7.00,4.81,2.92,1.29,0.96,5.55,3.94,2.14,1,0.7,4.48,3.10,1.88,1,0.6,4.24,2.52,1.56,1,0.5,4.14,2.25,1.26,1,0.5,3.65,2.11,1.16,1,0.46,3.43,1.88,1.18,1,0.45,3.28,1.86,1.20,1,0.48,3.17,2.14,1.14,1,0.5,3.12,2.08,1.13,1,0.49)
+selectstab7_075<-c(3.92,4.28,4.55,4.85,4.94,5.01,5.05,5.17,5.39,5.3,5.22,5.38,5.36,5.2,4.99,4.56,4.19,4.24,4.09,3.89,3.9,3.89,3.89,3.81,3.87)
+select7<-matrix(select7,ncol=5,byrow=T) #
+colnames(select7)<-c("Lasso","Scad","MCP","Forward","stabsel") #
+select7<-as.data.frame(select7)
+lasso9<-c(12.10397,16.34785,12.43231,12.75795,13.11249,13.46336,12.44967,17.10930,12.35407,12.71728,13.03117,13.35877,12.71613,17.65800,12.59026,12.91405,13.15291,13.52404,13.18014,18.44723,12.57112,13.17059,13.63742,13.99326,13.78698,19.54599,13.03043,13.48568,13.86637,14.33509,14.32837,20.13036,13.56112,13.88638,14.30717,14.81388,15.14181,21.21964,14.23216,14.68129,15.14253,15.61095,17.57135,25.70991,15.84553,16.40041,16.99745,17.53141,18.10753,28.68720,15.96329,16.68535,17.46469,18.15600,18.76357,31.39026,17.30258,17.80826,18.49941,18.97454,19.96080,34.25879,17.99853,18.70083,19.22633,19.86447,19.57120,34.72438,18.03692,18.88715,19.63285,19.98152,19.52433,34.35308,17.74903,18.58188,19.25048,19.81860,19.24850,34.06835,17.76229,18.60632,19.34490,19.55839,18.73065,33.09989,18.02975,18.93748,19.42390,19.58860,17.77423,27.12295,20.14255,20.32139,20.31035,19.81885,17.45929,22.62042,22.18004,22.13618,21.96430,20.61838,17.72855,18.88085,22.77950,22.55056,22.19964,20.12696,18.31169,15.78337,24.16503,23.87267,23.4
+1875,19.28401,18.46299,12.99984,25.24346,24.90907,24.19598,18.35486,18.50077,11.59040,25.23340,24.60911,23.72767,17.73399,18.91536,9.30266,26.18133,25.55837,24.62900,17.58911,19.410312,8.353162,26.550188,26.189486,25.543221,18.450188,19.380404,7.711345,26.987611,26.667581,25.457333,16.842004,19.810143,6.846447,27.309946,27.110168,26.271663,17.932479)#
+#
+scad9<-c(24.84462,20.15439,24.86551,24.55736,24.19075,23.85119,24.55362,19.43111,24.90147,24.56471,24.26297,23.94093,24.47000,19.06241,24.82924,24.49081,24.25099,23.91217,24.17222,18.35730,25.00641,24.43961,23.98509,23.59254,24.07244,17.81184,24.87555,24.44950,24.07508,23.59395,24.01907,17.74045,24.75000,24.40651,24.01122,23.49367,23.91617,17.20603,24.97770,24.51065,24.04645,23.43955,22.54621,13.42436,24.66140,24.01805,23.37705,22.72199,22.22275,10.33088,24.74894,24.03072,23.35247,22.61611,21.910382,7.492656,24.431489,23.878048,23.154416,22.439166,21.12248,4.75924,24.27076,23.47490,22.79197,21.97100,20.886099,3.248425,24.153466,23.386899,22.601675,21.902390,20.589667,2.288217,24.207847,23.466216,22.853829,21.899482,20.55542,1.68736,24.15409,23.45753,22.79889,22.01054,20.498926,1.542607,24.501037,23.589366,22.889630,21.945788,20.379318,1.046407,25.914205,25.436298,24.864697,23.251503,19.9876442,0.9796521,27.0595749,26.8313867,26.4080391,23.7248015,20.0949978,0.8924918,27.4454870,27.0748650,26.4799554,22.7503
+856,20.3040033,0.9063298,28.1328429,27.7390960,27.0714180,20.9790852,20.399262,0.862785,28.168489,27.734169,26.860701,19.109306,20.5384886,0.8078399,28.5132120,27.8226789,26.8252046,18.8410268,20.7533533,0.7456971,28.5505552,27.8729929,26.8633910,17.9702630,20.7567562,0.6421617,28.5428391,28.1040810,27.3733411,18.8144359,20.7131961,0.6156977,28.8460110,28.4771687,27.1353923,16.3685492,20.7168007,0.6354202,28.9711276,28.7260262,27.8205735,17.6408337)#
+#
+mcp9<-c(24.86461,20.17629,24.88551,24.57736,24.21075,23.87119,24.57362,19.45073,24.92147,24.58471,24.28297,23.96093,24.48000,19.07643,24.83924,24.50081,24.26099,23.92217,24.18028,18.35706,25.02559,24.45578,23.99310,23.59629,24.09244,17.82093,24.89555,24.46950,24.09508,23.61395,24.03887,17.75866,24.77000,24.42651,24.03122,23.51367,23.95524,17.24456,25.01770,24.55065,24.08645,23.47955,22.54893,13.43478,24.66140,24.01805,23.37705,22.72199,22.25275,10.35239,24.77894,24.06072,23.38247,22.64611,21.970139,7.473118,24.491489,23.938048,23.214415,22.499166,21.136630,4.740507,24.280766,23.484903,22.801968,21.981004,20.914150,3.228524,24.183466,23.416899,22.631676,21.932390,20.629668,2.252952,24.247847,23.506216,22.893829,21.939481,20.585764,1.669651,24.194092,23.497531,22.838889,22.050541,20.514831,1.504686,24.521036,23.609365,22.909629,21.965788,20.409317,1.020517,25.944205,25.466298,24.894697,23.281503,20.0370463,0.9284312,27.0995741,26.8713861,26.4480391,23.7648317,20.1457367,0.8173696,27.4868668,27.1162737,26.5215
+245,22.7859374,20.3603239,0.8022747,28.2028431,27.8090947,27.1413688,21.0320684,20.4443792,0.7683229,28.2084891,27.7739317,26.9006603,19.1406926,20.5791774,0.7039326,28.5632118,27.8726766,26.8752148,18.8834026,20.7997184,0.6322685,28.5508563,27.8734146,26.8641431,17.9658307,20.7776174,0.5960286,28.5728387,28.1340806,27.4033404,18.8444666,20.7463391,0.5785775,28.8832210,28.5129953,27.1681776,16.3924728,20.7569150,0.5795279,28.9681419,28.7219247,27.8154854,17.6485197)#
+#
+stabsel9<-c(17.38956,14.96702,17.16584,16.91289,16.65000,16.40288,17.08386,14.39519,17.11401,16.83545,16.62806,16.40136,16.96381,14.09400,17.01814,16.73280,16.54547,16.26405,16.70099,13.49757,17.33434,16.82085,16.40578,16.05313,16.77488,13.30396,17.32511,16.97150,16.65364,16.24475,16.72651,13.24143,17.28688,16.96076,16.62690,16.19857,16.72840,13.06150,17.56961,17.19011,16.76530,16.22698,15.77870,11.92660,17.37063,16.89730,16.39933,15.89985,15.66216,11.00521,17.65937,17.13725,16.61624,16.01048,15.48563,10.10184,17.48514,17.03484,16.50377,15.97219,15.081603,9.491892,17.927444,17.247420,16.650914,15.980654,14.95597,9.24852,17.80672,17.21088,16.59649,16.03400,14.895762,8.799338,18.054931,17.423990,16.915534,16.103466,15.031097,8.821106,18.015307,17.447467,16.991637,16.343502,15.410371,8.592237,19.066197,18.350472,17.816251,16.998666,16.431906,7.764221,21.471936,21.154960,20.758011,19.352450,16.883741,6.865786,24.004635,23.812676,23.430981,20.928790,17.386682,6.093161,24.553364,24.203492,23.640612,20.403426,18.0
+62035,5.655472,25.635061,25.250260,24.598147,19.343116,18.383129,5.303511,26.202750,25.780402,24.917690,18.079052,18.839524,4.876567,26.782757,26.104266,25.107907,18.279492,19.057838,4.716605,26.680240,26.040316,25.054786,17.522689,18.977196,4.652621,26.688593,26.279272,25.578924,18.489651,18.989248,4.380932,27.005002,26.663584,25.353059,16.478447,18.874395,4.274069,27.103158,26.871447,25.998582,17.500225)#
+#
+forward9<-c(8.746770,10.851940,5.979925,5.931904,5.910703,5.942506,8.717247,10.839561,6.296523,6.228522,6.173334,6.206815,8.174507,10.509336,5.827827,5.807853,5.740895,5.685231,8.100451,10.696751,6.221338,5.974773,5.860808,5.835433,9.227660,11.418515,7.512744,7.454350,7.328097,7.192995,8.604392,11.058565,7.051952,6.806768,6.593013,6.538129,8.589599,11.130796,7.460356,7.251547,7.027511,6.924079,9.115623,13.502614,7.254990,7.041316,6.988729,7.160767,9.923569,16.129823,8.708467,8.288601,8.003913,8.174163,10.830640,16.747901,9.286784,9.131812,8.951839,9.176177,10.544721,17.307914,9.591575,9.265641,9.079530,9.373394,11.04686,16.99003,11.22069,10.90152,10.62450,10.87188,11.06922,17.41886,12.00284,11.43367,10.99438,10.60335,11.57096,16.02966,12.96185,12.21038,11.57376,11.21376,12.52475,13.80150,14.68841,13.82830,13.22686,12.61967,17.140105,6.272938,21.483154,21.136916,20.770128,19.327393,18.791543,2.618312,25.793207,25.539229,25.090343,22.373953,19.323403,1.892269,26.509317,26.158644,25.588769,21.858009,19.85813,1
+.56956,27.67604,27.28262,26.61051,20.53656,19.827742,1.604759,27.566808,27.132746,26.263136,18.529304,20.08868,1.44990,28.04221,27.35075,26.35249,18.40250,20.501077,1.089243,28.294699,27.616421,26.600516,17.794900,20.484269,1.094246,28.330020,27.892365,27.162804,18.737836,20.44720,1.09855,28.59660,28.23197,26.90773,16.25382,20.55070,1.04251,28.83183,28.58878,27.68542,17.62057)#
+#
+select9<-c(36.16,1.12,1.10,9.70,24.33,36.14,1.11,1.09,9.77,24.34,36.30,1.11,1.10,9.75,24.53,36.26,1.12,1.10,9.76,24.63,36.79,1.13,1.11,9.71,24.39,37.28,1.13,1.11,9.77,24.52,37.81,1.14,1.12,9.71,24.60,38.43,1.13,1.13,9.64,23.36,38.26,1.17,1.14,9.64,23.23,38.03,1.17,1.11,9.41,21.83,38.28,1.13,1.10,9.29,20.85,37.26,1.14,1.11,9.32,19.11,35.89,1.16,1.12,9.06,18.81,35.01,1.13,1.11,9.14,16.87,33.90,1.12,1.08,8.88,14.45,27.44,1.06,1.03,8.01,6.51,22.85,1.03,0.97,7.06,2.78,19.04,0.95,0.87,6.23,2.01,15.90,0.96,0.85,5.76,1.66,13.09,0.91,0.81,5.38,1.68,11.66,0.85,0.74,4.94,1.51,9.36,0.78,0.66,4.77,1.14,8.40,0.67,0.62,4.70,1.14,7.75,0.64,0.60,4.42,1.14,6.88,0.66,0.60,4.31,1.08)#
+#
+TD9<-c(11.94,25.00,25.02,17.78,10.73,11.96,25.01,25.03,17.75,10.78,12.08,25.01,25.02,17.75,10.69,12.08,25.02,25.02,17.72,10.65,12.81,25.03,25.05,17.75,11.31,13.66,25.03,25.05,17.81,11.64,14.51,25.02,25.06,17.87,11.92,16.13,25.05,25.05,17.98,13.44,17.20,25.01,25.04,18.20,14.47,18.45,25.01,25.07,18.27,16.01,19.58,25.03,25.04,18.47,16.39,9.60,25.00,25.03,18.44,17.71,19.43,24.94,24.98,18.58,18.19,19.63,24.95,24.97,18.74,18.57,19.60,24.96,25.00,19.14,19.41,20.22,25.02,25.05,20.23,22.99,20.67,25.11,25.15,21.44,24.32,21.84,25.23,25.29,22.53,24.71,23.18,25.30,25.35,23.46,25.12,24.07,25.41,25.45,23.96,25.20,24.32,25.49,25.54,24.36,25.37,24.64,25.60,25.62,24.77,25.48,25.04,25.71,25.70,24.90,25.54,25.33,25.70,25.70,25.26,25.54,25.60,25.66,25.70,25.45,25.58)#
+select9<-matrix(select9,ncol=5,byrow=T) #
+colnames(select9)<-c("Lasso","SCAD","MCP","Stabsel","Forward")  #
+select9<-as.data.frame(select9)   #
+#
+lasso9<-matrix(lasso9,ncol=6,byrow=T) #
+colnames(lasso9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+lasso9<-as.data.frame(lasso9)  #
+#
+scad9<-matrix(scad9,ncol=6,byrow=T) #
+colnames(scad9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+scad9<-as.data.frame(scad9)   #
+#
+mcp9<-matrix(mcp9,ncol=6,byrow=T) #
+colnames(mcp9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+mcp9<-as.data.frame(mcp9)  #
+#
+forward9<-matrix(forward9,ncol=6,byrow=T) #
+colnames(forward9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+forward9<-as.data.frame(forward9)  #
+#
+TD9<-matrix(TD9,ncol=5,byrow=T) #
+colnames(TD9)<-c("Lasso","SCAD","MCP","Stabsel","Forward") #
+TD9<-as.data.frame(TD9)    #
+#
+stabsel9<-matrix(stabsel9,ncol=6,byrow=T) #
+colnames(stabsel9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+stabsel9<-as.data.frame(stabsel9)
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(3,0,1,0))  #
+#
+ma<-max(lasso9,TD9[,1])  #
+mi<-min(lasso9,TD9[,1])  #
+plot(index,lasso9[,2],type="b",xlab="sigma",col=1,lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Lasso VSD of Example 6",xaxt="n")  #
+lines(index,lasso9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,lasso9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,1],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(scad9,TD9[,2])  #
+mi<-min(scad9,TD9[,2])  #
+plot(index,scad9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="SCAD VSD of Example 6",xaxt="n")  #
+lines(index,scad9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,scad9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,2],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)    #
+#
+ma<-max(mcp9,TD9[,3])  #
+mi<-min(mcp9,TD9[,3])  #
+plot(index,mcp9[,2],type="b",col=1,lty=1,xlab="sigma",pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="MCP VSD of Example 6",xaxt="n")  #
+lines(index,mcp9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,mcp9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,3],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(forward9,TD9[,5])  #
+mi<-min(forward9,TD9[,5])  #
+plot(index,forward9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="FS VSD of Example 6",xaxt="n")  #
+lines(index,forward9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,forward9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma) #
+#
+ma<-max(stabsel9[,c(2,4,6)],TD9[,4])  #
+mi<-min(stabsel9[,c(2,4,6)],TD9[,4])  #
+plot(index,stabsel9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Stability Selection VSD of Example 6",xaxt="n")  #
+lines(index,stabsel9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,stabsel9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n") #
+axis(1,index,sigma)#
+#
+legend(36,24,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=1,cex=1.1)
+TD9
+TD9<-c(11.94,25.00,25.02,17.78,10.73,11.96,25.01,25.03,17.75,10.78,12.08,25.01,25.02,17.75,10.69,12.08,25.02,25.02,17.72,10.65,12.81,25.03,25.05,17.75,11.31,13.66,25.03,25.05,17.81,11.64,14.51,25.02,25.06,17.87,11.92,16.13,25.05,25.05,17.98,13.44,17.20,25.01,25.04,18.20,14.47,18.45,25.01,25.07,18.27,16.01,19.58,25.03,25.04,18.47,16.39,19.60,25.00,25.03,18.44,17.71,19.43,24.94,24.98,18.58,18.19,19.63,24.95,24.97,18.74,18.57,19.60,24.96,25.00,19.14,19.41,20.22,25.02,25.05,20.23,22.99,20.67,25.11,25.15,21.44,24.32,21.84,25.23,25.29,22.53,24.71,23.18,25.30,25.35,23.46,25.12,24.07,25.41,25.45,23.96,25.20,24.32,25.49,25.54,24.36,25.37,24.64,25.60,25.62,24.77,25.48,25.04,25.71,25.70,24.90,25.54,25.33,25.70,25.70,25.26,25.54,25.60,25.66,25.70,25.45,25.58)
+TD9<-matrix(TD9,ncol=5,byrow=T) #
+colnames(TD9)<-c("Lasso","SCAD","MCP","Stabsel","Forward") #
+TD9<-as.data.frame(TD9)
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(3,0,1,0))  #
+#
+ma<-max(lasso9,TD9[,1])  #
+mi<-min(lasso9,TD9[,1])  #
+plot(index,lasso9[,2],type="b",xlab="sigma",col=1,lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Lasso VSD of Example 6",xaxt="n")  #
+lines(index,lasso9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,lasso9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,1],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(scad9,TD9[,2])  #
+mi<-min(scad9,TD9[,2])  #
+plot(index,scad9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="SCAD VSD of Example 6",xaxt="n")  #
+lines(index,scad9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,scad9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,2],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)    #
+#
+ma<-max(mcp9,TD9[,3])  #
+mi<-min(mcp9,TD9[,3])  #
+plot(index,mcp9[,2],type="b",col=1,lty=1,xlab="sigma",pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="MCP VSD of Example 6",xaxt="n")  #
+lines(index,mcp9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,mcp9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,3],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(forward9,TD9[,5])  #
+mi<-min(forward9,TD9[,5])  #
+plot(index,forward9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="FS VSD of Example 6",xaxt="n")  #
+lines(index,forward9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,forward9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma) #
+#
+ma<-max(stabsel9[,c(2,4,6)],TD9[,4])  #
+mi<-min(stabsel9[,c(2,4,6)],TD9[,4])  #
+plot(index,stabsel9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Stability Selection VSD of Example 6",xaxt="n")  #
+lines(index,stabsel9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,stabsel9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n") #
+axis(1,index,sigma)#
+#
+legend(36,24,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=1,cex=1.1)
+lasso9<-c(18.34283,28.98334,10.10997,10.71831,11.45580,12.44305,18.45059,29.12771,10.01080,10.75511,11.53291,12.61396,18.56676,29.30951,10.30246,11.01857,11.83031,12.88546,18.70723,29.64573,10.46501,11.33666,12.15138,12.93343,19.50436,30.68740,11.09053,11.87871,12.86478,13.88467,20.02456,31.58026,11.92170,12.72994,13.68005,14.51392,20.28146,32.21663,12.28653,12.85481,13.76329,14.75443,21.13551,34.06396,13.44188,14.40671,15.57101,16.57018,21.46076,35.26587,14.54590,15.63972,16.67465,18.09376,21.35455,35.89055,14.93594,16.16455,17.29248,18.54652,21.29030,36.01915,15.88871,16.67304,17.73984,18.56588,21.22117,35.90922,15.93953,17.11416,18.28936,19.18157,21.42353,35.96554,17.11156,18.45769,18.96414,19.81447,21.12396,35.39015,17.88957,18.70988,19.44111,19.93927,20.37539,33.74626,17.93506,18.66186,19.33253,19.98355,18.57983,30.00060,19.95198,20.07444,19.99586,19.81259,17.19908,26.50525,21.21929,21.09873,20.80484,19.61474,16.30696,22.46181,22.21034,22.11767,21.67409,20.43449,16.00636,18.28513,23.64745,23.39857,23.0
+2160,20.74192,15.44683,15.28182,24.44437,23.97483,23.17954,20.72519,15.67455,13.06312,25.32252,24.76952,24.11369,20.63853,15.36084,10.92716,25.88622,25.27468,24.64561,19.42316,15.383040,9.471183,26.224371,25.790509,25.313276,19.551121,15.301100,8.281401,26.612960,25.990122,25.147416,19.416918,15.308327,7.096086,27.152015,26.879247,25.806012,18.488208)#
+#
+scad9<-c(8.010647,13.789990,13.098844,12.673723,12.106032,11.418406,7.950335,13.580694,13.190745,12.624480,12.079384,11.336983,8.050871,13.719071,13.110533,12.512821,11.898862,11.183582,8.049446,13.662042,13.281514,12.590006,11.960094,11.353800,8.415177,13.918747,13.910222,13.260227,12.520013,11.843275,8.10972,14.56417,13.48203,12.82591,12.03468,11.44869,8.18861,14.52042,13.36327,12.98000,12.23498,11.24989,8.661355,15.284225,14.068924,13.082884,11.926584,11.219749,9.275616,15.241792,13.429027,12.554020,11.916848,11.048902,9.468044,15.686714,13.860819,12.999629,12.212756,11.435839,10.36302,15.88481,14.40670,14.05149,13.28613,12.69475,10.38153,16.27793,14.36815,13.67684,12.84585,12.21671,10.44463,16.36201,14.17325,13.38266,12.92766,12.20168,10.94255,15.61243,15.23337,14.71740,14.40093,13.91626,11.27956,15.64447,15.45965,15.09646,14.73976,14.06716,12.82055,11.84029,20.08640,19.74792,19.28594,18.17413,13.93562,10.24635,22.63965,22.35334,21.87404,19.90497,14.25005,9.29355,24.14359,23.91718,23.36422,21.36322,14.5
+73208,8.123233,24.868064,24.494774,23.950827,20.799657,14.906237,6.956723,26.172213,25.657518,24.754210,21.286472,15.354503,5.909379,26.663117,26.078975,25.342609,21.175486,15.107176,5.421816,27.052202,26.391755,25.722590,19.795858,15.122962,4.781187,27.122556,26.634426,26.173452,19.952484,15.102794,4.400706,27.317416,26.594362,25.766803,19.614735,15.372343,3.798259,27.774095,27.491065,26.400024,18.637168)#
+#
+mcp9<-c(7.658165,12.160155,13.710929,13.048305,12.196712,11.334520,7.854065,11.907954,14.179906,13.427994,12.646641,11.727995,7.721636,12.079377,13.938454,13.235010,12.492224,11.648579,7.735876,12.610241,13.709338,12.800820,11.998821,11.338949,7.705118,12.588785,13.937719,13.057979,12.197818,11.219731,7.47530,13.14887,13.23252,12.35563,11.48435,10.73352,7.694566,12.931662,13.641279,13.014039,12.204555,11.233566,8.04320,12.85219,14.52099,13.33414,12.05035,10.92651,8.050142,14.034551,13.011441,11.944409,11.152097,9.999064,8.315934,13.965541,13.721665,12.488912,11.396105,10.078301,8.840053,14.337437,13.639098,12.754250,11.664945,10.824808,9.028293,13.931621,14.268738,13.157080,12.151975,11.338931,9.979169,13.611642,14.844514,13.839689,13.238295,12.365370,10.18113,12.64383,15.57183,14.69155,14.05825,13.38129,10.70992,12.37954,15.99138,15.36082,14.63624,13.73191,12.920365,9.181908,20.230338,19.829834,19.335972,18.128287,13.639943,8.056766,21.985921,21.672122,21.172707,19.078937,14.467901,5.823875,24.712448,24.47
+0090,23.919639,21.815570,14.938683,4.692022,25.595673,25.192081,24.609370,21.035729,15.266768,3.730967,26.656826,26.082080,25.073644,20.986631,15.747463,3.068153,27.285991,26.655877,25.821537,21.121173,15.590192,2.542006,27.734984,27.029885,26.296187,19.657504,15.635298,2.221804,27.889584,27.377996,26.862880,20.028958,15.65375,1.98775,28.16735,27.42855,26.49195,19.43063,15.734207,1.893586,28.255757,27.971937,26.845349,18.351153)#
+#
+stabsel9<-c(12.559867,9.786092,18.700534,18.220554,17.633451,16.899178,12.50895,9.73365,18.70900,18.19490,17.67853,16.91208,12.487654,9.779079,18.605531,18.097627,17.509377,16.718954,12.52732,9.77124,18.62848,17.89259,17.27716,16.66773,12.616185,9.726236,18.955584,18.253945,17.465443,16.736621,12.510826,9.734244,18.380046,17.744311,17.134399,16.560390,12.462098,9.661918,18.460743,17.991395,17.431007,16.491618,12.26920,9.46777,18.55612,17.66415,16.64100,15.75739,12.263511,9.231127,17.982202,17.084181,16.333406,15.347507,12.482728,8.974893,18.456022,17.542388,16.653393,15.575274,12.602840,8.878148,18.071061,17.408615,16.521382,15.764735,12.885677,8.649806,18.444896,17.768585,16.949881,16.129762,13.008196,8.429473,18.670159,17.780823,17.202347,16.494453,13.35454,8.24950,18.89211,18.27339,17.86877,17.31893,13.585514,8.023928,19.404818,18.875513,18.354359,17.510150,14.08250,7.30021,21.19198,20.82710,20.37175,19.19259,14.378701,6.859179,23.104295,22.759671,22.256229,20.237026,14.507125,6.313823,24.420850,24.17684
+5,23.575063,21.651943,14.779462,5.791765,24.850046,24.464427,23.933736,20.776432,14.893218,5.289166,26.228499,25.660904,24.635625,21.008496,14.929696,5.024846,26.138018,25.512233,24.693063,20.575401,14.647032,4.930482,26.683732,25.984774,25.259880,19.400038,14.614287,4.777717,26.751811,26.319564,25.801043,19.834273,14.455830,4.444241,26.983703,26.319531,25.422795,19.381905,14.461407,4.337981,26.826877,26.551758,25.479093,18.248724)#
+#
+forward9<-c(10.69431,18.02035,12.12838,11.79175,11.47750,11.18196,10.68221,18.06470,12.02864,11.63729,11.29505,10.99204,10.71736,18.11274,11.71347,11.32602,11.05285,10.78981,10.83420,18.09099,12.26101,11.73023,11.28720,10.99987,11.35116,18.83102,12.84430,12.40543,12.04255,11.62044,11.69336,19.26419,12.83894,12.53736,12.17250,11.92720,11.61941,19.16294,13.03446,12.82799,12.50205,12.12484,11.57173,19.82109,13.46122,12.92700,12.14145,11.67306,11.37253,21.10198,12.68115,12.29409,11.82940,11.13589,12.03196,20.21056,14.15776,13.53475,12.88810,12.27613,12.17867,19.12218,14.37642,13.95246,13.55947,13.14353,12.53069,17.54129,15.09081,14.71201,14.24763,13.71717,12.59399,16.05046,15.77707,15.24225,14.90455,14.35986,13.09818,15.08988,16.44111,16.05883,15.73745,15.39087,12.83362,14.59767,16.52066,16.03628,15.80938,15.18769,15.126679,7.016066,21.670264,21.257681,20.773011,19.587956,16.34497,4.07013,24.87632,24.56995,24.06130,21.90881,16.631408,2.944539,26.575089,26.319943,25.700783,23.363968,16.851871,1.804735,27.229347,
+26.817702,26.224142,22.484550,16.560550,1.483363,27.896260,27.300592,26.184024,22.023088,16.577638,1.456328,27.899056,27.239961,26.398904,21.654508,16.365735,1.233716,28.328379,27.605399,26.861725,20.043195,16.3016190,0.9912403,28.4677325,27.9486815,27.3966558,20.5075808,16.1654797,0.9937676,28.7729105,28.0338189,27.0702208,19.9808592,16.119672,1.246655,28.711059,28.426227,27.293786,18.787421)#
+#
+select9<-c(36.05,18.85,17.00,9.75,24.10,36.20,18.82,16.67,9.72,24.15,36.31,18.83,16.80,9.80,24.13,36.36,18.59,17.26,9.86,23.71,37.15,18.68,17.09,9.79,24.11,37.58,18.95,17.38,9.93,24.21,37.77,18.62,16.76,9.93,23.86,38.45,18.50,15.64,9.88,23.62,38.45,17.63,16.29,9.75,23.96,38.23,17.46,15.72,9.53,22.26,37.78,17.23,15.69,9.44,20.67,37.21,17.34,14.94,9.18,18.70,37.01,17.23,14.38,8.93,16.96,36.27,16.36,13.34,8.69,15.86,34.45,16.25,12.96,8.43,15.22,30.36,12.17,9.50,7.59,7.30,26.75,10.47,8.27,7.07,4.24,22.63,9.45,5.97,6.46,3.06,18.41,8.24,4.80,5.90,1.89,15.38,7.05,3.81,5.38,1.55,13.14,5.98,3.13,5.09,1.51,10.99,5.48,2.59,4.98,1.28,9.52,4.83,2.26,4.82,1.03,8.32,4.44,2.02,4.48,1.03,7.13,3.83,1.92,4.37,1.28)#
+#
+TD9<-c(11.97,13.41,13.42,17.77,11.36,12.10,13.24,13.59,17.74,11.29,12.23,13.25,13.60,17.80,11.25,12.30,13.55,13.66,17.68,11.67,13.11,14.22,14.13,17.79,12.07,13.90,14.05,13.84,17.73,12.67,14.65,14.62,14.54,17.75,12.30,16.33,15.36,14.96,17.74,13.74,17.35,16.15,15.17,17.77,13.88,18.11,16.42,16.20,18.07,15.70,18.74,17.47,17.45,18.24,16.57,19.33,17.94,17.40,18.54,17.54,19.85,18.69,18.42,18.69,18.18,20.01,18.56,18.84,18.99,19.54,19.87,19.11,19.80,19.11,19.64,20.98,20.39,21.10,20.31,22.86,21.77,21.55,22.49,21.11,24.20,22.51,22.05,23.01,22.28,24.56,22.65,22.76,23.54,23.28,25.09,23.38,23.43,23.99,23.70,25.13,23.94,23.94,24.57,24.13,25.19,24.41,24.34,24.83,24.56,25.28,25.02,24.55,25.20,24.94,25.35,25.22,25.04,25.38,25.12,25.43,25.27,25.25,25.48,25.33,25.52)#
+#
+select9<-matrix(select9,ncol=5,byrow=T) #
+colnames(select9)<-c("Lasso","SCAD","MCP","Stabsel","Forward")  #
+select9<-as.data.frame(select9)   #
+#
+lasso9<-matrix(lasso9,ncol=6,byrow=T) #
+colnames(lasso9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+lasso9<-as.data.frame(lasso9)  #
+#
+scad9<-matrix(scad9,ncol=6,byrow=T) #
+colnames(scad9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+scad9<-as.data.frame(scad9)   #
+#
+mcp9<-matrix(mcp9,ncol=6,byrow=T) #
+colnames(mcp9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+mcp9<-as.data.frame(mcp9)  #
+#
+forward9<-matrix(forward9,ncol=6,byrow=T) #
+colnames(forward9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+forward9<-as.data.frame(forward9)  #
+#
+TD9<-matrix(TD9,ncol=5,byrow=T) #
+colnames(TD9)<-c("Lasso","SCAD","MCP","Stabsel","Forward") #
+TD9<-as.data.frame(TD9)    #
+#
+stabsel9<-matrix(stabsel9,ncol=6,byrow=T) #
+colnames(stabsel9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+stabsel9<-as.data.frame(stabsel9)
+sigma<-c(0.01,0.05,0.1,0.25,0.5,0.75,1,1.5,2,2.5,3,3.5,4,4.5,5,7.5,10,12.5,15,17.5,20,22.5,25,27.5,30)  #
+#
+index<-1:25
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(3,0,1,0))  #
+#
+ma<-max(lasso9,TD9[,1])  #
+mi<-min(lasso9,TD9[,1])  #
+plot(index,lasso9[,2],type="b",xlab="sigma",col=1,lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Lasso VSD of Example 6",xaxt="n")  #
+lines(index,lasso9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,lasso9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,1],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(scad9,TD9[,2])  #
+mi<-min(scad9,TD9[,2])  #
+plot(index,scad9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="SCAD VSD of Example 6",xaxt="n")  #
+lines(index,scad9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,scad9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,2],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)    #
+#
+ma<-max(mcp9,TD9[,3])  #
+mi<-min(mcp9,TD9[,3])  #
+plot(index,mcp9[,2],type="b",col=1,lty=1,xlab="sigma",pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="MCP VSD of Example 6",xaxt="n")  #
+lines(index,mcp9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,mcp9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,3],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(forward9,TD9[,5])  #
+mi<-min(forward9,TD9[,5])  #
+plot(index,forward9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="FS VSD of Example 6",xaxt="n")  #
+lines(index,forward9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,forward9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma) #
+#
+ma<-max(stabsel9[,c(2,4,6)],TD9[,4])  #
+mi<-min(stabsel9[,c(2,4,6)],TD9[,4])  #
+plot(index,stabsel9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Stability Selection VSD of Example 6",xaxt="n")  #
+lines(index,stabsel9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,stabsel9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n") #
+axis(1,index,sigma)#
+#
+legend(36,24,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=1,cex=1.1)
+sigma<-c(0.01,0.05,0.1,0.25,0.5,0.75,1,1.5,2,2.5,3,3.5,4,4.5,5,7.5,10,12.5,15,17.5,20,22.5,25,27.5,30)  #
+#
+index<-1:25
+lasso9<-c(18.34283,28.98334,10.10997,10.71831,11.45580,12.44305,18.45059,29.12771,10.01080,10.75511,11.53291,12.61396,18.56676,29.30951,10.30246,11.01857,11.83031,12.88546,18.70723,29.64573,10.46501,11.33666,12.15138,12.93343,19.50436,30.68740,11.09053,11.87871,12.86478,13.88467,20.02456,31.58026,11.92170,12.72994,13.68005,14.51392,20.28146,32.21663,12.28653,12.85481,13.76329,14.75443,21.13551,34.06396,13.44188,14.40671,15.57101,16.57018,21.46076,35.26587,14.54590,15.63972,16.67465,18.09376,21.35455,35.89055,14.93594,16.16455,17.29248,18.54652,21.29030,36.01915,15.88871,16.67304,17.73984,18.56588,21.22117,35.90922,15.93953,17.11416,18.28936,19.18157,21.42353,35.96554,17.11156,18.45769,18.96414,19.81447,21.12396,35.39015,17.88957,18.70988,19.44111,19.93927,20.37539,33.74626,17.93506,18.66186,19.33253,19.98355,18.57983,30.00060,19.95198,20.07444,19.99586,19.81259,17.19908,26.50525,21.21929,21.09873,20.80484,19.61474,16.30696,22.46181,22.21034,22.11767,21.67409,20.43449,16.00636,18.28513,23.64745,23.39857,23.0
+2160,20.74192,15.44683,15.28182,24.44437,23.97483,23.17954,20.72519,15.67455,13.06312,25.32252,24.76952,24.11369,20.63853,15.36084,10.92716,25.88622,25.27468,24.64561,19.42316,15.383040,9.471183,26.224371,25.790509,25.313276,19.551121,15.301100,8.281401,26.612960,25.990122,25.147416,19.416918,15.308327,7.096086,27.152015,26.879247,25.806012,18.488208)#
+#
+scad9<-c(8.010647,13.789990,13.098844,12.673723,12.106032,11.418406,7.950335,13.580694,13.190745,12.624480,12.079384,11.336983,8.050871,13.719071,13.110533,12.512821,11.898862,11.183582,8.049446,13.662042,13.281514,12.590006,11.960094,11.353800,8.415177,13.918747,13.910222,13.260227,12.520013,11.843275,8.10972,14.56417,13.48203,12.82591,12.03468,11.44869,8.18861,14.52042,13.36327,12.98000,12.23498,11.24989,8.661355,15.284225,14.068924,13.082884,11.926584,11.219749,9.275616,15.241792,13.429027,12.554020,11.916848,11.048902,9.468044,15.686714,13.860819,12.999629,12.212756,11.435839,10.36302,15.88481,14.40670,14.05149,13.28613,12.69475,10.38153,16.27793,14.36815,13.67684,12.84585,12.21671,10.44463,16.36201,14.17325,13.38266,12.92766,12.20168,10.94255,15.61243,15.23337,14.71740,14.40093,13.91626,11.27956,15.64447,15.45965,15.09646,14.73976,14.06716,12.82055,11.84029,20.08640,19.74792,19.28594,18.17413,13.93562,10.24635,22.63965,22.35334,21.87404,19.90497,14.25005,9.29355,24.14359,23.91718,23.36422,21.36322,14.5
+73208,8.123233,24.868064,24.494774,23.950827,20.799657,14.906237,6.956723,26.172213,25.657518,24.754210,21.286472,15.354503,5.909379,26.663117,26.078975,25.342609,21.175486,15.107176,5.421816,27.052202,26.391755,25.722590,19.795858,15.122962,4.781187,27.122556,26.634426,26.173452,19.952484,15.102794,4.400706,27.317416,26.594362,25.766803,19.614735,15.372343,3.798259,27.774095,27.491065,26.400024,18.637168)#
+#
+mcp9<-c(7.658165,12.160155,13.710929,13.048305,12.196712,11.334520,7.854065,11.907954,14.179906,13.427994,12.646641,11.727995,7.721636,12.079377,13.938454,13.235010,12.492224,11.648579,7.735876,12.610241,13.709338,12.800820,11.998821,11.338949,7.705118,12.588785,13.937719,13.057979,12.197818,11.219731,7.47530,13.14887,13.23252,12.35563,11.48435,10.73352,7.694566,12.931662,13.641279,13.014039,12.204555,11.233566,8.04320,12.85219,14.52099,13.33414,12.05035,10.92651,8.050142,14.034551,13.011441,11.944409,11.152097,9.999064,8.315934,13.965541,13.721665,12.488912,11.396105,10.078301,8.840053,14.337437,13.639098,12.754250,11.664945,10.824808,9.028293,13.931621,14.268738,13.157080,12.151975,11.338931,9.979169,13.611642,14.844514,13.839689,13.238295,12.365370,10.18113,12.64383,15.57183,14.69155,14.05825,13.38129,10.70992,12.37954,15.99138,15.36082,14.63624,13.73191,12.920365,9.181908,20.230338,19.829834,19.335972,18.128287,13.639943,8.056766,21.985921,21.672122,21.172707,19.078937,14.467901,5.823875,24.712448,24.47
+0090,23.919639,21.815570,14.938683,4.692022,25.595673,25.192081,24.609370,21.035729,15.266768,3.730967,26.656826,26.082080,25.073644,20.986631,15.747463,3.068153,27.285991,26.655877,25.821537,21.121173,15.590192,2.542006,27.734984,27.029885,26.296187,19.657504,15.635298,2.221804,27.889584,27.377996,26.862880,20.028958,15.65375,1.98775,28.16735,27.42855,26.49195,19.43063,15.734207,1.893586,28.255757,27.971937,26.845349,18.351153)#
+#
+stabsel9<-c(12.559867,9.786092,18.700534,18.220554,17.633451,16.899178,12.50895,9.73365,18.70900,18.19490,17.67853,16.91208,12.487654,9.779079,18.605531,18.097627,17.509377,16.718954,12.52732,9.77124,18.62848,17.89259,17.27716,16.66773,12.616185,9.726236,18.955584,18.253945,17.465443,16.736621,12.510826,9.734244,18.380046,17.744311,17.134399,16.560390,12.462098,9.661918,18.460743,17.991395,17.431007,16.491618,12.26920,9.46777,18.55612,17.66415,16.64100,15.75739,12.263511,9.231127,17.982202,17.084181,16.333406,15.347507,12.482728,8.974893,18.456022,17.542388,16.653393,15.575274,12.602840,8.878148,18.071061,17.408615,16.521382,15.764735,12.885677,8.649806,18.444896,17.768585,16.949881,16.129762,13.008196,8.429473,18.670159,17.780823,17.202347,16.494453,13.35454,8.24950,18.89211,18.27339,17.86877,17.31893,13.585514,8.023928,19.404818,18.875513,18.354359,17.510150,14.08250,7.30021,21.19198,20.82710,20.37175,19.19259,14.378701,6.859179,23.104295,22.759671,22.256229,20.237026,14.507125,6.313823,24.420850,24.17684
+5,23.575063,21.651943,14.779462,5.791765,24.850046,24.464427,23.933736,20.776432,14.893218,5.289166,26.228499,25.660904,24.635625,21.008496,14.929696,5.024846,26.138018,25.512233,24.693063,20.575401,14.647032,4.930482,26.683732,25.984774,25.259880,19.400038,14.614287,4.777717,26.751811,26.319564,25.801043,19.834273,14.455830,4.444241,26.983703,26.319531,25.422795,19.381905,14.461407,4.337981,26.826877,26.551758,25.479093,18.248724)#
+#
+forward9<-c(10.69431,18.02035,12.12838,11.79175,11.47750,11.18196,10.68221,18.06470,12.02864,11.63729,11.29505,10.99204,10.71736,18.11274,11.71347,11.32602,11.05285,10.78981,10.83420,18.09099,12.26101,11.73023,11.28720,10.99987,11.35116,18.83102,12.84430,12.40543,12.04255,11.62044,11.69336,19.26419,12.83894,12.53736,12.17250,11.92720,11.61941,19.16294,13.03446,12.82799,12.50205,12.12484,11.57173,19.82109,13.46122,12.92700,12.14145,11.67306,11.37253,21.10198,12.68115,12.29409,11.82940,11.13589,12.03196,20.21056,14.15776,13.53475,12.88810,12.27613,12.17867,19.12218,14.37642,13.95246,13.55947,13.14353,12.53069,17.54129,15.09081,14.71201,14.24763,13.71717,12.59399,16.05046,15.77707,15.24225,14.90455,14.35986,13.09818,15.08988,16.44111,16.05883,15.73745,15.39087,12.83362,14.59767,16.52066,16.03628,15.80938,15.18769,15.126679,7.016066,21.670264,21.257681,20.773011,19.587956,16.34497,4.07013,24.87632,24.56995,24.06130,21.90881,16.631408,2.944539,26.575089,26.319943,25.700783,23.363968,16.851871,1.804735,27.229347,
+26.817702,26.224142,22.484550,16.560550,1.483363,27.896260,27.300592,26.184024,22.023088,16.577638,1.456328,27.899056,27.239961,26.398904,21.654508,16.365735,1.233716,28.328379,27.605399,26.861725,20.043195,16.3016190,0.9912403,28.4677325,27.9486815,27.3966558,20.5075808,16.1654797,0.9937676,28.7729105,28.0338189,27.0702208,19.9808592,16.119672,1.246655,28.711059,28.426227,27.293786,18.787421)#
+#
+select9<-c(36.05,18.85,17.00,9.75,24.10,36.20,18.82,16.67,9.72,24.15,36.31,18.83,16.80,9.80,24.13,36.36,18.59,17.26,9.86,23.71,37.15,18.68,17.09,9.79,24.11,37.58,18.95,17.38,9.93,24.21,37.77,18.62,16.76,9.93,23.86,38.45,18.50,15.64,9.88,23.62,38.45,17.63,16.29,9.75,23.96,38.23,17.46,15.72,9.53,22.26,37.78,17.23,15.69,9.44,20.67,37.21,17.34,14.94,9.18,18.70,37.01,17.23,14.38,8.93,16.96,36.27,16.36,13.34,8.69,15.86,34.45,16.25,12.96,8.43,15.22,30.36,12.17,9.50,7.59,7.30,26.75,10.47,8.27,7.07,4.24,22.63,9.45,5.97,6.46,3.06,18.41,8.24,4.80,5.90,1.89,15.38,7.05,3.81,5.38,1.55,13.14,5.98,3.13,5.09,1.51,10.99,5.48,2.59,4.98,1.28,9.52,4.83,2.26,4.82,1.03,8.32,4.44,2.02,4.48,1.03,7.13,3.83,1.92,4.37,1.28)#
+#
+TD9<-c(11.97,13.41,13.42,17.77,11.36,12.10,13.24,13.59,17.74,11.29,12.23,13.25,13.60,17.80,11.25,12.30,13.55,13.66,17.68,11.67,13.11,14.22,14.13,17.79,12.07,13.90,14.05,13.84,17.73,12.67,14.65,14.62,14.54,17.75,12.30,16.33,15.36,14.96,17.74,13.74,17.35,16.15,15.17,17.77,13.88,18.11,16.42,16.20,18.07,15.70,18.74,17.47,17.45,18.24,16.57,19.33,17.94,17.40,18.54,17.54,19.85,18.69,18.42,18.69,18.18,20.01,18.56,18.84,18.99,19.54,19.87,19.11,19.80,19.11,19.64,20.98,20.39,21.10,20.31,22.86,21.77,21.55,22.49,21.11,24.20,22.51,22.05,23.01,22.28,24.56,22.65,22.76,23.54,23.28,25.09,23.38,23.43,23.99,23.70,25.13,23.94,23.94,24.57,24.13,25.19,24.41,24.34,24.83,24.56,25.28,25.02,24.55,25.20,24.94,25.35,25.22,25.04,25.38,25.12,25.43,25.27,25.25,25.48,25.33,25.52)#
+#
+select9<-matrix(select9,ncol=5,byrow=T) #
+colnames(select9)<-c("Lasso","SCAD","MCP","Stabsel","Forward")  #
+select9<-as.data.frame(select9)   #
+#
+lasso9<-matrix(lasso9,ncol=6,byrow=T) #
+colnames(lasso9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+lasso9<-as.data.frame(lasso9)  #
+#
+scad9<-matrix(scad9,ncol=6,byrow=T) #
+colnames(scad9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+scad9<-as.data.frame(scad9)   #
+#
+mcp9<-matrix(mcp9,ncol=6,byrow=T) #
+colnames(mcp9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+mcp9<-as.data.frame(mcp9)  #
+#
+forward9<-matrix(forward9,ncol=6,byrow=T) #
+colnames(forward9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+forward9<-as.data.frame(forward9)  #
+#
+TD9<-matrix(TD9,ncol=5,byrow=T) #
+colnames(TD9)<-c("Lasso","SCAD","MCP","Stabsel","Forward") #
+TD9<-as.data.frame(TD9)    #
+#
+stabsel9<-matrix(stabsel9,ncol=6,byrow=T) #
+colnames(stabsel9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+stabsel9<-as.data.frame(stabsel9)
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(3,0,1,0))
+ma<-max(select9)#
+mi<-min(select9)#
+plot(index,select9[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 6",xaxt="n")#
+lines(index,select9[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select9[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,select9[,4],type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)
+dev.off()
+sigma<-c(0.01,0.05,0.1,0.25,0.5,0.75,1,1.5,2,2.5,3,3.5,4,4.5,5,7.5,10,12.5,15,17.5,20,22.5,25,27.5,30)  #
+#
+index<-1:25  #
+#
+select1<-c(15.23,15.00,15.00,15.58,15.07,15.21,15.00,15.00,15.58,15.06,15.45,15.00,15.00,15.58,15.11,30.8,15.00,15.00,15.58,15.16,47.17,15.00,15.00,15.58,15.2,48.26,15.78,15.66,15.58,15.07,48.26,18.97,17.63,15.55,14.27,47.17,23.84,18.66,14.5,12.62,45.27,22.45,17.53,12.67,11.64,42.63,23.78,17.40,11.62,11.2,40.70,25.23,17.24,11.02,10.66,38.67,24.98,17.21,10.36,10.14,37.06,25.17,17.34,9.4,9.64,36.52,25.64,17.17,8.61,9.14,35.67,25.76,16.53,7.74,8.58,29.41,19.51,12.96,3.05,6.03,21.99,15.68,9.42,1.5,4.06,17.23,11.04,6.36,1.07,3.09,12.15,8.31,4.82,1.02,2.29,9.15,6.55,3.65,1.01,2.06,6.63,4.95,2.65,1,1.91,5.09,4.72,2.46,1,1.81,4.29,4.29,1.88,1,1.76,3.86,3.59,1.76,1,1.71,3.39,3.39,1.63,1,1.6)#
+lasso1<-c(0.1290591,0.2181912,0.1373645,0.1950299,0.1992780,0.2190240,0.1376053,0.2065156,0.1433607,0.1933992,0.1971299,0.2089068,0.2477749,0.4279113,0.2190855,0.3586910,0.3756394,0.4240513,5.1446037,15.5172767,0.9387197,9.5786189,12.0565261,15.1477582,13.95382,31.88882,11.98385,16.84646,27.91341,31.52052,15.83446,32.84899,30.79826,25.64902,29.54238,32.34318,17.07538,32.91561,42.69401,36.40441,29.65478,31.45663,19.59954,35.81571,53.81976,48.09338,25.27615,30.46047,22.50003,35.78362,56.33016,48.55981,25.03076,30.08020,27.25043,34.31684,58.12066,44.48076,29.03930,28.74194,32.76775,32.86131,56.71289,44.15668,35.26077,27.78782,37.41958,31.42667,56.70842,45.28924,40.48220,26.95796,41.07313,31.01896,55.38069,48.62160,45.35753,26.51887,43.46918,31.39550,55.81316,51.71814,49.47942,26.44759,46.86339,31.78806,57.86230,55.98667,54.50092,30.39478,56.06800,28.43432,71.76129,71.52495,70.11906,45.76207,59.33133,21.57751,79.93945,79.85044,79.13802,55.17729,61.50645,17.01152,86.38709,86.18032,85.57975,67.82922,62.83265,11.9
+9812,89.38668,89.33175,89.11247,77.80229,64.014286,9.073454,92.062048,92.002607,91.527785,73.696268,64.630161,6.559747,93.409037,93.353725,92.766802,75.850625,64.642651,5.073007,94.382894,94.304495,94.098315,77.201198,65.668874,4.285944,94.603262,94.419859,94.049276,76.476339,65.253350,3.835548,95.142235,95.100662,94.790049,78.158055,65.28984,3.38080,95.76930,95.71322,95.41554,76.83861)#
+#
+scad1<-c(0.1061293,0.0119125,0.0972631,0.0357335,0.0312794,0.0110268,0.1193923,0.0128330,0.1158635,0.0431238,0.0371859,0.0118478,0.2758008,0.0354935,0.3056777,0.1313195,0.1106221,0.0403079,10.7134549,0.2872238,14.9631558,6.2321090,3.7553421,0.6552497,23.2328658,0.2888181,43.2446239,22.8940835,4.5914984,0.6549421,24.5900182,0.7355626,61.7766997,42.4249938,3.1599558,0.5931096,21.429360,3.750390,69.989449,53.030938,1.954286,2.406418,15.564007,12.531863,74.643544,63.571021,7.105902,7.388235,17.522790,12.980205,76.537096,60.806193,13.829807,7.673977,22.73328,15.48105,73.67227,50.58174,22.20536,10.60625,28.65150,17.39205,67.50803,45.55858,30.00333,13.34844,33.95809,17.74221,63.02054,44.24532,36.99653,14.49033,38.37331,19.13149,58.17035,47.18175,42.90374,15.90426,41.06824,20.51846,56.12490,49.88503,47.28593,17.21093,44.78710,21.87964,57.19052,54.56932,52.89061,22.29120,55.65752,18.53436,71.84988,71.62338,70.10310,41.03820,59.40853,15.26698,80.52899,80.42741,79.58747,52.43350,62.13769,10.82238,87.30127,87.07640,86.
+36197,67.23427,62.978037,8.161414,89.944682,89.875833,89.643617,76.934018,63.968637,6.472368,92.234116,92.175252,91.634856,73.230998,64.486526,4.887861,93.487949,93.432574,92.844565,75.795160,64.393139,4.681333,94.130710,94.043138,93.799902,76.831347,65.262776,4.263769,94.151952,93.973795,93.613517,76.231041,65.034253,3.586385,94.954578,94.911183,94.601784,77.546641,64.960807,3.380973,95.465498,95.406569,95.099922,76.294489)#
+#
+mcp1<-c(0.1061293,0.0119125,0.0972631,0.0357335,0.0312794,0.0110268,0.1193923,0.0128330,0.1158635,0.0431238,0.0371859,0.0118478,0.2758008,0.0354935,0.3056777,0.1313195,0.1106221,0.0403079,10.7134549,0.2872238,14.9631558,6.2321090,3.7553421,0.6552497,23.2328658,0.2888181,43.2446239,22.8940835,4.5914984,0.6549421,24.6982372,0.6546105,61.8966992,42.5292949,3.1983877,0.5537605,22.194446,2.519687,71.175088,54.082669,1.970953,1.425207,17.701475,7.406427,79.048594,67.315842,6.840472,2.905626,19.934419,8.094954,80.949952,64.316402,14.698342,3.384294,24.715180,9.137425,79.112186,53.730823,22.838248,4.811360,30.124753,9.427774,72.830605,47.958211,30.542075,6.282279,35.127063,9.997563,66.764924,45.248849,37.423841,7.467930,38.995879,11.314481,60.307825,47.652312,43.055399,9.051382,42.109646,12.054170,58.346270,50.788531,48.067249,9.590552,45.76954,12.65361,58.46335,55.46716,53.73573,15.07765,56.22204,11.98589,72.40023,72.11525,70.53049,37.99064,60.264844,9.035344,81.825485,81.731884,80.835454,50.684161,62.90917,6.1432
+0,88.34384,88.10429,87.36462,66.64838,63.708165,4.672744,90.839759,90.739215,90.443416,77.195947,64.657906,3.582559,93.165372,93.106162,92.556053,73.615993,65.263778,2.613109,94.468923,94.417647,93.834666,76.096554,65.146207,2.445401,95.075575,94.983385,94.721675,77.163962,66.140914,1.883668,95.143656,94.964082,94.598867,76.480377,65.669744,1.760209,95.723332,95.680579,95.381165,78.069142,65.606047,1.630001,96.130709,96.071841,95.778585,76.744195)#
+#
+forward1<-c(0.6850952,0.5916183,0.6772631,0.6157335,0.6112794,0.5910268,0.7829291,0.6063043,0.7913080,0.6587222,0.6491837,0.6078633,1.3822401,0.6840371,1.5454499,1.0755211,1.0097947,0.7284941,8.839134,0.864795,10.945798,6.965027,6.064260,2.001545,25.4300906,0.8966698,29.6854899,28.1601661,24.1779333,4.2260044,36.9480756,0.9523633,45.9657441,45.5501904,42.0736538,9.3583388,43.429124,1.407616,58.632587,58.196754,56.528194,18.304767,48.732860,3.366175,74.117771,73.995644,73.250134,54.705577,52.116727,3.309755,83.480618,83.322683,82.702550,75.231246,52.435745,3.454149,86.968428,86.926868,86.333089,81.728155,53.143135,3.755613,88.347206,88.151513,87.519563,84.722505,53.261281,3.921671,89.186364,89.139168,88.718459,85.157196,54.652213,3.714765,90.324655,90.266970,89.846055,85.455178,54.942437,3.790806,91.184115,91.127944,90.459122,83.139289,56.349429,3.934311,92.200348,92.135302,91.633797,87.673132,61.199563,2.269945,96.474043,96.382473,96.090785,91.229636,62.546047,1.350424,97.872595,97.825160,97.476888,87.75157
+8,62.483529,1.008651,98.502411,98.446708,98.080952,84.093539,62.9169900,0.9901195,98.2525449,98.1866108,97.9111623,83.4966826,62.1710445,0.9947802,98.3416593,98.2771461,97.8842829,85.1859217,62.8126069,0.9794107,98.5165635,98.4744224,98.1820229,81.8300158,62.3390926,0.9728307,98.1922749,98.1639088,97.8943553,77.1705427,63.3073354,0.9875819,98.3557745,98.3219377,98.0098695,80.0232880,62.4851138,0.9724339,98.4201597,98.3811020,98.0767708,78.6783803,62.5536729,0.9881664,98.3257202,98.2835816,97.8783299,78.5034674)  #
+#
+stabsel1<-c(0.1418405,0.0802370,0.1372539,0.0993173,0.0962282,0.0800536,0.1397485,0.0710972,0.1384355,0.0954069,0.0912109,0.0708016,0.3248648,0.1392687,0.3641989,0.2236719,0.2052454,0.1459962,10.7308214,0.4228687,14.8431556,6.1691762,3.7324705,0.7504376,23.0487254,0.5294321,43.0446244,22.7409948,4.5480883,0.8272249,25.128724,1.035687,62.486701,43.192292,4.014467,1.380624,25.128577,2.051242,74.455165,57.364438,4.996806,3.135534,23.592353,2.552759,84.192524,72.304268,12.490027,4.912033,25.469366,1.995821,85.605439,67.381079,19.218668,4.566380,29.717947,1.891367,83.447375,56.288546,26.883873,4.742845,34.778160,2.021071,75.774826,50.671965,33.761394,5.582472,39.222662,2.416796,69.959603,47.542411,40.311626,6.437182,43.119417,3.200016,63.160300,50.694072,46.142784,7.554295,46.242098,4.256296,61.557962,53.993670,51.210370,7.830947,49.958391,5.082095,61.356093,58.645576,56.871348,13.449738,59.182294,5.478638,74.699664,74.376982,72.709329,37.707207,63.175148,3.890556,83.602560,83.496463,82.641183,50.557721,64.82995
+7,3.018304,89.251680,89.016928,88.332196,66.476515,65.813276,2.253119,91.470910,91.380892,91.048564,74.470875,66.364997,2.037993,93.061120,92.995774,92.455376,70.495940,66.63144,1.89512,94.12873,94.07747,93.49035,73.65065,66.341784,1.797665,94.561429,94.489696,94.233081,73.743711,67.184683,1.749032,94.187911,93.965494,93.472982,72.597663,66.85607,1.70032,94.70508,94.65547,94.33164,75.35291,66.824020,1.592168,95.084345,95.021730,94.753687,72.455996)#
+#
+TD1<-c(0.23,0.00,0.00,0.58,0.07,0.21,0.00,0.00,0.58,0.06,0.45,0.00,0.00,0.58,0.11,15.8,0.00,0.00,0.58,0.16,32.17,0.00,0.00,0.58,0.3,33.26,0.78,0.66,0.58,0.65,33.26,3.97,2.63,0.59,1.55,32.29,9.26,4.48,1.74,3.36,30.97,9.05,5.13,3.31,4.44,29.45,11.8,6.80,4.3,5.08,28.82,14.35,8.04,4.88,5.72,27.97,15.46,9.09,5.5,6.3,27.30,16.65,10.04,6.38,7,27.38,17.70,10.79,7.13,7.6,27.17,18.64,11.23,7.96,8.34,25.11,16.89,12.28,12.17,11.13,22.27,16.90,13.52,13.58,13.1,21.23,16.80,14.48,14.07,14.21,20.05,16.89,15.32,14.46,14.71,19.11,17.07,15.69,14.77,15.24,18.15,16.83,15.79,14.88,15.47,17.53,17.14,15.96,15.06,15.55,17.53,17.33,15.92,15.2,15.66,17.42,17.19,15.94,15.3,15.65,17.25,17.09,15.91,15.38,15.84)#
+#
+vsdstab1_075<-c(1.855724,1.904459,1.856044,1.892537,1.895596,1.907228,1.800891,1.837210,1.807967,1.834215,1.835443,1.839421,1.964430,1.986173,1.972251,1.982111,1.983191,1.993413,10.666958,3.200713,14.264294,6.921337,4.999976,3.293972,21.123813,4.289081,39.915568,21.471901,6.037622,4.233845,22.471810,4.981252,58.441326,40.393221,5.844727,4.990657,21.930080,5.984064,68.917736,53.366479,7.022926,6.142464,20.759373,7.426095,77.506314,66.525728,12.555829,7.277878,23.006175,8.391349,78.290239,62.040013,18.455600,8.236161,27.752736,8.355938,76.761566,52.433582,25.627049,8.810872,32.872676,8.744113,69.847823,47.349497,32.131519,9.657995,37.157561,9.597978,64.984993,45.133673,38.405203,10.446811,40.71392,10.94977,59.28017,48.08744,43.90282,11.47709,43.48908,12.57137,57.75306,51.11608,48.61343,12.01548,46.83994,13.90752,57.80038,55.40436,53.78462,16.81701,55.53588,16.04327,70.96780,70.70914,69.16135,39.64309,59.08774,15.18548,79.18247,79.07373,78.14765,51.27267,60.74872,14.29691,84.60044,84.38456,83.77020,65.1163,61.
+61978,14.06182,86.55489,86.47944,86.17368,72.51978,61.86284,13.45689,87.38302,87.30478,86.74533,68.65426,62.27195,12.95576,88.69633,88.62947,88.02213,71.39661,62.05538,12.73997,89.67150,89.59522,89.33010,71.85856,62.54294,12.75205,88.86951,88.70573,88.27206,70.28117,62.27298,12.56432,89.47801,89.43933,89.17224,72.98472,62.28296,12.54554,89.92123,89.87531,89.65837,70.66907)#
+#
+selectstab1_075<-c(16.91,16.84,16.99,18.17,19.37,19.98,20.39,19.89,19.51,18.82,18.46,18.24,18.06,17.91,17.69,16.62,15.37,14.38,14.11,13.49,12.98,12.76,12.77,12.58,12.56)#
+#
+TD1_075<-c(1.91,1.84,1.99,3.17,4.37,4.98,5.65,7.03,8.63,9.58,10.3,11.02,11.7,12.43,13.21,15.8,18.09,19.72,21.23,22.25,22.32,23.1,23.73,23.92,24.02)#
+select1<-matrix(select1,ncol=5,byrow=T) #
+colnames(select1)<-c("Lasso","Scad","MCP","Forward","stabsel")#
+select1<-as.data.frame(select1)  #
+#
+lasso1<-matrix(lasso1,ncol=6,byrow=T) #
+colnames(lasso1)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior")#
+lasso1<-as.data.frame(lasso1)  #
+#
+scad1<-matrix(scad1,ncol=6,byrow=T) #
+colnames(scad1)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior")#
+scad1<-as.data.frame(scad1)  #
+#
+mcp1<-matrix(mcp1,ncol=6,byrow=T) #
+colnames(mcp1)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+mcp1<-as.data.frame(mcp1)  #
+#
+forward1<-matrix(forward1,ncol=6,byrow=T) #
+colnames(forward1)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior")#
+forward1<-as.data.frame(forward1)  #
+#
+TD1<-matrix(TD1,ncol=5,byrow=T) #
+colnames(TD1)<-c("Lasso","SCAD","MCP","forward","stabsel") #
+TD1<-as.data.frame(TD1)     #
+#
+stabsel1_075<-matrix(vsdstab1_075,ncol=6,byrow=T) #
+colnames(stabsel1_075)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+stabsel1_075<-as.data.frame(stabsel1_075)#
+#
+pdf("vsd1.pdf",width=7,height=5)#
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(3,0,1,0))#
+#
+ma<-max(lasso1)  #
+mi<-min(lasso1)  #
+#
+plot(index,lasso1[,2],type="b",xlab="sigma",col=1,lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Lasso VSD of Example 1",xaxt="n")  #
+lines(index,lasso1[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,lasso1[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n") #
+lines(index,TD1[,1],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(scad1)  #
+mi<-min(scad1)  #
+plot(index,scad1[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="SCAD VSD of Example 1",xaxt="n")  #
+lines(index,scad1[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,scad1[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD1[,2],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(mcp1)  #
+mi<-min(mcp1)  #
+plot(index,mcp1[,2],type="b",col=1,lty=1,xlab="sigma",pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="MCP VSD of Example 1",xaxt="n")  #
+lines(index,mcp1[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,mcp1[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD1[,3],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(forward1)  #
+mi<-min(forward1)  #
+plot(index,forward1[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="FS VSD of Example 1",xaxt="n")  #
+lines(index,forward1[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,forward1[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD1[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma) #
+#
+ma<-max(stabsel1_075[,c(2,4,6)],TD1_075)  #
+mi<-min(stabsel1_075[,c(2,4,6)],TD1_075)  #
+plot(index,stabsel1_075[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Stability Selection VSD of Example 1",xaxt="n")  #
+lines(index,stabsel1_075[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,stabsel1_075[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD1_075,type="b",pch=4,cex=0.8,col=4,xaxt="n") #
+axis(1,index,sigma)#
+#
+legend(36,60,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=1,cex=1.1)#
+dev.off() #
+#
+select2<-c(14.97,28.32,27.49,16.45,2.16,14.97,28.33,26.89,16.45,2.16,14.96,27.95,26.78,16.43,2.15,14.96,27.70,27.48,16.38,2.13,15.05,25.60,26.59,16.2,2.16,16.81,24.23,23.21,13,2.08,20.93,17.18,18.14,10.36,2.05,21.36,10.18,10.12,7.36,1.95,19.91,6.80,6.78,5.87,1.89,18.92,4.98,4.56,4.87,1.74,18.01,4.47,4.14,4.17,1.55,17.18,4.18,3.94,3.82,1.42,16.22,4.12,3.90,3.57,1.34,15.62,4.21,3.89,3.49,1.23,15.21,4.07,4.12,3.38,1.22,13.41,4.33,3.83,3.15,0.99,12.50,4.45,3.87,3.12,0.87,11.91,4.69,4.27,3.09,0.85,11.62,5.09,4.50,3.12,0.91,11.20,5.64,4.79,3.14,0.86,10.97,6.21,4.99,3.03,0.83,10.73,6.76,5.30,2.93,0.81,10.43,7.13,5.25,2.57,0.78,9.88,7.14,5.36,2.46,0.76,9.51,6.60,4.87,2.12,0.79)  #
+lasso2<-c(0.0017492,0.0024562,0.0000000,0.0000001,0.0000001,0.0000002,0.0029700,0.0028577,0.0000000,0.0000000,0.0000001,0.0000001,0.0124986,0.0107859,0.0000000,0.0000000,0.0000000,0.0000001,0.1104032,0.1070135,0.1202146,0.0505225,0.0047537,0.0062994,0.8910586,1.0331701,1.7992941,0.5311767,0.0891065,0.1178614,3.087681,4.987855,5.605887,2.402499,1.567734,1.986138,6.558859,12.100952,6.416027,4.562175,5.787333,7.271004,8.695066,16.539221,7.737129,6.787415,8.710623,11.539304,9.398873,16.306331,9.543880,8.428426,9.755165,13.021571,10.095294,15.746989,10.288116,9.974008,11.035833,14.076081,10.55437,14.91409,10.94855,11.42892,11.91013,13.94130,10.71077,14.36814,11.41826,11.70705,11.89782,13.42679,10.45488,13.54221,11.80935,11.35710,11.40624,12.55099,10.22183,13.12895,11.69603,10.94135,10.94189,12.01033,10.19626,12.76919,11.63361,10.64253,10.75829,11.80374,9.381882,11.441239,11.112802,9.313095,9.285400,10.276269,8.893241,10.646178,10.601922,8.540696,8.452331,9.377347,8.657122,10.117869,10.400283,8.010713,7.842614,8.
+772440,8.295154,9.974106,10.139682,7.558337,7.385035,8.478743,8.165632,9.682061,9.848600,7.123110,6.956078,8.083754,7.825945,9.898450,9.669612,6.956887,6.782575,7.997155,7.896770,9.872252,9.627134,6.783803,6.631333,7.870723,7.860041,9.640404,9.655425,6.447382,6.282029,7.696086,7.878293,9.273563,9.858753,6.193423,5.998244,7.333574,7.766084,9.026675,9.836622,5.913326,5.760756,7.088662)  #
+#
+scad2<-c(24.84878,24.84833,24.85000,24.85000,24.85000,24.85000,25.13790,25.13832,25.14000,25.14000,25.14000,25.14000,25.00219,25.00633,25.01000,25.01000,25.01000,25.01000,24.75163,24.77775,24.70397,24.76409,24.80471,24.80629,23.69777,23.71130,23.27805,23.97483,24.01073,24.00350,22.50179,22.46941,20.25009,22.70325,23.21085,23.07537,19.24186,16.96876,18.97463,19.65679,19.26812,18.79181,15.468891,9.125149,19.457446,16.445475,14.362867,12.183730,13.105809,5.096316,18.863377,13.571133,10.035550,7.414732,11.068548,3.152531,18.650016,10.461254,6.786418,3.816582,9.823966,2.570641,17.876012,8.110143,4.834396,2.661987,9.158462,2.325655,16.650084,6.356610,3.975927,2.195396,8.628428,2.402249,15.341568,5.066322,3.526492,2.057620,8.159784,2.529162,14.456098,4.161002,3.308303,2.130909,7.832132,2.487865,13.668665,3.674889,3.157589,1.862491,7.195190,3.031136,11.992306,2.942404,2.653882,1.890704,6.942657,3.205974,10.997297,2.673328,2.591307,2.100081,6.818242,3.553877,10.594835,2.769863,2.559249,2.270432,6.651648,4.027208,10.
+328135,2.855324,2.560005,2.572460,6.710337,4.729916,9.968974,2.978683,2.729914,3.070121,6.429065,5.678375,9.838180,3.393618,3.095116,3.784848,6.521011,6.322596,9.450934,3.708209,3.403237,4.392548,6.688101,6.665549,9.453119,4.003194,3.649740,4.841581,6.809154,6.856331,9.574979,4.102107,3.744940,5.007681,6.927904,6.401742,9.889604,3.908746,3.613171,4.597299)  #
+#
+mcp2<-c(24.41836,24.41785,24.42000,24.42000,24.42000,24.42000,23.95793,23.95833,23.96000,23.96000,23.96000,23.96000,23.89771,23.89661,23.90000,23.90000,23.90000,23.90000,24.40611,24.43645,24.34397,24.40409,24.44471,24.44630,23.70912,23.94502,22.83430,23.77308,24.11808,24.12319,21.91511,21.66220,20.09623,21.69411,22.47670,22.29261,19.21346,17.64867,18.61540,19.26700,19.25926,18.99578,15.826437,9.782036,19.899567,16.856430,14.354483,12.386051,13.456343,6.091525,19.386679,14.036860,10.431806,8.067251,11.405010,3.883894,19.150353,11.150253,7.342689,4.829346,10.427766,3.506975,18.421313,8.989812,5.959663,4.079404,9.993767,3.252010,17.481281,7.580887,5.515665,4.027036,9.483346,3.164916,16.350641,6.592171,5.123274,3.895522,9.161036,3.127732,15.501272,5.765345,4.978337,3.824953,8.757323,3.211205,14.473966,5.042643,4.646369,3.795433,8.062049,2.705181,13.402331,4.367137,4.129599,3.105427,7.797431,2.569060,12.441192,4.066513,3.908170,2.904987,7.545024,2.894584,11.793783,3.939795,3.702018,3.084743,7.378479,3.061518,11.
+508961,3.689500,3.404610,2.937147,7.367920,3.453982,11.148566,3.485467,3.246148,3.087935,7.053732,3.695561,11.051189,3.475777,3.208199,3.096062,7.134446,4.209240,10.810483,3.483309,3.205351,3.232967,7.272226,4.343312,10.821531,3.364464,3.098963,3.101848,7.326835,4.627057,10.862585,3.338834,3.092899,3.193643,7.490801,4.291228,11.090793,3.156344,2.990381,2.814287)  #
+#
+forward2<-c(3.662521,1.974060,11.344306,5.738131,1.826543,1.599257,3.728142,1.981214,10.042014,5.781432,1.952173,1.586523,3.601616,1.904920,9.751707,5.899464,1.940208,1.463959,3.688356,1.872028,9.776822,6.279501,2.036047,1.403606,4.011046,2.613399,9.905203,6.528873,2.310252,1.710456,7.247782,5.748014,13.433172,10.103368,5.692394,4.793128,8.975472,6.571076,15.932328,12.073562,7.210458,5.956630,10.661463,5.690232,18.143757,12.924242,7.751979,5.775213,10.831822,4.652566,18.816338,11.838096,6.694741,4.718222,10.598858,3.918846,18.584372,10.448133,6.135106,3.948538,10.180778,3.515517,18.263767,8.630021,5.224798,3.541866,9.891836,3.353619,17.489871,7.441090,5.008881,3.463607,9.661695,3.201694,16.702554,6.483458,4.938471,3.341914,9.348729,2.991006,15.928730,5.573778,4.664389,3.197356,9.209108,2.798385,15.443447,5.285965,4.656251,3.153698,9.122309,2.882862,14.227556,4.819617,4.602906,2.921351,9.006182,2.739787,13.493746,4.659549,4.494222,2.762974,8.850413,2.692815,13.072961,4.542436,4.345508,2.633992,8.794677,2.707
+992,13.030402,4.565028,4.250574,2.619095,8.847766,2.629790,13.011965,4.460493,4.033461,2.513704,8.897234,2.483018,13.051563,4.421046,3.977089,2.423908,8.967177,2.498596,13.115431,4.452956,4.139620,2.400052,9.116042,2.261626,13.298173,4.514888,4.264381,2.371660,9.260171,2.215508,13.252755,4.404705,4.080477,2.157952,9.302444,1.908490,13.427472,4.453306,4.146022,2.047033)  #
+#
+stabsel2<-c(12.80889,12.80618,12.81000,12.81000,12.81000,12.81000,12.80771,12.80597,12.81000,12.81000,12.81000,12.81000,12.80598,12.80275,12.81000,12.81000,12.81000,12.81000,12.80589,12.71655,12.94569,12.87376,12.82529,12.82370,12.74924,11.86394,14.04815,13.14667,12.80182,12.77214,13.469409,9.877211,17.531626,14.829764,13.497703,12.779867,14.56694,7.21860,20.77737,16.78690,13.80001,11.89427,14.505517,3.946258,22.403404,17.117642,11.738646,8.372507,13.492180,3.022995,21.652305,14.726632,9.345745,5.756633,12.409197,2.848321,20.804831,12.044548,7.505932,4.257018,11.368400,2.867669,19.898406,9.547626,6.137225,3.736650,10.776090,2.785599,18.562300,7.887327,5.541645,3.473159,10.262839,2.866055,17.227557,6.728239,5.174271,3.385169,9.952907,2.906336,16.473108,5.901821,5.071362,3.464694,9.696459,2.928013,15.624681,5.463412,4.993804,3.260287,9.067355,2.968212,14.353905,4.961172,4.702083,3.225546,8.796123,3.085966,13.623414,4.959545,4.779521,3.331311,8.664197,3.145654,13.403336,5.077099,4.778995,3.359520,8.619581,3.06
+5287,13.446139,5.066115,4.746354,3.337627,8.582054,2.897426,13.476154,5.078442,4.812248,3.409157,8.561551,2.643573,13.602975,5.224115,4.890609,3.539059,8.589420,2.238731,13.631995,5.273782,4.967493,3.533915,8.629582,1.825952,13.822054,5.258403,4.988370,3.389129,8.674608,1.517693,14.011840,5.245347,5.020269,3.231764,8.630422,1.329502,14.001598,5.127584,4.999232,3.062106)#
+#
+TD2<-c(0.03,24.88,24.43,1.45,12.84,0.03,25.17,23.97,1.45,12.84,0.04,25.01,23.94,1.43,12.85,0.08,24.84,24.52,1.38,12.87,0.19,24.14,24.25,1.64,12.84,2.03,23.91,22.95,4.9,12.94,6.43,20.66,20.60,6.64,12.97,8.70,16.96,16.90,8.78,13.11,9.03,14.82,14.80,9.79,13.23,9.92,13.66,13.38,10.69,13.44,10.33,13.31,13.04,11.27,13.65,11.16,13.18,12.94,11.54,13.86,11.66,13.04,12.90,11.75,14.02,12.12,13.17,12.89,11.77,14.13,12.67,13.07,13.04,11.88,14.18,14.23,13.33,12.83,12.09,14.57,15.00,13.45,12.87,12.1,14.83,15.57,13.69,13.27,12.09,15.01,16.10,14.09,13.50,12.1,15.05,16.44,14.64,13.79,12.08,15.16,16.81,15.21,13.99,12.21,15.35,16.95,15.76,14.32,12.33,15.39,17.07,16.05,14.39,12.63,15.38,16.94,16.14,14.56,12.74,15.44,17.05,15.78,14.47,13.04,15.47)#
+#
+vsdstab2_075<-c(7.989678,7.986419,7.990000,7.990000,7.990000,7.990000,7.858003,7.856059,7.860000,7.860000,7.860000,7.860000,7.926753,7.923175,7.930000,7.930000,7.930000,7.930000,8.031022,7.946324,8.165685,8.093764,8.045294,8.043701,8.249202,7.440542,9.559825,8.622642,8.236350,8.213706,9.192062,6.184388,13.428220,10.477793,9.031246,8.311508,10.529324,5.105272,16.780843,12.514543,9.532176,7.729869,11.010201,4.276078,18.571723,13.217759,7.983038,5.266985,10.841077,4.267750,18.347674,11.636094,6.649706,4.547109,10.290195,4.098609,17.839821,9.774935,5.821781,4.207789,9.588469,3.993777,17.108429,8.113611,5.167944,3.989017,9.277069,3.851033,16.166033,6.954193,4.814235,3.800361,8.945225,3.935302,15.097196,6.257599,4.850276,3.889211,8.512869,3.788763,14.233415,5.365771,4.592952,3.765747,8.400905,3.755361,13.714732,5.087651,4.642240,3.624720,7.765336,3.993465,12.481777,4.699011,4.408563,3.764367,7.376739,4.335080,11.465920,4.651322,4.409807,4.030788,7.197117,4.414296,11.140521,4.724430,4.414573,4.122879,7.302926,4.71
+2007,11.264523,5.003624,4.671154,4.432559,7.241838,4.969007,11.169966,5.123663,4.839240,4.733736,7.336845,5.130100,11.350288,5.416723,5.077632,5.033856,7.288546,5.133308,11.236305,5.453874,5.144438,5.185274,7.366856,5.198296,11.387347,5.619386,5.326947,5.375727,7.469720,5.319825,11.452353,5.832910,5.587982,5.591807,7.499511,5.456492,11.505974,5.917359,5.717326,5.740274)#
+#
+selectstab2_075<-c(7.06,7.19,7.13,7.09,6.9,6.74,6.65,6.28,5.94,5.6,5.43,5.21,5.22,5.1,4.86,4.59,4.66,4.52,4.62,4.67,4.75,4.8,4.92,5.14,5.31)#
+#
+TD2_075<-c(8.02,7.89,7.97,8.09,8.3,8.56,8.83,9.44,10.22,10.82,11.33,11.71,12.1,12.42,12.74,14.09,15,15.62,16.2,16.69,17.09,17.36,17.78,18.14,18.47)#
+TD2<-matrix(TD2,ncol=5,byrow=T) #
+colnames(TD2)<-c("Lasso","SCAD","MCP","forward","stabsel") #
+TD2<-as.data.frame(TD2)  #
+#
+select2<-matrix(select2,ncol=5,byrow=T) #
+colnames(select2)<-c("Lasso","Scad","MCP","Forward","stabsel") #
+select2<-as.data.frame(select2)  #
+#
+lasso2<-matrix(lasso2,ncol=6,byrow=T) #
+colnames(lasso2)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+lasso2<-as.data.frame(lasso2)  #
+#
+scad2<-matrix(scad2,ncol=6,byrow=T) #
+colnames(scad2)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+scad2<-as.data.frame(scad2)   #
+#
+mcp2<-matrix(mcp2,ncol=6,byrow=T) #
+colnames(mcp2)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+mcp2<-as.data.frame(mcp2)  #
+#
+forward2<-matrix(forward2,ncol=6,byrow=T) #
+colnames(forward2)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+forward2<-as.data.frame(forward2)   #
+#
+stabsel2_075<-matrix(vsdstab2_075,ncol=6,byrow=T) #
+colnames(stabsel2_075)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+stabsel2_075<-as.data.frame(stabsel2_075)  #
+#
+pdf("vsd2.pdf",width=7,height=5)  #
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(3,0,1,0))#
+ma<-max(lasso2,TD2[,1])  #
+mi<-min(lasso2,TD2[,1])  #
+plot(index,lasso2[,2],type="b",xlab="sigma",col=1,lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Lasso VSD of Example 2",xaxt="n")  #
+lines(index,lasso2[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,lasso2[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD2[,1],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(scad2,TD2[,2])  #
+mi<-min(scad2,TD2[,2])  #
+plot(index,scad2[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="SCAD VSD of Example 2",xaxt="n")  #
+lines(index,scad2[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,scad2[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD2[,2],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)    #
+#
+ma<-max(mcp2,TD2[,3])  #
+mi<-min(mcp2,TD2[,3])  #
+plot(index,mcp2[,2],type="b",col=1,lty=1,xlab="sigma",pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="MCP VSD of Example 2",xaxt="n")  #
+lines(index,mcp2[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,mcp2[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD2[,3],type="b",pch=4,cex=0.8,col=4,xaxt="n")   #
+axis(1,index,sigma)   #
+#
+ma<-max(forward2[,c(2,4,6)],TD2[,4])  #
+mi<-min(forward2[,c(2,4,6)],TD2[,4])  #
+plot(index,forward2[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="FS VSD of Example 2",xaxt="n")  #
+lines(index,forward2[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,forward2[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD2[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n") #
+axis(1,index,sigma)#
+#
+ma<-max(stabsel2_075[,c(2,4,6)],TD2_075)  #
+mi<-min(stabsel2_075[,c(2,4,6)],TD2_075)  #
+plot(index,stabsel2_075[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Stability Selection VSD of Example 2",xaxt="n")  #
+lines(index,stabsel2_075[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,stabsel2_075[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD2_075,type="b",pch=4,cex=0.8,col=4,xaxt="n") #
+axis(1,index,sigma)#
+#
+legend(36,10,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=1,cex=1.1)#
+dev.off()     #
+#
+select4<-c(3.02,3.01,3.01,3.1,2.97,3.03,3.49,3.42,3.1,2.97,3.18,3.54,3.51,3.1,2.96,5.17,3.71,3.65,3.1,2.97,5.30,3.74,3.66,3.1,2.95,5.34,3.76,3.63,3.1,2.95,5.33,3.77,3.66,3.1,2.94,5.33,3.81,3.75,3.1,2.9,5.36,4.07,3.93,3.03,2.67,5.33,4.37,4.71,2.96,2.46,5.33,4.48,4.26,2.7,2.27,5.23,4.48,4.30,2.38,1.92,5.16,4.45,4.28,2.13,1.67,5.04,4.53,4.16,1.9,1.53,4.97,4.35,4.11,1.59,1.4,4.20,3.61,3.04,1.09,0.88,3.37,2.49,2.45,1.02,0.62,2.57,1.96,1.78,1.01,0.5,2.03,1.67,1.33,1.01,0.37,1.80,1.56,1.14,1,0.32,1.47,1.39,1.02,1,0.27,1.35,1.18,0.90,1,0.27,1.26,1.12,0.89,1,0.24,1.17,1.11,0.85,1,0.24,1.08,1.13,0.85,1,0.21)  #
+#
+lasso4<-c(0.0372780,0.0308379,0.0391496,0.0365499,0.0349950,0.0324697,1.0974782,0.5538012,1.2171231,0.9055324,0.6598396,0.4539319,1.3038018,0.6619648,1.3335252,0.9697127,0.6923842,0.5084864,1.566175,1.764443,1.409645,1.522482,1.669839,1.812843,1.690345,1.895795,1.532893,1.648243,1.800560,1.942585,1.702904,1.925544,1.535030,1.658549,1.821548,1.972514,1.723498,1.943321,1.551013,1.666675,1.819961,1.965776,1.761210,2.047302,1.556977,1.674705,1.828587,1.975827,1.803239,2.241346,1.551226,1.689719,1.855751,2.029860,1.876588,2.470221,1.582900,1.738122,1.908485,2.110206,1.939540,2.766328,1.607635,1.796293,1.985797,2.250915,1.980414,2.992859,1.630114,1.849492,2.042990,2.351549,2.024462,3.240924,1.652203,1.925558,2.122221,2.491476,2.053076,3.409533,1.671413,1.969301,2.155655,2.564452,2.131532,3.601213,1.746706,2.066528,2.238592,2.704346,2.238370,3.610435,1.874957,2.171701,2.258080,2.809139,2.309673,3.078760,2.022650,2.098436,2.104795,2.536639,2.283828,2.400993,2.023681,1.779697,1.774919,2.033886,2.250668,1.926860,2.01
+1344,1.533454,1.533255,1.683848,2.223460,1.721221,1.980052,1.396860,1.390604,1.516671,2.181553,1.417928,1.941077,1.220269,1.232879,1.273950,2.227185,1.307814,1.999194,1.157011,1.188120,1.180212,2.210322,1.220611,1.974095,1.080063,1.127508,1.094914,2.209936,1.139182,1.962773,1.039029,1.101627,1.030763,2.1934414,1.0535571,1.9653949,0.9951942,1.0696606,0.9612845)  #
+#
+scad4<-c(0.0288664,0.0173015,0.0245858,0.0176039,0.0141890,0.0099965,0.9700718,0.6429246,0.9690556,0.7505968,0.6078181,0.5178922,1.2154202,0.7395284,1.1612032,0.8641654,0.6724680,0.5713571,1.4524456,0.9441272,1.3371816,1.0467563,0.8550588,0.7557584,1.4837975,0.9581987,1.3434242,1.0419364,0.8501849,0.7583795,1.5096329,0.9815612,1.3580866,1.0550063,0.8641958,0.7723957,1.5157723,0.9993841,1.3633568,1.0612594,0.8713416,0.7816421,1.5070864,1.0642685,1.3353992,1.0447891,0.8678891,0.7962489,1.540673,1.347185,1.295736,1.089222,0.998807,1.000897,1.612763,1.747555,1.286681,1.190242,1.201103,1.294717,1.716633,2.104446,1.353541,1.308735,1.367065,1.535456,1.744431,2.376554,1.363849,1.379035,1.470086,1.697714,1.852018,2.650666,1.471477,1.534366,1.629727,1.899853,2.009852,3.002683,1.660341,1.788307,1.879438,2.178387,2.046972,3.073481,1.707558,1.813521,1.894097,2.215625,2.135446,3.058224,1.803744,1.849343,1.896866,2.307736,2.153888,2.229480,1.901565,1.530689,1.532328,1.736361,2.183203,1.804799,1.961742,1.357568,1.356012,1.
+465252,2.155931,1.563177,1.941296,1.230921,1.243449,1.299099,2.154580,1.480870,1.911641,1.217941,1.225556,1.277730,2.143881,1.331582,1.908456,1.146962,1.187043,1.173069,2.1886116,1.1330204,1.9513602,0.9964654,1.0726340,0.9981750,2.1914754,1.0807580,1.9472754,0.9711770,1.0545681,0.9625092,2.1942047,1.0779705,1.9395699,0.9706141,1.0622754,0.9683624,2.1861602,1.0992127,1.9255686,0.9834221,1.0679507,0.9942971)  #
+#
+mcp4<-c(0.0288664,0.0173015,0.0245858,0.0176039,0.0141890,0.0099965,0.9715110,0.6148558,0.9832936,0.7476687,0.5910001,0.4896200,1.2063802,0.7175442,1.1583747,0.8540782,0.6525511,0.5470817,1.4298486,0.8897472,1.3081917,0.9953106,0.7907816,0.6866107,1.4861659,0.9140960,1.3505428,1.0202885,0.8054035,0.6987813,1.4944964,0.9001774,1.3603284,1.0174934,0.7876550,0.6739346,1.5036310,0.9306790,1.3614307,1.0267320,0.8084625,0.7009601,1.5088673,1.0340162,1.3498841,1.0414770,0.8476925,0.7623305,1.5394603,1.2673717,1.3127073,1.0680314,0.9454800,0.9183377,1.611741,1.621118,1.323244,1.160359,1.119946,1.167226,1.705962,1.952175,1.381661,1.265933,1.276485,1.393417,1.802261,2.270353,1.449934,1.393515,1.448692,1.619037,1.888455,2.535388,1.559533,1.542877,1.596420,1.802811,1.945887,2.693008,1.637756,1.640520,1.679253,1.897496,2.037766,2.875536,1.716544,1.735836,1.788166,2.053444,2.198113,2.542035,1.936092,1.674267,1.680816,1.872924,2.297813,2.210264,2.048407,1.633891,1.664607,1.781739,2.321796,1.646875,2.127163,1.366621,1.4037
+93,1.366462,2.258758,1.247360,2.088982,1.128618,1.170732,1.045043,2.2555650,1.0806485,2.0717098,1.0316290,1.0986206,0.9249836,2.2554414,0.9765615,2.0717959,0.9618957,1.0575973,0.8494330,2.2499815,0.8659907,2.0537371,0.8722670,0.9773851,0.7571442,2.2318175,0.8613269,2.0166246,0.8557948,0.9574621,0.7622390,2.2133616,0.8271979,1.9746215,0.8391150,0.9391377,0.7408831,2.2187277,0.8301272,1.9760325,0.8482165,0.9446198,0.7508331)  #
+#
+forward4<-c(1.4089199,0.6712306,1.4113881,0.9935961,0.6469833,0.4148150,1.6110847,0.7280094,1.5314439,1.0587937,0.6746550,0.4322277,1.6217927,0.7301211,1.5482575,1.0676909,0.6762839,0.4311720,1.6172186,0.7272205,1.5391508,1.0610974,0.6749808,0.4319732,1.6157261,0.7254671,1.5363449,1.0577138,0.6713420,0.4310825,1.6163576,0.7270244,1.5370871,1.0623141,0.6769310,0.4329881,1.6122362,0.7299904,1.5343041,1.0604783,0.6764419,0.4338523,1.6034918,0.7581958,1.5328049,1.0589368,0.6786254,0.4392776,1.6284438,0.8161105,1.5821549,1.0999011,0.7220387,0.4755886,1.6625698,0.9114016,1.6234473,1.1268911,0.7544392,0.5085270,1.8416121,1.0328416,1.8628800,1.3353097,0.9577850,0.6725076,1.9929827,1.0518019,2.0677020,1.4814490,1.1082749,0.7594662,2.0887118,1.0309356,2.1977942,1.5193809,1.1486455,0.7404559,2.1885171,1.0371659,2.3176639,1.5696379,1.2154400,0.7735732,2.3312671,0.9690047,2.4950541,1.6805919,1.3457142,0.8338360,2.3979286,0.8568425,2.4909092,1.4514177,1.2165755,0.6963655,2.2733201,0.8688947,2.2653526,1.1900325,1.0353607,
+0.6572421,2.1975471,0.8997491,2.1145905,1.0629052,0.9375181,0.7011807,2.1191069,0.9246757,1.9965912,1.0130755,0.8979392,0.7462535,2.0893031,0.9341104,1.9298877,1.0045040,0.8989005,0.7898870,2.0423143,0.9414268,1.8612081,0.9845164,0.8754697,0.8087545,2.0462359,0.9481774,1.8482327,0.9820698,0.8773481,0.8277300,2.0049273,0.9506182,1.7918940,0.9741889,0.8719908,0.8352216,1.9909082,0.9526845,1.7725682,0.9661244,0.8590342,0.8428810,1.9675306,0.9543693,1.7537957,0.9598686,0.8503034,0.8484422)   #
+#
+stabsel4<-c(0.0628317,0.0478225,0.0638420,0.0562919,0.0523628,0.0469081,1.1347627,0.5714641,1.2389475,0.9211646,0.6702297,0.4607790,1.3994708,0.6565658,1.4473540,1.0365232,0.7158780,0.4870327,1.6094896,0.7505881,1.5871886,1.1351139,0.7677223,0.5191319,1.6930285,0.7924583,1.6540388,1.1815766,0.7973319,0.5440033,1.7114652,0.7970318,1.6692415,1.1901973,0.7988437,0.5428113,1.7203683,0.8116629,1.6796377,1.1998309,0.8094846,0.5548925,1.7521599,0.8674920,1.7204361,1.2396869,0.8511408,0.6021447,1.9225875,1.0095623,1.9344987,1.4404954,1.0504221,0.7837343,2.0531716,1.1103773,2.1109742,1.6026098,1.2180652,0.9484548,2.145764,1.137593,2.249952,1.718017,1.338998,1.040840,2.360577,1.206162,2.517722,1.927965,1.547347,1.204078,2.475572,1.163088,2.655563,1.988789,1.618080,1.211026,2.500784,1.101480,2.678189,1.941357,1.582998,1.140435,2.513057,1.034674,2.697021,1.905630,1.567821,1.072919,2.5952752,0.7958292,2.7119602,1.6478791,1.4450009,0.8823183,2.5814048,0.5863495,2.6434989,1.3610456,1.3045835,0.6645375,2.5396162,0.4841812,
+2.5455800,1.1312606,1.1779824,0.5225026,2.5169536,0.3748832,2.4927015,0.9805101,1.0970532,0.4243591,2.4969698,0.3368208,2.4423336,0.8785628,1.0202227,0.3938002,2.4685517,0.2889052,2.3949191,0.8013063,0.9647735,0.3448390,2.4443145,0.2840164,2.3444108,0.7335871,0.9051860,0.3164947,2.4304894,0.2586292,2.3182993,0.7011412,0.8834457,0.2991945,2.3973197,0.2618693,2.2623716,0.6983337,0.8733557,0.3070846,2.4154811,0.2336716,2.2861558,0.6949794,0.8774939,0.2861386)#
+#
+TD4<-c(0.02,0.01,0.01,0.1,0.03,0.03,0.49,0.42,0.1,0.03,0.18,0.54,0.51,0.1,0.04,2.17,0.71,0.65,0.1,0.03,2.30,0.74,0.66,0.1,0.05,2.34,0.76,0.63,0.1,0.05,2.33,0.77,0.66,0.1,0.06,2.33,0.83,0.77,0.12,0.12,2.36,1.13,1.01,0.19,0.35,2.33,1.49,1.31,0.28,0.58,2.35,1.68,1.54,0.6,0.79,2.33,1.82,1.74,0.92,1.16,2.34,1.95,1.90,1.19,1.41,2.40,2.19,1.98,1.38,1.57,2.41,2.27,2.17,1.69,1.68,2.64,2.55,2.54,2.09,2.24,2.75,2.67,2.83,2.28,2.58,2.85,2.80,2.92,2.41,2.72,2.93,2.83,2.89,2.63,2.87,3.04,3.04,3.04,2.84,2.92,3.01,3.13,3.06,2.94,2.93,3.05,3.14,3.08,3.02,2.93,3.06,3.10,3.09,3.08,2.96,3.09,3.13,3.13,3.10,2.96,3.12,3.17,3.15,3.12,2.95)  #
+#
+vsdstab4_075<-c(0.0342593,0.0236375,0.0353300,0.0304995,0.0279290,0.0241981,1.1047626,0.5414641,1.2089474,0.8911644,0.6402295,0.4307791,1.3594707,0.6165658,1.4073540,0.9965231,0.6758782,0.4470325,1.5794896,0.7205882,1.5571885,1.1051136,0.7377224,0.4891321,1.6426504,0.7490170,1.6014360,1.1307258,0.7484728,0.4983759,1.6538107,0.7503020,1.6067522,1.1297103,0.7409656,0.4896506,1.6681698,0.7688517,1.6206870,1.1423222,0.7539972,0.5033475,1.6671250,0.8154375,1.6237862,1.1522184,0.7717712,0.5335824,1.6919004,0.8845966,1.6644813,1.1910541,0.8148522,0.5825127,1.7169087,0.9640505,1.7020893,1.2192329,0.8572604,0.6293482,1.7661134,1.0796731,1.7581376,1.2741082,0.9351797,0.7156937,1.7885631,1.1895994,1.7850120,1.2820849,0.9595757,0.7682100,1.8760541,1.3010931,1.8928909,1.3626661,1.0647506,0.8775548,1.941847,1.377943,1.957552,1.388444,1.106135,0.910004,1.9738039,1.4286217,1.9842892,1.3914401,1.1224343,0.9437537,2.0721618,1.3501502,2.0404094,1.2467389,1.0373095,0.8678439,2.0904990,1.2438717,1.9869953,1.1301395,0.9800847,0.
+9097796,2.1309083,1.1359591,2.0056962,1.0929753,1.0033038,0.9012721,2.1608714,1.0195883,2.0101945,1.0305242,0.9910468,0.8520818,2.1415368,0.9837423,1.9680839,0.9790482,0.9372023,0.8336749,2.1454681,0.9073787,1.9634806,0.9519826,0.9416476,0.7894983,2.1463620,0.9345707,1.9412606,0.9599966,0.9402325,0.8304544,2.1430386,0.8986020,1.9214113,0.9122504,0.9086679,0.7985844,2.1105669,0.9309331,1.8660840,0.9284026,0.9162636,0.8354031,2.1065591,0.8938914,1.8750059,0.9029087,0.9008160,0.8052801)#
+#
+selectstab4_075<-c(3.01,3,3,3,3.02,3.03,3,3.01,2.96,2.9,2.82,2.73,2.56,2.42,2.29,1.71,1.43,1.25,1.09,1.04,0.95,0.97,0.93,0.96,0.92)#
+#
+TD4_075<-c(0.01,0,0,0,0.02,0.03,0.04,0.09,0.14,0.3,0.46,0.61,0.84,1.04,1.19,1.87,2.27,2.49,2.69,2.78,2.91,3.03,3.05,3.12,3.14)#
+select4<-matrix(select4,ncol=5,byrow=T) #
+colnames(select4)<-c("Lasso","Scad","MCP","Forward","stabsel") #
+select4<-as.data.frame(select4)   #
+#
+lasso4<-matrix(lasso4,ncol=6,byrow=T) #
+colnames(lasso4)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+lasso4<-as.data.frame(lasso4)  #
+#
+scad4<-matrix(scad4,ncol=6,byrow=T) #
+colnames(scad4)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+scad4<-as.data.frame(scad4)   #
+#
+mcp4<-matrix(mcp4,ncol=6,byrow=T) #
+colnames(mcp4)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+mcp4<-as.data.frame(mcp4)  #
+#
+forward4<-matrix(forward4,ncol=6,byrow=T) #
+colnames(forward4)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+forward4<-as.data.frame(forward4)  #
+#
+stabsel4_075<-matrix(vsdstab4_075,ncol=6,byrow=T) #
+colnames(stabsel4_075)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+stabsel4_075<-as.data.frame(stabsel4_075)  #
+TD4<-matrix(TD4,ncol=5,byrow=T) #
+colnames(TD4)<-c("Lasso","SCAD","MCP","forward","stabsel") #
+TD4<-as.data.frame(TD4)      #
+#
+pdf("vsd4.pdf",width=7,height=5)  #
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(3,0,1,0))#
+#
+ma<-max(lasso4,TD4[,1])  #
+mi<-min(lasso4,TD4[,1])  #
+plot(index,lasso4[,2],type="b",xlab="sigma",col=1,lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Lasso VSD of Example 3",xaxt="n")  #
+lines(index,lasso4[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,lasso4[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD4[,1],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(scad4,TD4[,2])  #
+mi<-min(scad4,TD4[,2])  #
+plot(index,scad4[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="SCAD VSD of Example 3",xaxt="n")  #
+lines(index,scad4[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,scad4[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD4[,2],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)    #
+#
+ma<-max(mcp4,TD4[,3])  #
+mi<-min(mcp4,TD4[,3])  #
+plot(index,mcp4[,2],type="b",col=1,lty=1,xlab="sigma",pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="MCP VSD of Example 3",xaxt="n")  #
+lines(index,mcp4[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,mcp4[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD4[,3],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+ma<-max(forward4,TD4[,4])  #
+mi<-min(forward4,TD4[,4])  #
+plot(index,forward4[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="FS VSD of Example 3",xaxt="n")  #
+lines(index,forward4[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,forward4[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD4[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma) #
+#
+ma<-max(stabsel4_075[,c(2,4,6)],TD4_075)  #
+mi<-min(stabsel4_075[,c(2,4,6)],TD4_075)  #
+plot(index,stabsel4_075[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Stability Selection VSD of Example 3",xaxt="n")  #
+lines(index,stabsel4_075[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,stabsel4_075[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD4_075,type="b",pch=4,cex=0.8,col=4,xaxt="n") #
+axis(1,index,sigma)#
+#
+legend(36,2,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=1,cex=1.1)#
+dev.off()#
+#
+select5<-c(11.07,8.86,8.90,11.49,11.01,11.08,8.86,8.91,11.49,11.04,11.14,8.86,8.91,11.49,11.07,11.76,8.86,8.87,11.49,11.23,17.67,8.85,8.85,11.49,11.16,29.26,8.85,8.80,11.28,10.05,35.92,8.78,8.77,10.62,10.06,37.45,8.84,8.80,9.65,9.35,35.69,9.96,9.54,8.81,8.74,34.09,11.92,10.88,8.14,8.23,32.07,14.13,11.71,7.39,7.82,31.55,15.86,11.98,6.79,7.4,30.48,17.00,11.92,6.42,7.03,29.49,17.85,11.62,6.1,6.77,28.90,18.15,11.31,5.81,6.65,24.44,15.16,9.68,4.33,5.87,22.32,15.13,9.24,3.55,5.23,19.53,14.82,8.35,2.88,4.51,17.63,13.93,7.94,2.14,4.13,15.89,13.89,7.38,1.58,3.69,14.26,13.31,6.97,1.32,3.39,12.96,11.54,6.58,1.21,3.18,11.09,10.48,5.81,1.13,2.98,9.35,9.55,5.13,1.06,2.65,7.94,8.64,4.62,1.03,2.4)  #
+#
+lasso5<-c(0,0,0,0,0,0,0,0,0,0,0,0,0.0290109,0.0556387,0.0263899,0.0431940,0.0432236,0.0541774,0.2117968,0.5226160,0.1316389,0.2892619,0.2925688,0.4553892,1.6783181,6.1519659,0.5921716,2.8740148,3.3287006,5.4146458,5.370766,18.687889,1.294530,10.662955,13.073518,16.894569,8.426407,26.228574,5.394629,14.098618,19.219774,24.565980,12.46100,28.66744,23.10878,17.56070,21.98194,27.33156,13.45015,27.55155,38.25386,22.82968,21.74217,26.02227,13.96350,26.63789,49.88325,31.91151,21.11512,24.47285,14.44716,25.34953,59.19907,44.22530,18.84807,22.63794,15.17754,25.37042,64.69014,48.36657,17.89999,22.63138,15.94786,24.84450,68.44105,52.47410,17.09204,22.03679,16.68419,24.18212,70.41285,53.97531,16.43295,21.41987,17.59627,23.97950,71.70577,54.19423,16.17760,21.20543,29.24640,20.45534,73.83840,45.61233,25.69706,18.17294,39.35348,19.38520,66.73827,48.27960,40.23727,17.03642,47.62920,17.41868,61.67330,55.94640,52.06993,15.47135,52.82483,16.11158,65.98512,64.04405,61.31528,16.61055,56.39501,14.87901,71.62306,70.58100,68.78472
+,21.33610,58.46477,13.55285,76.68603,76.02222,74.59209,32.54001,60.35312,12.47583,79.68267,79.52734,78.62633,40.23025,61.89843,10.74337,83.41761,83.21215,82.47954,48.22448,62.247663,9.125554,86.070465,85.908499,85.398826,53.383587,62.861782,7.738079,88.944457,88.803042,88.332827,52.987795)  #
+#
+scad5<-c(2.21,2.21,2.21,2.21,2.21,2.21,2.22,2.22,2.22,2.22,2.22,2.22,2.250989,2.224361,2.253610,2.236806,2.236776,2.225823,2.688202,2.377383,2.768362,2.610738,2.607431,2.444611,7.161923,2.687912,8.238310,5.958521,5.504022,3.425022,15.291317,1.743409,19.739473,9.762106,7.349234,3.535092,21.777716,0.986452,31.689845,13.781373,8.063687,2.593417,27.1231157,0.7347246,50.8702657,19.0323986,6.7607689,1.3882343,27.239908,2.016865,62.888938,28.950078,4.632110,1.139352,25.260806,4.517988,70.874604,39.625508,2.940199,2.530620,22.453775,7.437117,76.010483,53.108562,3.212066,4.868144,19.761014,9.691715,78.916822,56.167778,4.449494,7.036789,17.825961,11.371890,80.525257,59.525560,5.676485,8.755763,16.897788,12.547151,80.945817,60.113733,6.888523,10.003666,17.049128,13.234848,81.524537,59.440964,8.383289,10.652840,28.334681,11.179269,82.020955,46.069330,22.720409,9.042475,38.572262,12.179583,70.644395,47.666031,38.637226,9.887642,47.06854,12.70382,62.04354,55.49364,51.50499,10.77346,52.46168,12.41121,65.74683,63.64064,60.
+95105,12.91046,56.24792,12.87466,71.73184,70.56299,68.76736,19.63819,58.06663,12.60252,76.35844,75.63594,74.18016,31.42294,60.37814,11.06554,80.02376,79.85492,78.92889,39.68163,61.83315,10.13487,83.57963,83.34402,82.57201,49.34826,62.135249,9.330211,85.769430,85.622111,85.123074,53.878793,62.682572,8.428793,88.716971,88.592384,88.194673,54.650340)  #
+#
+mcp5<-c(2.17,2.17,2.17,2.17,2.17,2.17,2.17,2.17,2.17,2.17,2.17,2.17,2.200989,2.174361,2.203610,2.186806,2.186776,2.175823,2.678202,2.367383,2.758362,2.600738,2.597431,2.434611,7.161923,2.687841,8.238310,5.958521,5.504022,3.425022,15.341316,1.790591,19.789473,9.812107,7.399234,3.585092,21.7877160,0.9914191,31.6998452,13.7913731,8.0736869,2.6034123,27.1624770,0.6630685,50.9102664,19.0689444,6.7828204,1.3585569,27.591550,1.634173,63.288936,29.196499,4.670449,0.868085,26.078424,3.502741,71.854643,40.232790,2.915086,1.634302,24.220608,5.062545,78.294763,54.807824,3.148223,2.769509,22.379371,5.856756,82.496279,58.832204,4.145530,3.494933,21.031334,6.320972,85.048071,63.046012,5.427463,4.049993,20.632709,6.350189,86.442580,64.689902,6.815717,4.299492,20.758359,6.439276,87.532636,64.359183,8.292739,4.304023,30.401329,5.734774,86.840333,48.325023,23.679124,3.876029,39.817914,6.317819,73.606220,48.705848,39.319696,4.295373,48.025358,6.251777,63.377492,56.252340,52.150482,4.559050,53.203698,6.424013,66.694158,64.37381
+3,61.560436,7.513404,56.932720,6.383837,72.764245,71.560036,69.680738,14.429992,58.903939,6.282902,77.621354,76.876657,75.425989,27.473079,60.910136,6.124694,80.751929,80.572770,79.593498,37.459526,62.681306,5.511681,84.463740,84.280980,83.536579,47.675550,62.967575,4.954759,86.834841,86.674210,86.168150,52.779869,63.363596,4.420962,89.543527,89.384766,88.934928,52.959947)  #
+#
+forward5<-c(0.5235124,0.4930207,0.5158167,0.4978137,0.4977922,0.4918902,0.5274510,0.4933763,0.5194520,0.4989418,0.4989172,0.4921647,0.5620501,0.4982253,0.5557666,0.5165102,0.5164538,0.4981672,0.9206385,0.5428007,0.9874498,0.7692016,0.7656386,0.5824455,4.1506686,0.7108981,5.1391975,2.4707179,2.3170993,1.1488350,11.187221,1.059795,12.977170,8.614692,7.291313,2.128505,18.657559,1.081692,21.013834,17.234817,14.609432,2.702278,30.891941,1.113199,35.195813,34.130791,29.179617,2.675967,40.507073,1.087863,48.154769,47.595961,43.510974,3.885477,47.861868,1.178721,59.298984,58.936669,55.423294,8.090461,51.933848,1.140114,67.443494,67.246103,65.510719,14.748711,54.656026,1.260547,73.279171,73.090599,71.517004,21.500160,56.330965,1.387194,78.792541,78.630359,77.945246,33.983728,57.498557,1.314698,82.818323,82.670155,82.209351,47.717029,58.27732,1.29093,85.72647,85.66314,85.09260,63.70890,59.513543,0.979781,93.983655,93.947140,93.757394,81.913018,59.99942,1.10695,95.38642,95.30235,94.91670,85.61054,60.912334,1.139783,96
+.188925,96.148872,95.810935,76.289286,60.740572,1.034091,97.235240,97.191623,96.853843,86.833154,61.4948825,0.9105173,97.5613784,97.5307829,97.2782493,82.2149974,62.2185545,0.9377645,97.8687278,97.8183025,97.4132682,79.2600698,62.0167602,0.9879307,97.9295163,97.8854491,97.5635596,79.1040128,62.822433,0.984057,98.048925,97.956329,97.528505,80.377530,62.8042261,0.9402235,98.3766723,98.3181374,97.8776212,80.7374831,62.3960062,0.9874444,98.3750008,98.3284196,98.0650413,77.7573073)   #
+#
+stabsel5<-c(0.1,0.1,0.1,0.1,0.1,0.1,0.12,0.12,0.12,0.12,0.12,0.12,0.1805309,0.1544054,0.1836101,0.1668060,0.1667764,0.1558226,0.5800467,0.3539266,0.6330781,0.5026030,0.4998807,0.3764958,5.018741,1.044775,6.073925,3.829268,3.384618,1.484350,13.675448,1.266187,18.079481,8.125259,5.743807,2.160116,20.778343,1.118007,30.450563,12.673320,7.006748,2.000187,26.794390,1.273875,50.360267,18.692874,6.515651,1.667685,28.387187,1.531897,64.088933,30.144068,5.828302,2.024559,28.700057,1.742615,74.504639,42.786443,5.456487,2.519504,28.006472,1.870587,81.847938,58.252218,6.566878,2.874641,26.846620,1.898654,86.409218,61.575335,8.219421,2.855821,25.909423,1.852148,88.954841,64.498152,9.758336,2.806648,25.600265,1.851431,90.101154,66.042394,10.897032,2.836504,25.680885,1.980595,90.595014,64.929377,12.059542,2.694794,33.495793,2.324602,87.856871,49.176203,26.002746,2.444710,42.904963,2.633647,72.560724,50.336537,41.155008,2.513927,50.523184,2.727935,64.217520,57.661073,53.846628,2.932519,55.875942,2.916728,67.781853,65.84991
+0,63.034517,5.971914,59.556281,2.883579,73.645409,72.769960,70.906235,13.218863,61.291760,2.855891,78.828593,78.176634,76.701782,26.477848,63.275958,2.835012,82.155311,81.996269,81.048168,36.770998,64.498613,2.754624,85.306788,85.052633,84.359946,44.774470,64.94087,2.50085,87.61153,87.44587,86.95011,52.51453,65.371328,2.298931,90.347950,90.216305,89.733929,52.095532)#
+#
+TD5<-c(0.07,2.14,2.10,0.49,0.03,0.08,2.14,2.09,0.49,0.06,0.14,2.14,2.09,0.49,0.09,0.76,2.14,2.13,0.49,0.23,6.67,2.15,2.15,0.49,0.56,18.32,2.15,2.20,0.62,1.33,25.12,2.22,2.23,1.24,1.9,27.57,2.42,2.34,2.13,2.73,26.85,3.68,3.30,2.79,3.62,26.17,5.72,4.76,3.36,4.31,24.93,8.13,6.19,4.01,4.82,24.89,10.28,7.24,4.55,5.26,24.54,12.06,7.80,5.02,5.63,24.17,13.43,8.28,5.3,5.99,24.24,14.27,8.69,5.59,6.29,21.96,13.64,9.34,6.89,7.59,21.66,15.03,10.50,7.61,8.33,20.15,15.94,10.71,8.2,8.99,19.13,15.97,11.22,8.96,9.49,18.31,16.67,11.86,9.44,10.01,17.78,17.03,12.21,9.74,10.31,17.40,16.20,12.44,9.83,10.52,16.43,15.92,12.41,10.07,10.7,15.45,15.87,12.65,10.22,11.19,14.47,15.72,12.66,10.37,11.3)  #
+#
+vsdstab5_075<-c(1.8,1.8,1.8,1.8,1.8,1.8,2.45,2.45,2.45,2.45,2.45,2.45,3.261364,3.260355,3.263133,3.261776,3.261773,3.260631,4.655610,4.780861,4.622802,4.676629,4.677339,4.742780,6.305350,5.825057,6.705454,5.819517,5.654859,5.531199,11.694548,6.892053,14.849340,8.060544,6.732240,5.958277,17.153459,7.243074,25.404733,11.389463,7.524052,6.405878,22.484346,7.925433,43.927492,16.965588,7.420516,6.982463,23.632345,8.619495,56.973480,27.461126,7.845965,7.724684,24.109371,8.892669,67.002995,39.327468,8.034235,7.845458,23.376655,9.557435,73.878567,53.028717,8.863146,8.333477,22.716999,9.889830,78.404289,56.369182,9.949026,8.622307,21.925306,10.150416,80.635599,59.011917,11.104817,8.823573,21.92132,10.18448,82.04325,60.47117,11.74721,8.97242,22.245868,10.391016,82.429826,59.308851,12.655236,8.971381,30.520310,11.115157,79.908099,45.252521,24.793513,9.363974,39.761695,11.647402,66.695246,47.114384,38.718032,9.652374,47.18929,12.49079,60.13711,54.26538,50.80127,10.75309,52.33039,12.76974,63.79321,62.07736,59.42511,13.3
+6317,55.86618,13.03808,69.49626,68.71757,66.99680,19.63251,57.23068,13.23821,74.20238,73.64269,72.26341,31.16476,59.68420,13.26516,78.22609,78.05431,77.16454,40.53365,60.74933,12.94971,81.10669,80.82866,80.13357,46.51398,60.70883,12.97974,82.99082,82.83177,82.38601,53.56049,61.12279,12.94955,85.49878,85.37082,84.91331,53.39184)#
+#
+selectstab5_075<-c(12.87,13.53,14.34,15.9,17.01,17.23,16.78,16.61,16.57,16.15,16.16,15.99,15.87,15.52,15.39,14.84,14.37,14.36,14.04,13.89,13.8,13.63,13.19,13.14,13.06)#
+#
+TD5_075<-c(1.87,2.53,3.34,4.9,6.05,6.79,7.24,8.49,9.51,9.99,10.88,11.55,12.07,12.36,12.73,14.12,14.91,15.82,16.44,17.17,17.62,18.11,18.33,18.56,18.98)#
+select5<-matrix(select5,ncol=5,byrow=T) #
+colnames(select5)<-c("Lasso","Scad","MCP","Forward","stabsel") #
+select5<-as.data.frame(select5)  #
+#
+lasso5<-matrix(lasso5,ncol=6,byrow=T) #
+colnames(lasso5)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+lasso5<-as.data.frame(lasso5)  #
+#
+scad5<-matrix(scad5,ncol=6,byrow=T) #
+colnames(scad5)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+scad5<-as.data.frame(scad5)   #
+#
+mcp5<-matrix(mcp5,ncol=6,byrow=T) #
+colnames(mcp5)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+mcp5<-as.data.frame(mcp5)  #
+#
+forward5<-matrix(forward5,ncol=6,byrow=T) #
+colnames(forward5)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+forward5<-as.data.frame(forward5)  #
+#
+stabsel5_075<-matrix(vsdstab5_075,ncol=6,byrow=T) #
+colnames(stabsel5_075)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+stabsel5_075<-as.data.frame(stabsel5_075)#
+#
+TD5<-matrix(TD5,ncol=5,byrow=T) #
+colnames(TD5)<-c("Lasso","SCAD","MCP","forward","stabsel") #
+TD5<-as.data.frame(TD5)     #
+#
+pdf("vsd5.pdf",width=7,height=5)  #
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(3,0,1,0))  #
+#
+ma<-max(lasso5,TD5[,1])  #
+mi<-min(lasso5,TD5[,1])  #
+plot(index,lasso5[,2],type="b",xlab="sigma",col=1,lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Lasso VSD of Example 4",xaxt="n")  #
+lines(index,lasso5[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,lasso5[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD5[,1],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(scad5,TD5[,2])  #
+mi<-min(scad5,TD5[,2])  #
+plot(index,scad5[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="SCAD VSD of Example 4",xaxt="n")  #
+lines(index,scad5[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,scad5[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD5[,2],type="b",pch=4,cex=0.8,col=4,xaxt="n")   #
+axis(1,index,sigma)    #
+#
+ma<-max(mcp5,TD5[,3])  #
+mi<-min(mcp5,TD5[,3])  #
+#
+plot(index,mcp5[,2],type="b",col=1,lty=1,xlab="sigma",pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="MCP VSD of Example 4",xaxt="n")  #
+lines(index,mcp5[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,mcp5[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD5[,3],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(forward5,TD5[,4])  #
+mi<-min(forward5,TD5[,4])  #
+plot(index,forward5[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="FS VSD of Example 4",xaxt="n")  #
+lines(index,forward5[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,forward5[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD5[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)#
+#
+ma<-max(stabsel5_075[,c(2,4,6)],TD5_075)  #
+mi<-min(stabsel5_075[,c(2,4,6)],TD5_075)  #
+plot(index,stabsel5_075[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Stability Selection VSD of Example 4",xaxt="n")  #
+lines(index,stabsel5_075[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,stabsel5_075[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD5_075,type="b",pch=4,cex=0.8,col=4,xaxt="n") #
+axis(1,index,sigma)#
+legend(36,50,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=1,cex=1.1)#
+dev.off()#
+select7<-c(3.01,3.00,3.00,3.34,3.03,3.03,3.00,3.00,3.34,3.04,3.25,3.00,3.00,3.34,3.06,9.29,3.00,3.00,3.34,3.1,10.83,3.21,3.12,3.34,3.16,11.10,3.83,3.52,3.34,3.15,11.15,4.23,3.83,3.34,3.16,11.21,5.58,4.30,3.31,3.2,11.51,6.21,4.46,3.06,3.14,11.11,6.89,4.43,2.77,2.93,10.85,6.50,4.52,2.17,2.61,10.74,5.80,4.08,1.83,2.4,10.66,5.98,3.82,1.59,2.02,10.35,6.19,3.77,1.44,1.8,9.46,5.81,3.38,1.26,1.58,7.00,4.81,2.92,1.29,0.96,5.55,3.94,2.14,1,0.7,4.48,3.10,1.88,1,0.6,4.24,2.52,1.56,1,0.5,4.14,2.25,1.26,1,0.5,3.65,2.11,1.16,1,0.46,3.43,1.88,1.18,1,0.45,3.28,1.86,1.20,1,0.48,3.17,2.14,1.14,1,0.5,3.12,2.08,1.13,1,0.49)   #
+#
+lasso7<-c(0.0062737,0.0097426,0.0072216,0.0092825,0.0087116,0.0097114,0.0169335,0.0287310,0.0160188,0.0251382,0.0220775,0.0278739,0.1335119,0.2320872,0.1217863,0.1746847,0.1503986,0.2068843,3.666721,6.136662,3.148007,4.130351,3.667088,5.635113,5.784357,7.650522,10.582336,6.047138,5.708343,7.127382,6.493779,7.973650,15.168463,8.182889,7.055821,7.265050,7.014202,8.335836,16.761268,9.502038,7.807636,7.187503,7.746678,8.586645,16.701080,9.902621,9.128979,7.260440,9.135608,9.172971,16.343984,12.693627,11.672861,7.540439,10.058947,9.120580,17.511310,14.459843,13.685652,7.916249,11.061654,9.282152,19.280143,17.011035,16.281962,10.152402,11.776779,9.531075,20.602111,19.476760,18.764725,11.423610,12.184174,9.745902,21.665412,20.782075,20.162366,12.478727,12.429498,9.671554,22.992500,22.388559,21.464050,13.312868,12.655896,8.919284,24.021456,23.470910,22.410072,13.896469,13.167959,6.827541,26.518260,26.111867,25.483766,15.705089,13.550847,5.473756,27.337204,26.503169,25.739481,14.648842,14.074556,4.438664,27.569612,2
+6.914355,26.000422,12.829101,14.08088,4.20066,27.66031,26.85546,25.91373,11.75144,14.084868,4.107958,28.005783,27.298543,26.528892,12.200167,14.047451,3.625795,27.927713,27.361483,26.857363,12.426677,14.132153,3.411959,27.971246,27.384778,26.455042,12.235238,14.16868,3.26747,28.03605,27.19458,26.39630,12.40075,14.423928,3.142962,28.191138,27.330585,26.500180,13.248549,14.32781,3.09811,28.14368,27.25105,26.53006,12.57828)    #
+#
+scad7<-c(0.0037263,0.0002574,0.0027784,0.0007175,0.0012884,0.0002886,0.0130665,0.0012690,0.0139812,0.0048618,0.0079225,0.0021261,0.1531905,0.0200044,0.1730583,0.0840205,0.1128726,0.0471195,4.9168798,0.1626115,8.5303776,2.7728255,3.6476521,0.7098683,6.8352486,0.3252415,17.5057248,6.7249587,6.5100271,0.7142044,6.5968606,0.9575667,21.6453131,10.0022770,7.4759513,1.0587898,6.418403,1.590029,22.652336,10.991240,7.632877,1.402354,6.448710,3.026304,20.995409,10.406562,7.921835,2.910198,7.801565,3.911937,18.781079,12.666730,11.046336,4.076849,8.825285,4.936708,18.167510,14.168283,13.039857,5.334305,10.154535,4.958006,19.695976,16.849156,15.784336,7.814636,11.258234,4.644372,21.221970,19.936312,19.115136,9.773364,11.737682,5.090729,22.572852,21.484156,20.670046,11.077131,11.913118,5.535279,23.766205,23.059536,21.985827,12.786077,12.133440,5.271486,24.515849,23.880450,22.735992,13.543197,12.827542,4.641212,26.858156,26.456633,25.793110,16.008796,13.25610,3.85719,27.30627,26.48750,25.72980,14.75063,13.786816,3.054641,
+27.577937,26.926258,26.020537,12.981043,13.621791,2.483197,27.864249,26.980789,25.979710,11.740525,13.780970,2.228505,28.125353,27.407050,26.613807,12.276773,13.971633,2.090893,28.325339,27.738566,27.211747,12.619865,13.988713,1.858969,28.320293,27.711164,26.759178,12.426416,14.022571,1.849897,28.343502,27.453526,26.661018,12.555364,14.301617,2.120059,28.310761,27.419285,26.592214,13.392646,14.26862,2.05814,28.14706,27.23062,26.51393,12.60621)    #
+#
+mcp7<-c(0.0037263,0.0002574,0.0027784,0.0007175,0.0012884,0.0002886,0.0130665,0.0012690,0.0139812,0.0048618,0.0079225,0.0021261,0.1531905,0.0200044,0.1730583,0.0840205,0.1128726,0.0471195,4.9168798,0.1626115,8.5303776,2.7728255,3.6476521,0.7098683,6.8975333,0.2666763,17.5956735,6.7664145,6.5610895,0.7101160,6.7580573,0.6873694,21.9440289,10.1718278,7.6359273,0.9873560,6.586268,1.218777,23.053119,11.246330,7.830171,1.227895,6.884781,1.796464,22.002252,10.748497,8.272110,2.226400,8.348384,2.244026,19.815441,13.074897,11.432385,3.358566,9.473874,2.571477,19.307895,14.712639,13.517945,4.264517,10.448533,3.042194,20.102957,17.061837,15.969911,7.174148,11.288280,2.964316,21.322260,19.892893,19.017209,9.063614,11.930540,2.973192,22.698904,21.581151,20.765692,10.310428,12.071598,3.167019,23.894503,23.127363,21.985333,11.920163,12.611160,2.869835,25.214085,24.554128,23.333153,13.212480,13.02694,2.76203,27.25375,26.81657,26.13860,15.63701,13.731105,2.074831,27.919076,27.056741,26.237094,14.510379,14.064037,1.844498,2
+7.975911,27.285456,26.337408,12.675626,13.924781,1.530234,28.186823,27.296435,26.276623,11.364896,14.110309,1.247785,28.393699,27.667471,26.869183,11.905579,14.272818,1.146195,28.589571,28.002481,27.474608,12.304743,14.203413,1.168475,28.498756,27.889277,26.939510,12.222226,14.211621,1.196387,28.518071,27.628366,26.834322,12.358019,14.503912,1.139429,28.660096,27.763773,26.916659,13.447456,14.426793,1.116185,28.524108,27.603392,26.878273,12.7447489)    #
+#
+forward7<-c(0.3438556,0.3402691,0.3427784,0.3407175,0.3412884,0.3402886,0.4287016,0.3492548,0.4344598,0.3778297,0.3976642,0.3574222,0.9689104,0.4291056,1.1267668,0.8071309,0.9230758,0.6172463,5.5238089,0.6072582,7.2450050,4.5569810,5.1576488,1.9212803,10.076537,0.668249,16.430998,14.199813,13.466583,4.812159,11.4603845,0.7802648,22.0295078,20.8817089,19.4435350,8.5488222,11.6578043,0.9710881,24.4571542,23.5011665,22.1735083,12.4664817,11.486718,1.179445,25.897191,25.465442,23.968492,14.275388,11.78721,1.16938,26.32593,25.68961,24.11249,14.96260,11.890094,1.158899,26.645421,26.043494,24.767636,15.845382,12.4026250,0.9557586,27.2913219,26.8605235,25.7040732,16.2189343,12.6110779,0.9211963,27.5200976,26.7341557,25.6294665,16.0710549,12.958568,0.913981,28.016300,27.550507,26.046575,16.621491,13.1357630,0.9212911,28.1598011,27.6160943,26.6060210,16.9759337,13.4803932,0.9005175,28.2429645,27.6420356,26.3710239,17.1777391,13.54907,1.17092,28.53336,27.96710,26.55940,15.43284,13.4623108,0.9449879,28.5759289,27.75877
+00,26.6841660,14.1394093,13.632912,0.972496,28.757182,27.882189,26.583963,12.848743,13.7490396,0.9743655,28.6007280,27.6204535,26.6570228,11.8455181,13.7965086,0.9756185,28.7068253,28.0873784,27.0602518,12.0215935,13.7217181,0.9855914,28.6135300,27.5942691,26.7385336,12.6796831,13.6504622,0.9750439,28.7022767,28.1357458,26.7826810,11.6299651,13.7789058,0.9866572,28.6731690,27.9693272,27.2303084,11.6931809,13.6038077,0.9831538,28.6667099,27.9346996,27.0781197,11.2417675,13.6632948,0.9845255,28.7844448,27.9481658,27.1505923,12.0405917)   #
+#
+stabsel7<-c(0.0261162,0.0297239,0.0272216,0.0292825,0.0287116,0.0297114,0.0467833,0.0408997,0.0484244,0.0434268,0.0453457,0.0415489,0.1835616,0.0762420,0.2020179,0.1315121,0.1536882,0.1012695,4.8392766,0.2529932,8.4305045,2.7076447,3.5579034,0.7399012,6.8528713,0.3528519,17.4619777,6.7833450,6.5671195,0.8566652,6.7867686,0.4307897,21.8018006,9.9127947,7.7408031,1.1373328,6.7648296,0.4897324,22.6314740,11.1359514,8.1198288,1.3748621,7.5799578,0.6929788,21.9375496,10.9184994,8.7464148,2.1797048,9.295473,1.035694,19.538006,12.786176,11.497361,3.296219,10.780346,1.314921,19.607857,15.153011,14.177226,4.574133,11.866602,1.399431,20.403467,17.605983,16.789335,7.153212,12.716874,1.524622,21.728449,20.400441,19.641579,9.367800,13.330404,1.408486,23.232291,22.138818,21.294743,10.336498,13.786329,1.329273,24.551022,23.783758,22.717913,11.770966,13.968694,1.222469,25.422661,24.394899,23.283041,12.799352,14.5361307,0.8869773,27.2272750,26.6427201,25.7149796,14.5210985,14.9300550,0.6865895,27.6810843,26.6503568,25.59653
+49,12.7496520,14.9437302,0.5973831,27.6040261,26.5382598,25.5894052,10.9154696,14.9101960,0.4981759,27.5327534,26.1865257,24.9944070,9.3039113,15.0581432,0.4994411,27.7427494,26.8080052,25.9352624,11.1086648,15.1889726,0.4614966,27.8841902,27.0773970,26.3595868,10.5921335,15.0713492,0.4503371,27.8802170,26.9513383,25.9010610,10.8076741,14.8907385,0.4803123,27.7578199,26.3669775,25.2523853,10.6831235,15.0270243,0.5009731,27.7487761,26.7144535,25.6690047,10.6809300,15.0264465,0.4907703,27.6359619,26.5708420,25.6618839,11.0241859)#
+#
+TD7<-c(0.01,0.00,0.00,0.34,0.03,0.03,0.00,0.00,0.34,0.04,0.25,0.00,0.00,0.34,0.06,6.29,0.00,0.00,0.34,0.1,7.83,0.21,0.12,0.34,0.16,8.10,0.83,0.52,0.34,0.15,8.15,1.23,0.83,0.34,0.18,8.21,2.60,1.32,0.39,0.24,8.51,3.35,1.72,0.52,0.42,8.13,4.39,2.09,0.85,0.63,7.95,4.20,2.46,0.99,0.95,8.06,3.88,2.56,1.31,1.16,8.20,4.36,2.60,1.55,1.62,8.23,4.77,2.93,1.72,1.78,7.68,4.65,2.84,1.84,1.92,6.60,4.85,3.56,2.57,2.66,6.33,4.94,3.72,2.82,2.98,5.98,4.86,3.96,3,3.16,6.14,4.58,3.94,3.2,3.24,6.20,4.51,3.92,3.44,3.34,5.81,4.53,3.92,3.56,3.34,5.73,4.48,3.96,3.6,3.33,5.62,4.52,3.98,3.76,3.36,5.65,4.78,3.94,3.78,3.38,5.68,4.78,3.95,3.78,3.37)   #
+#
+vsdstab7_075<-c(0.9161162,0.9197239,0.9172216,0.9192825,0.9187116,0.9197114,1.265449,1.278548,1.266019,1.275138,1.272077,1.277874,1.555429,1.548571,1.554967,1.551509,1.547719,1.552119,4.714148,1.848442,7.538495,3.072141,3.610801,1.913462,6.400228,1.953945,16.010902,6.547109,6.219235,2.055925,6.375316,2.076062,20.188558,9.410837,7.380849,2.333338,6.495212,2.162906,21.065806,10.567763,7.809079,2.511813,7.315425,2.488914,20.499401,10.430041,8.496203,3.168445,8.867224,3.105229,18.242460,12.222931,11.032851,4.255890,10.088599,3.486680,18.303277,14.313783,13.348675,5.258824,11.022907,3.833613,19.171920,16.643971,15.854781,7.579954,11.788514,4.330560,20.412082,19.230886,18.508516,9.624867,12.068822,4.577941,21.827163,20.799500,19.985361,10.370378,12.528653,4.615069,23.182830,22.479443,21.468215,11.812546,12.71123,4.53812,23.95552,23.00358,21.93608,12.78524,13.09063,4.42764,25.62640,25.05748,24.15290,14.55324,13.397334,4.135693,25.904618,24.971680,23.918215,12.937271,13.541411,4.205671,25.986509,25.017172,24.076575
+,11.902413,13.455426,4.063549,25.548558,24.440813,23.253488,10.462831,13.588048,3.869486,26.004924,25.151629,24.293795,11.889334,13.707541,3.881215,26.221263,25.491638,24.765922,11.390501,13.672271,3.871283,26.227437,25.390270,24.333305,11.751934,13.504591,3.871795,25.887247,24.618792,23.517296,11.346321,13.698346,3.792833,26.108320,25.178044,24.162204,11.437086,13.682687,3.853629,26.026164,25.055398,24.119745,11.722005)#
+#
+selectstab7_075<-c(3.92,4.28,4.55,4.85,4.94,5.01,5.05,5.17,5.39,5.3,5.22,5.38,5.36,5.2,4.99,4.56,4.19,4.24,4.09,3.89,3.9,3.89,3.89,3.81,3.87)#
+#
+TD7_075<-c(0.92,1.28,1.55,1.85,1.94,2.01,2.05,2.19,2.41,2.4,2.64,3.02,3.22,3.46,3.61,4.8,5.23,5.72,5.89,5.99,6.1,6.13,6.23,6.15,6.29)#
+#
+select7<-matrix(select7,ncol=5,byrow=T) #
+colnames(select7)<-c("Lasso","Scad","MCP","Forward","stabsel") #
+select7<-as.data.frame(select7)   #
+#
+lasso7<-matrix(lasso7,ncol=6,byrow=T) #
+colnames(lasso7)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+lasso7<-as.data.frame(lasso7)  #
+#
+scad7<-matrix(scad7,ncol=6,byrow=T) #
+colnames(scad7)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+scad7<-as.data.frame(scad7)   #
+#
+mcp7<-matrix(mcp7,ncol=6,byrow=T) #
+colnames(mcp7)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+mcp7<-as.data.frame(mcp7)  #
+#
+forward7<-matrix(forward7,ncol=6,byrow=T) #
+colnames(forward7)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+forward7<-as.data.frame(forward7)  #
+#
+TD7<-matrix(TD7,ncol=5,byrow=T) #
+colnames(TD7)<-c("Lasso","SCAD","MCP","forward","stabsel") #
+TD7<-as.data.frame(TD7)    #
+#
+stabsel7_075<-matrix(vsdstab7_075,ncol=6,byrow=T) #
+colnames(stabsel7_075)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+stabsel7_075<-as.data.frame(stabsel7_075)#
+#
+pdf("vsd7.pdf",width=7,height=5)  #
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(3,0,1,0))  #
+#
+ma<-max(lasso7,TD7[,1])  #
+mi<-min(lasso7,TD7[,1])  #
+plot(index,lasso7[,2],type="b",xlab="sigma",col=1,lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Lasso VSD of Example 5",xaxt="n")  #
+lines(index,lasso7[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,lasso7[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD7[,1],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(scad7,TD7[,2])  #
+mi<-min(scad7,TD7[,2])  #
+plot(index,scad7[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="SCAD VSD of Example 5",xaxt="n")  #
+lines(index,scad7[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,scad7[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD7[,2],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)    #
+#
+ma<-max(mcp7,TD7[,3])  #
+mi<-min(mcp7,TD7[,3])  #
+plot(index,mcp7[,2],type="b",col=1,lty=1,xlab="sigma",pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="MCP VSD of Example 5",xaxt="n")  #
+lines(index,mcp7[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,mcp7[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD7[,3],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(forward7,TD7[,4])  #
+mi<-min(forward7,TD7[,4])  #
+plot(index,forward7[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="FS VSD of Example 5",xaxt="n")  #
+lines(index,forward7[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,forward7[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD7[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma) #
+#
+ma<-max(stabsel7_075[,c(2,4,6)],TD7_075)  #
+mi<-min(stabsel7_075[,c(2,4,6)],TD7_075)  #
+plot(index,stabsel7_075[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Stability Selection VSD of Example 5",xaxt="n")  #
+lines(index,stabsel7_075[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,stabsel7_075[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD7_075,type="b",pch=4,cex=0.8,col=4,xaxt="n") #
+axis(1,index,sigma)#
+#
+legend(36,20,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=1,cex=1.1)#
+dev.off()   #
+#lasso9<-c(38.89914,66.00057,20.14966,20.79102,24.34702,25.85813,38.85691,65.86185,19.98322,20.65763,24.53659,25.82384,38.80140,65.79689,20.11641,20.82849,24.18537,25.85452,39.05118,66.32771,19.98317,20.98605,24.41770,25.73249,39.33747,66.90818,20.13680,21.16790,24.94981,26.83656,39.87466,67.62852,21.67914,22.38611,26.05839,27.66829,40.31417,68.74543,21.51182,22.35162,26.51698,28.81998,41.52634,71.38892,23.71567,25.11489,29.87800,32.25214,43.34542,74.56652,25.33256,26.71794,33.44000,35.96356,45.08472,77.98944,28.14425,29.24161,36.30031,38.64898,46.01161,80.16221,28.61222,30.95685,38.84384,41.39129,47.11438,81.83461,30.16689,33.42561,40.63406,42.31037,47.67096,82.91869,32.18881,35.46783,42.05655,43.39724,47.20789,83.03980,32.69578,36.48400,41.49198,42.35521,46.67794,82.15864,33.67497,37.22072,41.35445,42.32504,43.54629,77.01758,36.47386,38.19127,40.18643,40.78203,39.78066,69.86548,38.24061,38.78054,38.61814,38.73672,37.42057,64.31164,40.24194,40.29634,39.65954,39.02807,35.60612,58.54393,42.74670,42.59740,41.
+38466,39.18841,33.33902,52.58192,45.08978,44.87122,42.38279,38.89589,31.97187,47.45772,47.80917,47.56351,44.80664,38.18784,30.80287,42.17742,49.07490,48.79838,45.13808,36.60465,29.88072,38.39633,50.66761,50.19463,44.47103,35.18233,29.14506,31.84360,52.80629,52.18362,45.94784,29.66921,29.12387,26.50669,54.13856,53.62755,47.37566,26.50687)#
+#
+#scad9<-c(14.09592,34.08179,26.84333,26.15316,22.72786,21.69517,14.07725,34.08674,26.87818,26.21478,22.74633,21.75943,14.15742,34.00097,26.98065,26.31568,23.18332,21.96644,14.27700,34.04766,27.31948,26.23425,23.16257,22.16826,14.31031,34.35832,26.92720,26.09682,22.57946,21.25719,13.95863,34.33832,26.34619,25.26189,21.83826,20.43634,13.64952,34.76976,26.55703,25.28958,21.05064,19.32692,14.92232,35.24102,26.78703,24.87959,20.24116,18.53124,15.04840,36.53053,27.46029,25.63892,19.86265,18.35093,15.10015,38.31931,26.59710,25.42595,19.34131,17.23195,16.30013,39.13441,27.53486,25.75251,19.73585,18.01111,16.42744,40.70689,26.91533,24.75480,18.94039,17.62023,16.51684,40.29161,25.76000,23.31420,18.47465,17.75154,18.22931,39.58439,26.83385,23.88274,20.93613,20.40856,18.79751,39.28940,26.68105,24.51825,21.88010,21.04677,23.51499,33.79981,31.85961,31.28613,29.79756,28.93843,24.65711,29.97859,35.63751,34.95257,33.44491,31.33371,26.47388,25.43761,42.12297,41.86580,39.62335,33.00910,27.90608,22.11895,46.88534,46.62015,43.2
+7745,33.56059,28.56559,20.44189,50.37501,50.01563,45.38397,32.93988,28.48815,19.28891,53.09461,52.68099,47.79887,29.92933,27.69486,18.05903,54.29660,53.92510,48.37075,26.92075,27.64415,16.71820,54.96705,54.31253,46.75939,23.34967,27.58535,15.75351,56.45939,55.70990,47.84305,20.61888,28.19119,14.40512,56.94360,56.29237,49.20651,19.57635)#
+#
+#mcp9<-c(10.50851,30.68396,24.83804,24.07171,19.82982,18.30256,10.55900,30.62579,24.95701,24.13249,19.48319,18.18663,10.62051,30.39063,25.23917,24.55029,20.11873,18.48362,11.35665,30.63677,26.34183,25.22232,21.05420,19.49197,11.16342,30.94277,26.78911,25.52836,20.80241,18.30742,11.14451,31.35946,24.95955,24.30287,19.75667,17.92376,11.18644,31.56738,25.49224,24.61694,19.38263,16.82689,11.38809,32.66760,26.54893,24.86156,19.23452,16.58466,11.76355,34.50051,25.54699,23.70809,16.53577,13.81856,12.37044,35.72845,24.92804,23.49097,15.31048,12.60333,12.51491,37.14255,25.75635,23.11061,13.83591,11.09521,12.86436,38.13331,24.99646,20.83712,12.55747,10.65492,13.86411,37.80910,24.91553,20.86903,13.40044,11.93866,14.57369,36.56806,25.58044,21.31145,16.59158,15.71025,14.69257,36.27260,23.80838,20.35939,16.69280,15.47142,19.87107,30.55048,29.18660,27.75966,25.38113,23.83510,23.53431,24.28543,35.35612,34.73832,33.11558,30.77700,26.09776,18.51525,42.49537,42.10438,39.47630,31.91064,27.80015,15.86596,48.29189,47.97672,44.28
+597,33.09687,28.33441,13.87910,51.20770,50.75035,45.65726,31.21837,29.33134,11.83242,54.81696,54.36820,49.19869,28.08758,28.55217,10.82306,56.14834,55.73901,49.85888,23.93817,29.026190,9.291885,57.035357,56.263587,48.249882,19.686950,28.995391,8.506712,58.461998,57.706584,49.456534,16.257143,29.505110,7.778396,59.077444,58.362657,50.945821,15.008823)#
+#
+#stabsel9<-c(25.41612,22.48108,39.81477,39.27752,36.11479,35.00515,25.19331,22.39994,39.68913,39.16441,35.81266,34.81452,25.13726,22.49954,39.53288,38.93937,35.93485,34.62895,25.15315,22.43370,39.91355,38.99745,35.97053,34.78851,25.11999,22.33193,40.13718,39.18163,35.95105,34.24969,25.24074,22.31440,39.23945,38.61194,35.46370,34.05798,25.10469,22.15320,39.93634,39.14637,35.53287,33.52109,24.77092,22.13848,39.45688,38.11323,33.58182,31.70759,24.98938,21.89271,39.71408,38.32266,32.85718,30.97536,24.74733,21.91448,38.41345,37.38250,31.76643,29.85673,25.09285,21.68064,39.26802,37.48764,31.29584,29.20317,25.21170,21.56511,38.80836,36.34910,30.75462,29.43475,25.12033,21.47296,37.91267,35.60769,30.24931,28.97046,25.48975,21.15316,37.38543,34.41235,30.59305,29.79715,25.55048,21.27285,36.51763,33.99653,31.03562,29.86170,27.14632,19.85174,37.52695,36.38319,34.54796,33.17262,27.45829,18.70286,39.69850,39.08700,37.32546,34.56870,27.53174,17.71629,43.58014,43.21576,40.70604,33.73141,28.18676,16.49722,47.39223,47.07770,4
+3.49022,33.36207,27.79320,15.36373,49.85537,49.40534,44.36462,31.00577,27.76566,14.34026,52.67669,52.22099,46.99635,27.78889,27.29245,13.60233,54.10035,53.69176,47.96084,25.10218,27.37307,13.01996,54.53745,53.89124,46.28110,21.35550,27.09510,12.53445,55.71422,54.99575,47.08785,18.47536,27.33282,11.80527,56.11082,55.39318,48.12801,17.67015)#
+#
+#forward9<-c(22.40675,43.62927,23.69594,23.36524,21.99923,21.55399,22.52335,43.94975,23.81073,23.52648,22.19613,21.79366,22.07299,43.99758,23.67214,23.23028,22.11180,21.60634,22.61649,44.32641,24.97225,24.31516,22.90258,22.42971,22.22346,43.83983,24.00130,23.45466,22.27726,21.54285,21.94463,43.52968,23.51878,23.41547,22.04919,21.36748,21.91034,43.15922,23.83998,23.50728,21.98644,21.38341,22.96226,45.80726,25.36174,24.65742,22.81619,22.27730,23.45684,47.26511,25.30974,24.45083,22.78123,22.30268,23.61808,48.77760,24.66356,24.12008,22.38920,22.04494,23.75716,49.67168,24.28594,23.28858,21.83819,21.70312,24.92788,48.76308,26.37899,25.53161,24.06379,23.74635,25.47528,47.60436,27.12411,26.30522,25.01797,24.79461,26.96177,44.06159,29.53994,28.05127,26.93163,26.69657,26.62075,42.26591,30.27715,29.42857,28.20954,27.53888,31.09926,17.27565,40.80026,39.64651,37.76567,36.45024,34.572853,6.508152,47.473383,46.720161,44.864108,41.814045,35.800039,2.877805,52.533758,52.096399,49.365005,41.444403,35.583222,2.494711,55.36549
+5,55.008977,51.227084,39.166894,35.034098,1.952022,57.306398,56.817433,51.440788,35.096989,34.734527,1.544405,59.819233,59.356200,53.901275,29.978297,33.885628,1.324352,60.719869,60.281990,54.385134,24.987677,33.522226,1.141842,61.193571,60.461884,52.267651,19.438787,32.974471,1.106142,61.789793,60.989811,52.869726,14.753359,33.022819,1.102239,61.826647,61.069032,53.667693,12.935873)#
+#
+#select9<-c(78.47,43.83,41.51,22.96,54.52,78.35,44.00,41.46,22.92,54.85,78.35,43.92,41.18,23.04,55.00,78.51,43.68,40.87,22.93,54.88,78.82,43.69,41.17,22.88,54.26,79.32,43.94,41.11,22.78,53.66,79.82,44.18,41.22,22.76,52.75,80.94,42.87,40.75,22.80,54.06,82.22,42.61,41.10,22.49,54.05,83.81,43.25,40.73,22.57,53.88,84.46,42.62,40.98,22.25,53.49,84.93,43.23,40.86,22.16,51.30,85.17,42.18,39.65,22.08,49.55,84.63,40.93,37.91,21.69,45.43,83.31,40.29,37.28,21.79,43.26,77.48,34.21,30.95,20.23,17.66,70.18,30.27,24.57,19.00,6.76,64.55,25.67,18.73,17.95,3.07,58.74,22.31,16.05,16.69,2.65,52.74,20.60,14.03,15.52,2.08,47.59,19.42,11.96,14.47,1.65,42.29,18.17,10.93,13.71,1.41,38.49,16.81,9.38,13.11,1.21,31.92,15.83,8.58,12.61,1.16,26.57,14.47,7.84,11.87,1.15)#
+#
+#TD9<-c(22.07,28.05,25.09,39.38,22.12,22.07,27.78,25.22,39.30,22.51,22.13,27.82,25.40,39.22,22.22,22.37,28.14,26.09,39.37,22.78,22.76,28.07,25.75,39.40,22.14,23.30,27.88,25.81,39.38,22.60,24.08,27.40,25.84,39.40,22.99,26.12,28.63,27.35,39.40,23.98,28.40,29.85,28.22,39.65,24.87,30.77,30.49,29.33,39.61,25.36,32.68,31.58,29.64,39.93,26.77,34.45,32.15,31.00,40.08,28.94,35.61,32.88,32.67,40.28,31.47,36.55,34.43,33.87,40.63,34.59,36.93,35.49,34.38,40.71,35.80,38.62,40.43,41.51,42.67,49.22,39.54,43.19,44.75,44.26,55.28,40.37,44.97,47.79,45.45,57.35,41.98,46.83,49.41,46.97,57.71,43.08,47.88,50.85,48.42,58.14,44.47,48.62,51.94,49.53,58.53,46.27,49.99,53.23,50.81,58.75,47.97,51.07,54.24,51.63,58.97,49.40,51.91,55.08,52.39,59.00,51.03,52.53,55.86,53.25,59.05)#
+#
+#lasso9<-c(12.10397,16.34785,12.43231,12.75795,13.11249,13.46336,12.44967,17.10930,12.35407,12.71728,13.03117,13.35877,12.71613,17.65800,12.59026,12.91405,13.15291,13.52404,13.18014,18.44723,12.57112,13.17059,13.63742,13.99326,13.78698,19.54599,13.03043,13.48568,13.86637,14.33509,14.32837,20.13036,13.56112,13.88638,14.30717,14.81388,15.14181,21.21964,14.23216,14.68129,15.14253,15.61095,17.57135,25.70991,15.84553,16.40041,16.99745,17.53141,18.10753,28.68720,15.96329,16.68535,17.46469,18.15600,18.76357,31.39026,17.30258,17.80826,18.49941,18.97454,19.96080,34.25879,17.99853,18.70083,19.22633,19.86447,19.57120,34.72438,18.03692,18.88715,19.63285,19.98152,19.52433,34.35308,17.74903,18.58188,19.25048,19.81860,19.24850,34.06835,17.76229,18.60632,19.34490,19.55839,18.73065,33.09989,18.02975,18.93748,19.42390,19.58860,17.77423,27.12295,20.14255,20.32139,20.31035,19.81885,17.45929,22.62042,22.18004,22.13618,21.96430,20.61838,17.72855,18.88085,22.77950,22.55056,22.19964,20.12696,18.31169,15.78337,24.16503,23.87267,23.
+41875,19.28401,18.46299,12.99984,25.24346,24.90907,24.19598,18.35486,18.50077,11.59040,25.23340,24.60911,23.72767,17.73399,18.91536,9.30266,26.18133,25.55837,24.62900,17.58911,19.410312,8.353162,26.550188,26.189486,25.543221,18.450188,19.380404,7.711345,26.987611,26.667581,25.457333,16.842004,19.810143,6.846447,27.309946,27.110168,26.271663,17.932479)#
+#
+#scad9<-c(24.84462,20.15439,24.86551,24.55736,24.19075,23.85119,24.55362,19.43111,24.90147,24.56471,24.26297,23.94093,24.47000,19.06241,24.82924,24.49081,24.25099,23.91217,24.17222,18.35730,25.00641,24.43961,23.98509,23.59254,24.07244,17.81184,24.87555,24.44950,24.07508,23.59395,24.01907,17.74045,24.75000,24.40651,24.01122,23.49367,23.91617,17.20603,24.97770,24.51065,24.04645,23.43955,22.54621,13.42436,24.66140,24.01805,23.37705,22.72199,22.22275,10.33088,24.74894,24.03072,23.35247,22.61611,21.910382,7.492656,24.431489,23.878048,23.154416,22.439166,21.12248,4.75924,24.27076,23.47490,22.79197,21.97100,20.886099,3.248425,24.153466,23.386899,22.601675,21.902390,20.589667,2.288217,24.207847,23.466216,22.853829,21.899482,20.55542,1.68736,24.15409,23.45753,22.79889,22.01054,20.498926,1.542607,24.501037,23.589366,22.889630,21.945788,20.379318,1.046407,25.914205,25.436298,24.864697,23.251503,19.9876442,0.9796521,27.0595749,26.8313867,26.4080391,23.7248015,20.0949978,0.8924918,27.4454870,27.0748650,26.4799554,22.750
+3856,20.3040033,0.9063298,28.1328429,27.7390960,27.0714180,20.9790852,20.399262,0.862785,28.168489,27.734169,26.860701,19.109306,20.5384886,0.8078399,28.5132120,27.8226789,26.8252046,18.8410268,20.7533533,0.7456971,28.5505552,27.8729929,26.8633910,17.9702630,20.7567562,0.6421617,28.5428391,28.1040810,27.3733411,18.8144359,20.7131961,0.6156977,28.8460110,28.4771687,27.1353923,16.3685492,20.7168007,0.6354202,28.9711276,28.7260262,27.8205735,17.6408337)#
+#
+#mcp9<-c(24.86461,20.17629,24.88551,24.57736,24.21075,23.87119,24.57362,19.45073,24.92147,24.58471,24.28297,23.96093,24.48000,19.07643,24.83924,24.50081,24.26099,23.92217,24.18028,18.35706,25.02559,24.45578,23.99310,23.59629,24.09244,17.82093,24.89555,24.46950,24.09508,23.61395,24.03887,17.75866,24.77000,24.42651,24.03122,23.51367,23.95524,17.24456,25.01770,24.55065,24.08645,23.47955,22.54893,13.43478,24.66140,24.01805,23.37705,22.72199,22.25275,10.35239,24.77894,24.06072,23.38247,22.64611,21.970139,7.473118,24.491489,23.938048,23.214415,22.499166,21.136630,4.740507,24.280766,23.484903,22.801968,21.981004,20.914150,3.228524,24.183466,23.416899,22.631676,21.932390,20.629668,2.252952,24.247847,23.506216,22.893829,21.939481,20.585764,1.669651,24.194092,23.497531,22.838889,22.050541,20.514831,1.504686,24.521036,23.609365,22.909629,21.965788,20.409317,1.020517,25.944205,25.466298,24.894697,23.281503,20.0370463,0.9284312,27.0995741,26.8713861,26.4480391,23.7648317,20.1457367,0.8173696,27.4868668,27.1162737,26.521
+5245,22.7859374,20.3603239,0.8022747,28.2028431,27.8090947,27.1413688,21.0320684,20.4443792,0.7683229,28.2084891,27.7739317,26.9006603,19.1406926,20.5791774,0.7039326,28.5632118,27.8726766,26.8752148,18.8834026,20.7997184,0.6322685,28.5508563,27.8734146,26.8641431,17.9658307,20.7776174,0.5960286,28.5728387,28.1340806,27.4033404,18.8444666,20.7463391,0.5785775,28.8832210,28.5129953,27.1681776,16.3924728,20.7569150,0.5795279,28.9681419,28.7219247,27.8154854,17.6485197)#
+#
+#stabsel9<-c(17.38956,14.96702,17.16584,16.91289,16.65000,16.40288,17.08386,14.39519,17.11401,16.83545,16.62806,16.40136,16.96381,14.09400,17.01814,16.73280,16.54547,16.26405,16.70099,13.49757,17.33434,16.82085,16.40578,16.05313,16.77488,13.30396,17.32511,16.97150,16.65364,16.24475,16.72651,13.24143,17.28688,16.96076,16.62690,16.19857,16.72840,13.06150,17.56961,17.19011,16.76530,16.22698,15.77870,11.92660,17.37063,16.89730,16.39933,15.89985,15.66216,11.00521,17.65937,17.13725,16.61624,16.01048,15.48563,10.10184,17.48514,17.03484,16.50377,15.97219,15.081603,9.491892,17.927444,17.247420,16.650914,15.980654,14.95597,9.24852,17.80672,17.21088,16.59649,16.03400,14.895762,8.799338,18.054931,17.423990,16.915534,16.103466,15.031097,8.821106,18.015307,17.447467,16.991637,16.343502,15.410371,8.592237,19.066197,18.350472,17.816251,16.998666,16.431906,7.764221,21.471936,21.154960,20.758011,19.352450,16.883741,6.865786,24.004635,23.812676,23.430981,20.928790,17.386682,6.093161,24.553364,24.203492,23.640612,20.403426,18.
+062035,5.655472,25.635061,25.250260,24.598147,19.343116,18.383129,5.303511,26.202750,25.780402,24.917690,18.079052,18.839524,4.876567,26.782757,26.104266,25.107907,18.279492,19.057838,4.716605,26.680240,26.040316,25.054786,17.522689,18.977196,4.652621,26.688593,26.279272,25.578924,18.489651,18.989248,4.380932,27.005002,26.663584,25.353059,16.478447,18.874395,4.274069,27.103158,26.871447,25.998582,17.500225)#
+#
+#forward9<-c(8.746770,10.851940,5.979925,5.931904,5.910703,5.942506,8.717247,10.839561,6.296523,6.228522,6.173334,6.206815,8.174507,10.509336,5.827827,5.807853,5.740895,5.685231,8.100451,10.696751,6.221338,5.974773,5.860808,5.835433,9.227660,11.418515,7.512744,7.454350,7.328097,7.192995,8.604392,11.058565,7.051952,6.806768,6.593013,6.538129,8.589599,11.130796,7.460356,7.251547,7.027511,6.924079,9.115623,13.502614,7.254990,7.041316,6.988729,7.160767,9.923569,16.129823,8.708467,8.288601,8.003913,8.174163,10.830640,16.747901,9.286784,9.131812,8.951839,9.176177,10.544721,17.307914,9.591575,9.265641,9.079530,9.373394,11.04686,16.99003,11.22069,10.90152,10.62450,10.87188,11.06922,17.41886,12.00284,11.43367,10.99438,10.60335,11.57096,16.02966,12.96185,12.21038,11.57376,11.21376,12.52475,13.80150,14.68841,13.82830,13.22686,12.61967,17.140105,6.272938,21.483154,21.136916,20.770128,19.327393,18.791543,2.618312,25.793207,25.539229,25.090343,22.373953,19.323403,1.892269,26.509317,26.158644,25.588769,21.858009,19.85813,
+1.56956,27.67604,27.28262,26.61051,20.53656,19.827742,1.604759,27.566808,27.132746,26.263136,18.529304,20.08868,1.44990,28.04221,27.35075,26.35249,18.40250,20.501077,1.089243,28.294699,27.616421,26.600516,17.794900,20.484269,1.094246,28.330020,27.892365,27.162804,18.737836,20.44720,1.09855,28.59660,28.23197,26.90773,16.25382,20.55070,1.04251,28.83183,28.58878,27.68542,17.62057)#
+#
+#select9<-c(36.16,1.12,1.10,9.70,24.33,36.14,1.11,1.09,9.77,24.34,36.30,1.11,1.10,9.75,24.53,36.26,1.12,1.10,9.76,24.63,36.79,1.13,1.11,9.71,24.39,37.28,1.13,1.11,9.77,24.52,37.81,1.14,1.12,9.71,24.60,38.43,1.13,1.13,9.64,23.36,38.26,1.17,1.14,9.64,23.23,38.03,1.17,1.11,9.41,21.83,38.28,1.13,1.10,9.29,20.85,37.26,1.14,1.11,9.32,19.11,35.89,1.16,1.12,9.06,18.81,35.01,1.13,1.11,9.14,16.87,33.90,1.12,1.08,8.88,14.45,27.44,1.06,1.03,8.01,6.51,22.85,1.03,0.97,7.06,2.78,19.04,0.95,0.87,6.23,2.01,15.90,0.96,0.85,5.76,1.66,13.09,0.91,0.81,5.38,1.68,11.66,0.85,0.74,4.94,1.51,9.36,0.78,0.66,4.77,1.14,8.40,0.67,0.62,4.70,1.14,7.75,0.64,0.60,4.42,1.14,6.88,0.66,0.60,4.31,1.08)#
+#
+#TD9<-c(11.94,25.00,25.02,17.78,10.73,11.96,25.01,25.03,17.75,10.78,12.08,25.01,25.02,17.75,10.69,12.08,25.02,25.02,17.72,10.65,12.81,25.03,25.05,17.75,11.31,13.66,25.03,25.05,17.81,11.64,14.51,25.02,25.06,17.87,11.92,16.13,25.05,25.05,17.98,13.44,17.20,25.01,25.04,18.20,14.47,18.45,25.01,25.07,18.27,16.01,19.58,25.03,25.04,18.47,16.39,19.60,25.00,25.03,18.44,17.71,19.43,24.94,24.98,18.58,18.19,19.63,24.95,24.97,18.74,18.57,19.60,24.96,25.00,19.14,19.41,20.22,25.02,25.05,20.23,22.99,20.67,25.11,25.15,21.44,24.32,21.84,25.23,25.29,22.53,24.71,23.18,25.30,25.35,23.46,25.12,24.07,25.41,25.45,23.96,25.20,24.32,25.49,25.54,24.36,25.37,24.64,25.60,25.62,24.77,25.48,25.04,25.71,25.70,24.90,25.54,25.33,25.70,25.70,25.26,25.54,25.60,25.66,25.70,25.45,25.58)#
+#
+lasso9<-c(18.34283,28.98334,10.10997,10.71831,11.45580,12.44305,18.45059,29.12771,10.01080,10.75511,11.53291,12.61396,18.56676,29.30951,10.30246,11.01857,11.83031,12.88546,18.70723,29.64573,10.46501,11.33666,12.15138,12.93343,19.50436,30.68740,11.09053,11.87871,12.86478,13.88467,20.02456,31.58026,11.92170,12.72994,13.68005,14.51392,20.28146,32.21663,12.28653,12.85481,13.76329,14.75443,21.13551,34.06396,13.44188,14.40671,15.57101,16.57018,21.46076,35.26587,14.54590,15.63972,16.67465,18.09376,21.35455,35.89055,14.93594,16.16455,17.29248,18.54652,21.29030,36.01915,15.88871,16.67304,17.73984,18.56588,21.22117,35.90922,15.93953,17.11416,18.28936,19.18157,21.42353,35.96554,17.11156,18.45769,18.96414,19.81447,21.12396,35.39015,17.88957,18.70988,19.44111,19.93927,20.37539,33.74626,17.93506,18.66186,19.33253,19.98355,18.57983,30.00060,19.95198,20.07444,19.99586,19.81259,17.19908,26.50525,21.21929,21.09873,20.80484,19.61474,16.30696,22.46181,22.21034,22.11767,21.67409,20.43449,16.00636,18.28513,23.64745,23.39857,23.0
+2160,20.74192,15.44683,15.28182,24.44437,23.97483,23.17954,20.72519,15.67455,13.06312,25.32252,24.76952,24.11369,20.63853,15.36084,10.92716,25.88622,25.27468,24.64561,19.42316,15.383040,9.471183,26.224371,25.790509,25.313276,19.551121,15.301100,8.281401,26.612960,25.990122,25.147416,19.416918,15.308327,7.096086,27.152015,26.879247,25.806012,18.488208)#
+#
+scad9<-c(8.010647,13.789990,13.098844,12.673723,12.106032,11.418406,7.950335,13.580694,13.190745,12.624480,12.079384,11.336983,8.050871,13.719071,13.110533,12.512821,11.898862,11.183582,8.049446,13.662042,13.281514,12.590006,11.960094,11.353800,8.415177,13.918747,13.910222,13.260227,12.520013,11.843275,8.10972,14.56417,13.48203,12.82591,12.03468,11.44869,8.18861,14.52042,13.36327,12.98000,12.23498,11.24989,8.661355,15.284225,14.068924,13.082884,11.926584,11.219749,9.275616,15.241792,13.429027,12.554020,11.916848,11.048902,9.468044,15.686714,13.860819,12.999629,12.212756,11.435839,10.36302,15.88481,14.40670,14.05149,13.28613,12.69475,10.38153,16.27793,14.36815,13.67684,12.84585,12.21671,10.44463,16.36201,14.17325,13.38266,12.92766,12.20168,10.94255,15.61243,15.23337,14.71740,14.40093,13.91626,11.27956,15.64447,15.45965,15.09646,14.73976,14.06716,12.82055,11.84029,20.08640,19.74792,19.28594,18.17413,13.93562,10.24635,22.63965,22.35334,21.87404,19.90497,14.25005,9.29355,24.14359,23.91718,23.36422,21.36322,14.5
+73208,8.123233,24.868064,24.494774,23.950827,20.799657,14.906237,6.956723,26.172213,25.657518,24.754210,21.286472,15.354503,5.909379,26.663117,26.078975,25.342609,21.175486,15.107176,5.421816,27.052202,26.391755,25.722590,19.795858,15.122962,4.781187,27.122556,26.634426,26.173452,19.952484,15.102794,4.400706,27.317416,26.594362,25.766803,19.614735,15.372343,3.798259,27.774095,27.491065,26.400024,18.637168)#
+#
+mcp9<-c(7.658165,12.160155,13.710929,13.048305,12.196712,11.334520,7.854065,11.907954,14.179906,13.427994,12.646641,11.727995,7.721636,12.079377,13.938454,13.235010,12.492224,11.648579,7.735876,12.610241,13.709338,12.800820,11.998821,11.338949,7.705118,12.588785,13.937719,13.057979,12.197818,11.219731,7.47530,13.14887,13.23252,12.35563,11.48435,10.73352,7.694566,12.931662,13.641279,13.014039,12.204555,11.233566,8.04320,12.85219,14.52099,13.33414,12.05035,10.92651,8.050142,14.034551,13.011441,11.944409,11.152097,9.999064,8.315934,13.965541,13.721665,12.488912,11.396105,10.078301,8.840053,14.337437,13.639098,12.754250,11.664945,10.824808,9.028293,13.931621,14.268738,13.157080,12.151975,11.338931,9.979169,13.611642,14.844514,13.839689,13.238295,12.365370,10.18113,12.64383,15.57183,14.69155,14.05825,13.38129,10.70992,12.37954,15.99138,15.36082,14.63624,13.73191,12.920365,9.181908,20.230338,19.829834,19.335972,18.128287,13.639943,8.056766,21.985921,21.672122,21.172707,19.078937,14.467901,5.823875,24.712448,24.47
+0090,23.919639,21.815570,14.938683,4.692022,25.595673,25.192081,24.609370,21.035729,15.266768,3.730967,26.656826,26.082080,25.073644,20.986631,15.747463,3.068153,27.285991,26.655877,25.821537,21.121173,15.590192,2.542006,27.734984,27.029885,26.296187,19.657504,15.635298,2.221804,27.889584,27.377996,26.862880,20.028958,15.65375,1.98775,28.16735,27.42855,26.49195,19.43063,15.734207,1.893586,28.255757,27.971937,26.845349,18.351153)#
+#
+stabsel9<-c(12.559867,9.786092,18.700534,18.220554,17.633451,16.899178,12.50895,9.73365,18.70900,18.19490,17.67853,16.91208,12.487654,9.779079,18.605531,18.097627,17.509377,16.718954,12.52732,9.77124,18.62848,17.89259,17.27716,16.66773,12.616185,9.726236,18.955584,18.253945,17.465443,16.736621,12.510826,9.734244,18.380046,17.744311,17.134399,16.560390,12.462098,9.661918,18.460743,17.991395,17.431007,16.491618,12.26920,9.46777,18.55612,17.66415,16.64100,15.75739,12.263511,9.231127,17.982202,17.084181,16.333406,15.347507,12.482728,8.974893,18.456022,17.542388,16.653393,15.575274,12.602840,8.878148,18.071061,17.408615,16.521382,15.764735,12.885677,8.649806,18.444896,17.768585,16.949881,16.129762,13.008196,8.429473,18.670159,17.780823,17.202347,16.494453,13.35454,8.24950,18.89211,18.27339,17.86877,17.31893,13.585514,8.023928,19.404818,18.875513,18.354359,17.510150,14.08250,7.30021,21.19198,20.82710,20.37175,19.19259,14.378701,6.859179,23.104295,22.759671,22.256229,20.237026,14.507125,6.313823,24.420850,24.17684
+5,23.575063,21.651943,14.779462,5.791765,24.850046,24.464427,23.933736,20.776432,14.893218,5.289166,26.228499,25.660904,24.635625,21.008496,14.929696,5.024846,26.138018,25.512233,24.693063,20.575401,14.647032,4.930482,26.683732,25.984774,25.259880,19.400038,14.614287,4.777717,26.751811,26.319564,25.801043,19.834273,14.455830,4.444241,26.983703,26.319531,25.422795,19.381905,14.461407,4.337981,26.826877,26.551758,25.479093,18.248724)#
+#
+forward9<-c(10.69431,18.02035,12.12838,11.79175,11.47750,11.18196,10.68221,18.06470,12.02864,11.63729,11.29505,10.99204,10.71736,18.11274,11.71347,11.32602,11.05285,10.78981,10.83420,18.09099,12.26101,11.73023,11.28720,10.99987,11.35116,18.83102,12.84430,12.40543,12.04255,11.62044,11.69336,19.26419,12.83894,12.53736,12.17250,11.92720,11.61941,19.16294,13.03446,12.82799,12.50205,12.12484,11.57173,19.82109,13.46122,12.92700,12.14145,11.67306,11.37253,21.10198,12.68115,12.29409,11.82940,11.13589,12.03196,20.21056,14.15776,13.53475,12.88810,12.27613,12.17867,19.12218,14.37642,13.95246,13.55947,13.14353,12.53069,17.54129,15.09081,14.71201,14.24763,13.71717,12.59399,16.05046,15.77707,15.24225,14.90455,14.35986,13.09818,15.08988,16.44111,16.05883,15.73745,15.39087,12.83362,14.59767,16.52066,16.03628,15.80938,15.18769,15.126679,7.016066,21.670264,21.257681,20.773011,19.587956,16.34497,4.07013,24.87632,24.56995,24.06130,21.90881,16.631408,2.944539,26.575089,26.319943,25.700783,23.363968,16.851871,1.804735,27.229347,
+26.817702,26.224142,22.484550,16.560550,1.483363,27.896260,27.300592,26.184024,22.023088,16.577638,1.456328,27.899056,27.239961,26.398904,21.654508,16.365735,1.233716,28.328379,27.605399,26.861725,20.043195,16.3016190,0.9912403,28.4677325,27.9486815,27.3966558,20.5075808,16.1654797,0.9937676,28.7729105,28.0338189,27.0702208,19.9808592,16.119672,1.246655,28.711059,28.426227,27.293786,18.787421)#
+#
+select9<-c(36.05,18.85,17.00,9.75,24.10,36.20,18.82,16.67,9.72,24.15,36.31,18.83,16.80,9.80,24.13,36.36,18.59,17.26,9.86,23.71,37.15,18.68,17.09,9.79,24.11,37.58,18.95,17.38,9.93,24.21,37.77,18.62,16.76,9.93,23.86,38.45,18.50,15.64,9.88,23.62,38.45,17.63,16.29,9.75,23.96,38.23,17.46,15.72,9.53,22.26,37.78,17.23,15.69,9.44,20.67,37.21,17.34,14.94,9.18,18.70,37.01,17.23,14.38,8.93,16.96,36.27,16.36,13.34,8.69,15.86,34.45,16.25,12.96,8.43,15.22,30.36,12.17,9.50,7.59,7.30,26.75,10.47,8.27,7.07,4.24,22.63,9.45,5.97,6.46,3.06,18.41,8.24,4.80,5.90,1.89,15.38,7.05,3.81,5.38,1.55,13.14,5.98,3.13,5.09,1.51,10.99,5.48,2.59,4.98,1.28,9.52,4.83,2.26,4.82,1.03,8.32,4.44,2.02,4.48,1.03,7.13,3.83,1.92,4.37,1.28)#
+#
+TD9<-c(11.97,13.41,13.42,17.77,11.36,12.10,13.24,13.59,17.74,11.29,12.23,13.25,13.60,17.80,11.25,12.30,13.55,13.66,17.68,11.67,13.11,14.22,14.13,17.79,12.07,13.90,14.05,13.84,17.73,12.67,14.65,14.62,14.54,17.75,12.30,16.33,15.36,14.96,17.74,13.74,17.35,16.15,15.17,17.77,13.88,18.11,16.42,16.20,18.07,15.70,18.74,17.47,17.45,18.24,16.57,19.33,17.94,17.40,18.54,17.54,19.85,18.69,18.42,18.69,18.18,20.01,18.56,18.84,18.99,19.54,19.87,19.11,19.80,19.11,19.64,20.98,20.39,21.10,20.31,22.86,21.77,21.55,22.49,21.11,24.20,22.51,22.05,23.01,22.28,24.56,22.65,22.76,23.54,23.28,25.09,23.38,23.43,23.99,23.70,25.13,23.94,23.94,24.57,24.13,25.19,24.41,24.34,24.83,24.56,25.28,25.02,24.55,25.20,24.94,25.35,25.22,25.04,25.38,25.12,25.43,25.27,25.25,25.48,25.33,25.52)#
+#
+select9<-matrix(select9,ncol=5,byrow=T) #
+colnames(select9)<-c("Lasso","SCAD","MCP","Stabsel","Forward")  #
+select9<-as.data.frame(select9)   #
+#
+lasso9<-matrix(lasso9,ncol=6,byrow=T) #
+colnames(lasso9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+lasso9<-as.data.frame(lasso9)  #
+#
+scad9<-matrix(scad9,ncol=6,byrow=T) #
+colnames(scad9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+scad9<-as.data.frame(scad9)   #
+#
+mcp9<-matrix(mcp9,ncol=6,byrow=T) #
+colnames(mcp9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+mcp9<-as.data.frame(mcp9)  #
+#
+forward9<-matrix(forward9,ncol=6,byrow=T) #
+colnames(forward9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+forward9<-as.data.frame(forward9)  #
+#
+TD9<-matrix(TD9,ncol=5,byrow=T) #
+colnames(TD9)<-c("Lasso","SCAD","MCP","Stabsel","Forward") #
+TD9<-as.data.frame(TD9)    #
+#
+stabsel9<-matrix(stabsel9,ncol=6,byrow=T) #
+colnames(stabsel9)<-c("ARM","ARM.prior","AIC","AIC.prior","BIC","BIC.prior") #
+stabsel9<-as.data.frame(stabsel9)#
+pdf("vsd9.pdf",width=7,height=5)  #
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(3,0,1,0))  #
+#
+ma<-max(lasso9,TD9[,1])  #
+mi<-min(lasso9,TD9[,1])  #
+plot(index,lasso9[,2],type="b",xlab="sigma",col=1,lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Lasso VSD of Example 6",xaxt="n")  #
+lines(index,lasso9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,lasso9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,1],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(scad9,TD9[,2])  #
+mi<-min(scad9,TD9[,2])  #
+plot(index,scad9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="SCAD VSD of Example 6",xaxt="n")  #
+lines(index,scad9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,scad9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,2],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)    #
+#
+ma<-max(mcp9,TD9[,3])  #
+mi<-min(mcp9,TD9[,3])  #
+plot(index,mcp9[,2],type="b",col=1,lty=1,xlab="sigma",pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="MCP VSD of Example 6",xaxt="n")  #
+lines(index,mcp9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,mcp9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,3],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma)   #
+#
+ma<-max(forward9,TD9[,5])  #
+mi<-min(forward9,TD9[,5])  #
+plot(index,forward9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="FS VSD of Example 6",xaxt="n")  #
+lines(index,forward9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,forward9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")  #
+axis(1,index,sigma) #
+#
+ma<-max(stabsel9[,c(2,4,6)],TD9[,4])  #
+mi<-min(stabsel9[,c(2,4,6)],TD9[,4])  #
+plot(index,stabsel9[,2],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="VSD",main="Stability Selection VSD of Example 6",xaxt="n")  #
+lines(index,stabsel9[,4],type="b",pch=2,cex=0.8,col=2,xaxt="n")  #
+lines(index,stabsel9[,6],type="b",pch=3,cex=0.8,col=3,xaxt="n")  #
+lines(index,TD9[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n") #
+axis(1,index,sigma)#
+#
+legend(36,24,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=1,cex=1.1)#
+#
+dev.off()#
+pdf("selection.pdf",width=7,height=5)  #
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(4,0,1,0))#
+#
+ma<-max(select1)#
+mi<-min(select1)#
+plot(index,select1[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 1",xaxt="n")#
+lines(index,select1[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select1[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select1[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab1_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select2)#
+mi<-min(select2)#
+plot(index,select2[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 2",xaxt="n")#
+lines(index,select2[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select2[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select2[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab2_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select4)#
+mi<-min(select4)#
+plot(index,select4[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 3",xaxt="n")#
+lines(index,select4[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select4[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select4[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab4_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select5)#
+mi<-min(select5)#
+plot(index,select5[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 4",xaxt="n")#
+lines(index,select5[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select5[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select5[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab5_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select7)#
+mi<-min(select7)#
+plot(index,select7[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 5",xaxt="n")#
+lines(index,select7[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select7[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select7[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab7_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select9)#
+mi<-min(select9)#
+plot(index,select9[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 6",xaxt="n")#
+lines(index,select9[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select9[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,select9[,4],type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+legend(-67,-40,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:4,6),ncol=5)#
+dev.off()
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(4,0,1,0))#
+#
+ma<-max(select1)#
+mi<-min(select1)#
+plot(index,select1[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 1",xaxt="n")#
+lines(index,select1[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select1[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select1[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab1_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select2)#
+mi<-min(select2)#
+plot(index,select2[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 2",xaxt="n")#
+lines(index,select2[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select2[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select2[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab2_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select4)#
+mi<-min(select4)#
+plot(index,select4[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 3",xaxt="n")#
+lines(index,select4[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select4[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select4[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab4_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select5)#
+mi<-min(select5)#
+plot(index,select5[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 4",xaxt="n")#
+lines(index,select5[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select5[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select5[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab5_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select7)#
+mi<-min(select7)#
+plot(index,select7[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 5",xaxt="n")#
+lines(index,select7[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select7[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select7[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab7_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select9)#
+mi<-min(select9)#
+plot(index,select9[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 6",xaxt="n")#
+lines(index,select9[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select9[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,select9[,4],type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)
+legend(-67,-40,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:4,6),ncol=5)
+legend(36,24,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=1,cex=1.1)
+legend(-37,-12,c("ARM with Prior","AIC with Prior","BIC with Prior","True Difference"),pch=c(1:4),lty=1,col=c(1:4),ncol=4,cex=1.1,inset=c(.5,-.5))
+legend(-37,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:5),ncol=5,cex=1.1,inset=c(.5,-.5))
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(4,0,1,0))#
+#
+ma<-max(select1)#
+mi<-min(select1)#
+plot(index,select1[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 1",xaxt="n")#
+lines(index,select1[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select1[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select1[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab1_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select2)#
+mi<-min(select2)#
+plot(index,select2[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 2",xaxt="n")#
+lines(index,select2[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select2[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select2[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab2_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select4)#
+mi<-min(select4)#
+plot(index,select4[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 3",xaxt="n")#
+lines(index,select4[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select4[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select4[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab4_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select5)#
+mi<-min(select5)#
+plot(index,select5[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 4",xaxt="n")#
+lines(index,select5[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select5[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select5[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab5_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select7)#
+mi<-min(select7)#
+plot(index,select7[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 5",xaxt="n")#
+lines(index,select7[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select7[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select7[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab7_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select9)#
+mi<-min(select9)#
+plot(index,select9[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 6",xaxt="n")#
+lines(index,select9[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select9[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,select9[,4],type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)
+legend(-30,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:5),ncol=5,cex=1.1,inset=c(.5,-.5))
+legend(-40,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:5),ncol=5,cex=1.1,inset=c(.5,-.5))
+legend(-60,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:5),ncol=5,cex=1.1,inset=c(.5,-.5))
+legend(-70,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:5),ncol=5,cex=1.1,inset=c(.5,-.5))
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(4,0,1,0))#
+#
+ma<-max(select1)#
+mi<-min(select1)#
+plot(index,select1[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 1",xaxt="n")#
+lines(index,select1[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select1[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select1[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab1_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select2)#
+mi<-min(select2)#
+plot(index,select2[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 2",xaxt="n")#
+lines(index,select2[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select2[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select2[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab2_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select4)#
+mi<-min(select4)#
+plot(index,select4[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 3",xaxt="n")#
+lines(index,select4[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select4[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select4[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab4_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select5)#
+mi<-min(select5)#
+plot(index,select5[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 4",xaxt="n")#
+lines(index,select5[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select5[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select5[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab5_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select7)#
+mi<-min(select7)#
+plot(index,select7[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 5",xaxt="n")#
+lines(index,select7[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select7[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select7[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab7_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select9)#
+mi<-min(select9)#
+plot(index,select9[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 6",xaxt="n")#
+lines(index,select9[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select9[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,select9[,4],type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)
+legend(-70,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:5),ncol=5,cex=1.1,inset=c(.5,-.5))
+legend(-70,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:5),ncol=5,cex=0.7,inset=c(.5,-.5))
+legend(-70,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:5),ncol=5,cex=0.8,inset=c(.5,-.5))
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(4,0,1,0))#
+#
+ma<-max(select1)#
+mi<-min(select1)#
+plot(index,select1[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 1",xaxt="n")#
+lines(index,select1[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select1[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select1[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab1_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select2)#
+mi<-min(select2)#
+plot(index,select2[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 2",xaxt="n")#
+lines(index,select2[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select2[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select2[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab2_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select4)#
+mi<-min(select4)#
+plot(index,select4[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 3",xaxt="n")#
+lines(index,select4[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select4[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select4[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab4_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select5)#
+mi<-min(select5)#
+plot(index,select5[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 4",xaxt="n")#
+lines(index,select5[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select5[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select5[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab5_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select7)#
+mi<-min(select7)#
+plot(index,select7[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 5",xaxt="n")#
+lines(index,select7[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select7[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select7[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab7_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select9)#
+mi<-min(select9)#
+plot(index,select9[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 6",xaxt="n")#
+lines(index,select9[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select9[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,select9[,4],type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)
+legend(-70,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:5),ncol=5,cex=1,inset=c(.5,-.5))
+legend(-68,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:5),ncol=5,cex=1,inset=c(.5,-.5))
+dev.off()
+pdf("selection.pdf",width=7,height=5)  #
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(4,0,1,0))#
+#
+ma<-max(select1)#
+mi<-min(select1)#
+plot(index,select1[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 1",xaxt="n")#
+lines(index,select1[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select1[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select1[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab1_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select2)#
+mi<-min(select2)#
+plot(index,select2[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 2",xaxt="n")#
+lines(index,select2[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select2[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select2[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab2_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select4)#
+mi<-min(select4)#
+plot(index,select4[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 3",xaxt="n")#
+lines(index,select4[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select4[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select4[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab4_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select5)#
+mi<-min(select5)#
+plot(index,select5[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 4",xaxt="n")#
+lines(index,select5[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select5[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select5[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab5_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select7)#
+mi<-min(select7)#
+plot(index,select7[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 5",xaxt="n")#
+lines(index,select7[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select7[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select7[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab7_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select9)#
+mi<-min(select9)#
+plot(index,select9[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 6",xaxt="n")#
+lines(index,select9[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select9[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,select9[,4],type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+legend(-67,-12,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:4,6),ncol=5)#
+#
+dev.off()
+pdf("selection.pdf",width=7,height=5)  #
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(4,0,1,0))#
+#
+ma<-max(select1)#
+mi<-min(select1)#
+plot(index,select1[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 1",xaxt="n")#
+lines(index,select1[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select1[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select1[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab1_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select2)#
+mi<-min(select2)#
+plot(index,select2[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 2",xaxt="n")#
+lines(index,select2[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select2[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select2[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab2_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select4)#
+mi<-min(select4)#
+plot(index,select4[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 3",xaxt="n")#
+lines(index,select4[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select4[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select4[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab4_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select5)#
+mi<-min(select5)#
+plot(index,select5[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 4",xaxt="n")#
+lines(index,select5[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select5[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select5[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab5_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select7)#
+mi<-min(select7)#
+plot(index,select7[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 5",xaxt="n")#
+lines(index,select7[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select7[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select7[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab7_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select9)#
+mi<-min(select9)#
+plot(index,select9[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 6",xaxt="n")#
+lines(index,select9[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select9[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,select9[,4],type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+legend(-67,-16,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:4,6),ncol=5)#
+#
+dev.off()
+pdf("selection.pdf",width=7,height=5)  #
+par(xpd = NA,mfrow=c(2,3),mar=c(4, 4, 2, 0.5),oma=c(4,0,1,0))#
+#
+ma<-max(select1)#
+mi<-min(select1)#
+plot(index,select1[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 1",xaxt="n")#
+lines(index,select1[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select1[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select1[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab1_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select2)#
+mi<-min(select2)#
+plot(index,select2[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 2",xaxt="n")#
+lines(index,select2[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select2[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select2[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab2_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select4)#
+mi<-min(select4)#
+plot(index,select4[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 3",xaxt="n")#
+lines(index,select4[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select4[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select4[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab4_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select5)#
+mi<-min(select5)#
+plot(index,select5[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 4",xaxt="n")#
+lines(index,select5[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select5[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select5[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab5_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select7)#
+mi<-min(select7)#
+plot(index,select7[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 5",xaxt="n")#
+lines(index,select7[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select7[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select7[,4],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,selectstab7_075,type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+ma<-max(select9)#
+mi<-min(select9)#
+plot(index,select9[,1],type="b",col=1,xlab="sigma",lty=1,pch=1,cex=0.8,ylim=c(mi,ma),ylab="Average Selection Size",main="Example 6",xaxt="n")#
+lines(index,select9[,2],type="b",pch=2,cex=0.8,col=2,xaxt="n")#
+lines(index,select9[,3],type="b",pch=3,cex=0.8,col=3,xaxt="n")#
+lines(index,select9[,5],type="b",pch=4,cex=0.8,col=4,xaxt="n")#
+lines(index,select9[,4],type="b",pch=5,cex=0.8,col=6,xaxt="n")#
+axis(1,index,sigma)#
+#
+legend(-67,-20,c("Lasso","SCAD","MCP","Forward Stepwise","Stability Selection"),pch=c(1:5),lty=1,col=c(1:4,6),ncol=5)#
+#
+dev.off()
+library(glmnet)
+glmnet
+cv.glmnet
+ten=10
+ten
+missing(ten)
+!missing(ten)
+penalty="lasso"
+!missing(penalty)
+!missing(penalty) & !missing(ten)
+package.skeleton(name="vsd")
