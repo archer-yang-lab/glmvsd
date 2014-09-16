@@ -48,5 +48,5 @@ BIC.new<-BIC2-min(BIC2)
 
 weight.BIC<-round(exp(-BIC.new/2)/sum(exp(-BIC.new/2)),5)
 
-outlist<-list(weight.BIC=weight.BIC,cand.model=m2)
+outlist<-list(weight.BIC=weight.BIC,ending_candidate_model=m2)
 }

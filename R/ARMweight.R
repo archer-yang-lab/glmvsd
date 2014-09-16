@@ -1,7 +1,7 @@
-ARMweight<-function(x,y,n.sim,cand.mod,n.train){
+ARMweight<-function(x,y,n_rep,cand.mod,n.train){
 	
 	#cand.mod: m*p matrix, list of candiate model selected. 
-	#n.sim: number of replication in data split
+	#n_rep: number of replication in data split
 	#n.train:number of observation in the training set
 
 	n<-length(y)
@@ -26,11 +26,11 @@ m<-dim(model)[1]
 
 one<-matrix(rep(1,n-n.train),ncol=1)
 
-D1<-matrix(rep(0,n.sim*m),ncol=m)
+D1<-matrix(rep(0,n_rep*m),ncol=m)
 
-s1<-matrix(rep(0,n.sim*m),ncol=m)
+s1<-matrix(rep(0,n_rep*m),ncol=m)
 
-for (i in 1:n.sim){
+for (i in 1:n_rep){
 	train<-sample(n,n.train,replace=F)
 	x.test<-x[-train,]
 	y.test<-y[-train]
@@ -75,9 +75,9 @@ for (j in 1:m)    #removing the model which create NA results
     }
 }
 
-E<-matrix(rep(0,n.sim*dim(cand.mod2)[1]),nrow=n.sim)
+E<-matrix(rep(0,n_rep*dim(cand.mod2)[1]),nrow=n_rep)
 
-for(i in 1:n.sim)
+for(i in 1:n_rep)
   {
    for (j in 1:dim(cand.mod2)[1])
     {
@@ -85,7 +85,7 @@ for(i in 1:n.sim)
     }
   }
 
-for(i in 1:n.sim)
+for(i in 1:n_rep)
   {
    E.max<-max(E[i,])
    for (j in 1:dim(E)[2])
@@ -95,9 +95,9 @@ for(i in 1:n.sim)
   }
 
 
-numerator<-matrix(rep(0,n.sim*dim(cand.mod2)[1]),nrow=n.sim)
+numerator<-matrix(rep(0,n_rep*dim(cand.mod2)[1]),nrow=n_rep)
 
- for (i in 1:n.sim){
+ for (i in 1:n_rep){
  for(j in 1:dim(E)[2]){
  if (abs(E[i,j])>150) (numerator[i,j]==0)
  else numerator[i,j]=exp(E[i,j])
@@ -110,5 +110,5 @@ w.ARM<-numerator/denominator
 
 weight.ARM<-round(apply(w.ARM,2,mean),5)
 
-outlist<-list(weight.ARM=weight.ARM,cand.model=cand.mod2)
+outlist<-list(weight.ARM=weight.ARM,ending_candidate_model=cand.mod2)
 }

@@ -54,5 +54,5 @@ AIC.new.prior<-AIC.prior2-min(AIC.prior2)
 
 weight.AIC.prior<-round(exp(-AIC.new.prior/2)/sum(exp(-AIC.new.prior/2)),5)
 
-outlist<-list(weight.AIC.Prior=weight.AIC.prior,cand.model=m2)
+outlist<-list(weight.AIC.Prior=weight.AIC.prior,ending_candidate_model=m2)
 }

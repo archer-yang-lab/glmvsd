@@ -1,7 +1,7 @@
-ARMPweight<-function(x,y,n.sim,cand.mod,n.train,psi){
+ARMPweight<-function(x,y,n_rep,cand.mod,n.train,psi){
 	
 	#cand.mod: m*p matrix, list of candiate model selected. 
-	#n.sim: number of replication in data split
+	#n_rep: number of replication in data split
 	#n.train:number of observation in the training set
 
 	n<-length(y)
@@ -29,11 +29,11 @@ m<-dim(model)[1]
 
 one<-matrix(rep(1,n-n.train),ncol=1)
 
-D1<-matrix(rep(0,n.sim*m),ncol=m)
+D1<-matrix(rep(0,n_rep*m),ncol=m)
 
-s1<-matrix(rep(0,n.sim*m),ncol=m)
+s1<-matrix(rep(0,n_rep*m),ncol=m)
 
-for (i in 1:n.sim){
+for (i in 1:n_rep){
 	train<-sample(n,n.train,replace=F)
 	x.test<-x[-train,]
 	y.test<-y[-train]
@@ -88,9 +88,9 @@ for (i in 1:dim(D2)[2]){
  prior.arm[i]<-pstar[i]*log(exp(1)*p/pstar[i])+2*log(pstar[i]+2)}
  }
 
-E.prior<-matrix(rep(0,n.sim*dim(D2)[2]),nrow=n.sim)
+E.prior<-matrix(rep(0,n_rep*dim(D2)[2]),nrow=n_rep)
 
-for(i in 1:n.sim)
+for(i in 1:n_rep)
   {
    for (j in 1:dim(D2)[2])
     {
@@ -98,7 +98,7 @@ for(i in 1:n.sim)
     }
   }
 
-for(i in 1:n.sim)
+for(i in 1:n_rep)
   {
    E.prior.max<-max(E.prior[i,])
    for (j in 1:dim(E.prior)[2])
@@ -107,9 +107,9 @@ for(i in 1:n.sim)
     }
   }
 
-numerator.prior<-matrix(rep(0,n.sim*dim(D2)[2]),nrow=n.sim)
+numerator.prior<-matrix(rep(0,n_rep*dim(D2)[2]),nrow=n_rep)
 
- for (i in 1:n.sim){
+ for (i in 1:n_rep){
  for(j in 1:dim(E.prior)[2]){
  if (abs(E.prior[i,j])>700) (numerator.prior[i,j]=0)
  else numerator.prior[i,j]=exp(E.prior[i,j])
@@ -122,7 +122,7 @@ w.prior<-numerator.prior/denominator.prior
 
 weight.arm.prior<-round(apply(w.prior,2,mean),5)
 
-outlist<-list(weight.ARM.Prior=weight.arm.prior,cand.model=cand.mod2)
+outlist<-list(weight.ARM.Prior=weight.arm.prior,ending_candidate_model=cand.mod2)
 
 }
 
