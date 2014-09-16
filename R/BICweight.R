@@ -1,7 +1,7 @@
 BICweight<-function(x,y,candidate_model){
 	
 	n<-length(y)
-	p<-ncol(x)
+	p<-NCOL(x)
 	
 	
 	if(is.matrix(x) == "FASLE") stop("x must be matrix with n rows")

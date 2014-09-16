@@ -1,4 +1,4 @@
-ARMPweight<-function(x,y,n_rep,candidate_model,n_train,psi){
+ARMPweight<-function(x,y,n_rep=100,psi=1,candidate_model,n_train=ceiling(n/2)){
 	
 	#candidate_model: m*p matrix, list of candiate model selected. 
 	#n_rep: number of replication in data split
@@ -13,12 +13,7 @@ ARMPweight<-function(x,y,n_rep,candidate_model,n_train,psi){
 	    stop("x and y have different number of observations")
 	if (n_train >= n) 
 	    stop("Training size must be less than the number of observations")
-
-
-	if(missing(candidate_model)) stop("missing candidate model")
-	if(!missing(psi)) psi<-psi
-	  else psi<-1
-	if(missing(n_train)) stop("missing n_train")
+	if(missing(candidate_model)) stop("User must provide a list of candidate models")
 
 
 cand.nonzero<-apply(candidate_model,1,sum)

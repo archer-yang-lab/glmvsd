@@ -1,7 +1,7 @@
 BICPweight<-function(x,y,candidate_model,psi){
 	
 	n<-length(y)
-	p<-ncol(x)
+	p<-NCOL(x)
 	
 	if(is.matrix(x) == "FASLE") stop("x must be matrix with n rows")
 	if(is.vector(y)=="FALSE") stop("y must be a vector")

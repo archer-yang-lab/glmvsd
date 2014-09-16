@@ -5,7 +5,7 @@ ARMweight<-function(x,y,n_rep,candidate_model,n_train){
 	#n_train:number of observation in the training set
 
 	n<-length(y)
-	p<-ncol(x)
+	p<-NCOL(x)
 	
 	if(is.matrix(x) == "FASLE") stop("x must be matrix with n rows")
 	if(is.vector(y)=="FALSE") stop("y must be a vector")

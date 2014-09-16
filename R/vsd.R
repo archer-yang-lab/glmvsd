@@ -9,20 +9,18 @@ vsd<-function(x,y,
 	weight_fun=c("ARM","ARM.Prior","AIC","AIC.Prior","BIC","BIC.Prior"))
 {
 	
+candidate=match.arg(candidate)
+weight_fun=match.arg(weight_fun)
+	
 y <- drop(y)
 x <- as.matrix(x)
 p<-NCOL(x)
 n<-length(y)
 
-candidate=match.arg(candidate)
-weight_fun=match.arg(weight_fun)
-
 if (n != NROW(x)) 
     stop("x and y have different number of observations")
 if (n_train >= n) 
     stop("Training size must be less than the number of observations")
-if(missing(psi)) psi<-1
-if(missing(n_rep)) n_rep<-100
 if(missing(base_model)) stop("User must provide a base model.")
 
 
@@ -53,7 +51,7 @@ if(candidate=="union"){
 if(candidate=="supplied"){
    if(missing(candidate_model)) stop("Users must supply a candidate model.")
    if(is.matrix(candidate_model)!=TRUE) stop("Supplied model must be a matrix.")
-   if(ncol(candidate_model)!=ncol(x)) stop("Number of variables in candidate model and x does not match.")		
+   if(NCOL(candidate_model)!=NCOL(x)) stop("Number of variables in candidate model and x does not match.")		
    
 ########################   
 ########################   
