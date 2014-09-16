@@ -1,45 +1,28 @@
 vsd<-function(x,y,
-	n_train,
+	n_train = ceiling(n/2),
 	n_rep=100,
 	k=10,
 	base_model,
 	psi=1,
 	candidate=c("union","supplied"),
 	candidate_model, 
-	weight.function=c("ARM","ARM.Prior","AIC","AIC.Prior","BIC","BIC.Prior"))
+	weight_fun=c("ARM","ARM.Prior","AIC","AIC.Prior","BIC","BIC.Prior"))
 {
-# x = n by p covariate matrix
-# y = size n vector
-# n_train = the size of training set in MARM
-# n.s = number of regularization in penalization procedure
-# n_rep = number of data spliting in MARM
-# k = number of fold in cross validation
-# candidate_model = way to get candidate model; 
-#           "union" is union of solution path of Lasso, SCAD, and MCP; 
-# base_model = base model used in calculating indice.
-# psi = the size of penalty in calculting the non-uniformed AIC or BIC vsd
-
+	
 y <- drop(y)
 x <- as.matrix(x)
 p<-NCOL(x)
 n<-length(y)
 
+candidate=match.arg(candidate)
+weight_fun=match.arg(weight_fun)
+
 if (n != NROW(x)) 
     stop("x and y have different number of observations")
 if (n_train >= n) 
     stop("Training size must be less than the number of observations")
-
-if(missing(n_train)){n_train<-ceiling(n/2)}
-if(is.matrix(x) == "FASLE") stop("x must be matrix with n rows")
-if(is.vector(y)=="FALSE") stop("y must be a vector")
-if(missing(weight.function)) stop("missing weight function!")
-   else weight.function=match.arg(weight.function)
-
-candidate=match.arg(candidate)
-
 if(missing(psi)) psi<-1
 if(missing(n_rep)) n_rep<-100
-
 if(missing(base_model)) stop("User must provide a base model.")
 
 
@@ -83,37 +66,37 @@ if(candidate=="supplied"){
 ########################   weight   ###############
 
 
-if(weight.function=="ARM") {
+if(weight_fun=="ARM") {
 	ARM.weight<-ARMweight(x=x,y=y,n_rep=n_rep,candidate_model=candidate_model,n_train=n_train)
 	weight<-ARM.weight$weight.ARM
     ending_candidate_model<-ARM.weight$ending_candidate_model
     }
 
-if(weight.function=="ARM.Prior") {
+if(weight_fun=="ARM.Prior") {
 	ARMP.weight<-ARMPweight(x=x,y=y,n_rep=n_rep,candidate_model=candidate_model,psi=psi,n_train=n_train)
     weight<-ARMP.weight$weight.ARM.Prior
     ending_candidate_model<-ARMP.weight$ending_candidate_model
 }
 
-if(weight.function=="AIC") {
+if(weight_fun=="AIC") {
 	AIC.weight<-AICweight(x=x,y=y,candidate_model=candidate_model)
 	weight<-AIC.weight$weight.AIC
     ending_candidate_model<-AIC.weight$ending_candidate_model
     }
 
-if(weight.function=="AIC.Prior") {
+if(weight_fun=="AIC.Prior") {
 	AICP.weight<-AICPweight(x=x,y=y,candidate_model=candidate_model,psi=psi)
 	weight<-AICP.weight$weight.AIC.Prior
     ending_candidate_model<-AICP.weight$ending_candidate_model
     }
 
-if(weight.function=="BIC") {
+if(weight_fun=="BIC") {
 	BIC.weight<-BICweight(x=x,y=y,candidate_model=candidate_model)
 	weight<-BIC.weight$weight.BIC
     ending_candidate_model<-BIC.weight$ending_candidate_model
 	    }
 
-if(weight.function=="BIC.Prior") {
+if(weight_fun=="BIC.Prior") {
 	BICP.weight<-BICPweight(x=x,y=y,candidate_model=candidate_model,psi=psi)
 	weight<-BICP.weight$weight.BIC.Prior
     ending_candidate_model<-BICP.weight$ending_candidate_model
