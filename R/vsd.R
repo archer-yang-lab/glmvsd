@@ -1,5 +1,5 @@
 vsd<-function(x,y,
-	n.train,
+	n_train,
 	n_rep=100,
 	k=10,
 	base_model,
@@ -10,7 +10,7 @@ vsd<-function(x,y,
 {
 # x = n by p covariate matrix
 # y = size n vector
-# n.train = the size of training set in MARM
+# n_train = the size of training set in MARM
 # n.s = number of regularization in penalization procedure
 # n_rep = number of data spliting in MARM
 # k = number of fold in cross validation
@@ -19,11 +19,17 @@ vsd<-function(x,y,
 # base_model = base model used in calculating indice.
 # psi = the size of penalty in calculting the non-uniformed AIC or BIC vsd
 
+y <- drop(y)
+x <- as.matrix(x)
+p<-NCOL(x)
 n<-length(y)
-np<-dim(x)
-p<-np[2]
 
-if(missing(n.train)){n.train<-ceiling(n/2)}
+if (n != NROW(x)) 
+    stop("x and y have different number of observations")
+if (n_train >= n) 
+    stop("Training size must be less than the number of observations")
+
+if(missing(n_train)){n_train<-ceiling(n/2)}
 if(is.matrix(x) == "FASLE") stop("x must be matrix with n rows")
 if(is.vector(y)=="FALSE") stop("y must be a vector")
 if(missing(weight.function)) stop("missing weight function!")
@@ -78,37 +84,37 @@ if(candidate=="supplied"){
 
 
 if(weight.function=="ARM") {
-	ARM.weight<-ARMweight(x=x,y=y,n_rep=n_rep,cand.mod=candidate_model,n.train=n.train)
+	ARM.weight<-ARMweight(x=x,y=y,n_rep=n_rep,candidate_model=candidate_model,n_train=n_train)
 	weight<-ARM.weight$weight.ARM
     ending_candidate_model<-ARM.weight$ending_candidate_model
     }
 
 if(weight.function=="ARM.Prior") {
-	ARMP.weight<-ARMPweight(x=x,y=y,n_rep=n_rep,cand.mod=candidate_model,psi=psi,n.train=n.train)
+	ARMP.weight<-ARMPweight(x=x,y=y,n_rep=n_rep,candidate_model=candidate_model,psi=psi,n_train=n_train)
     weight<-ARMP.weight$weight.ARM.Prior
     ending_candidate_model<-ARMP.weight$ending_candidate_model
 }
 
 if(weight.function=="AIC") {
-	AIC.weight<-AICweight(x=x,y=y,cand.mod=candidate_model)
+	AIC.weight<-AICweight(x=x,y=y,candidate_model=candidate_model)
 	weight<-AIC.weight$weight.AIC
     ending_candidate_model<-AIC.weight$ending_candidate_model
     }
 
 if(weight.function=="AIC.Prior") {
-	AICP.weight<-AICPweight(x=x,y=y,cand.mod=candidate_model,psi=psi)
+	AICP.weight<-AICPweight(x=x,y=y,candidate_model=candidate_model,psi=psi)
 	weight<-AICP.weight$weight.AIC.Prior
     ending_candidate_model<-AICP.weight$ending_candidate_model
     }
 
 if(weight.function=="BIC") {
-	BIC.weight<-BICweight(x=x,y=y,cand.mod=candidate_model)
+	BIC.weight<-BICweight(x=x,y=y,candidate_model=candidate_model)
 	weight<-BIC.weight$weight.BIC
     ending_candidate_model<-BIC.weight$ending_candidate_model
 	    }
 
 if(weight.function=="BIC.Prior") {
-	BICP.weight<-BICPweight(x=x,y=y,cand.mod=candidate_model,psi=psi)
+	BICP.weight<-BICPweight(x=x,y=y,candidate_model=candidate_model,psi=psi)
 	weight<-BICP.weight$weight.BIC.Prior
     ending_candidate_model<-BICP.weight$ending_candidate_model
     }

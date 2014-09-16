@@ -1,40 +1,44 @@
-ARMPweight<-function(x,y,n_rep,cand.mod,n.train,psi){
+ARMPweight<-function(x,y,n_rep,candidate_model,n_train,psi){
 	
-	#cand.mod: m*p matrix, list of candiate model selected. 
+	#candidate_model: m*p matrix, list of candiate model selected. 
 	#n_rep: number of replication in data split
-	#n.train:number of observation in the training set
+	#n_train:number of observation in the training set
 
+	y <- drop(y)
+	x <- as.matrix(x)
+	p<-NCOL(x)
 	n<-length(y)
-	p<-ncol(x)
+
+	if (n != NROW(x)) 
+	    stop("x and y have different number of observations")
+	if (n_train >= n) 
+	    stop("Training size must be less than the number of observations")
 
 
-	if(is.matrix(x) == "FASLE") stop("x must be matrix with n rows")
-	if(is.vector(y)=="FALSE") stop("y must be a vector")
-	
-	if(missing(cand.mod)) stop("missing candidate model")
+	if(missing(candidate_model)) stop("missing candidate model")
 	if(!missing(psi)) psi<-psi
 	  else psi<-1
-	if(missing(n.train)) stop("missing n.train")
+	if(missing(n_train)) stop("missing n_train")
 
 
-cand.nonzero<-apply(cand.mod,1,sum)
+cand.nonzero<-apply(candidate_model,1,sum)
 o<-order(cand.nonzero)
-model.ordered<-cand.mod[o,]
+model.ordered<-candidate_model[o,]
 
-model<-model.ordered[apply(model.ordered,1,sum)<n.train,]
+model<-model.ordered[apply(model.ordered,1,sum)<n_train,]
 
 nonzero<-apply(model,1,sum)
 
 m<-dim(model)[1]
 
-one<-matrix(rep(1,n-n.train),ncol=1)
+one<-matrix(rep(1,n-n_train),ncol=1)
 
 D1<-matrix(rep(0,n_rep*m),ncol=m)
 
 s1<-matrix(rep(0,n_rep*m),ncol=m)
 
 for (i in 1:n_rep){
-	train<-sample(n,n.train,replace=F)
+	train<-sample(n,n_train,replace=F)
 	x.test<-x[-train,]
 	y.test<-y[-train]
 	x.train<-x[train,]
@@ -67,18 +71,18 @@ for (i in 1:n_rep){
 
 D2<-NULL
 s2<-NULL
-cand.mod2<-NULL
+candidate_model2<-NULL
 
 for (j in 1:m)  #removing the model which create NA results
     {
      if (all(is.na(D1[,j]))==FALSE&all(is.na(s1[,j]))==FALSE){
      D2<-cbind(D2,D1[,j])
      s2<-cbind(s2,s1[,j])
-     cand.mod2<-rbind(cand.mod2,model[j,])
+     candidate_model2<-rbind(candidate_model2,model[j,])
     }
 }
 
-pstar<-apply(cand.mod2,1,sum)   #non-zero variables in candidate model after removing model with NA results
+pstar<-apply(candidate_model2,1,sum)   #non-zero variables in candidate model after removing model with NA results
 
 prior.arm<-rep(0,dim(D2)[2])
 
@@ -122,7 +126,7 @@ w.prior<-numerator.prior/denominator.prior
 
 weight.arm.prior<-round(apply(w.prior,2,mean),5)
 
-outlist<-list(weight.ARM.Prior=weight.arm.prior,ending_candidate_model=cand.mod2)
+outlist<-list(weight.ARM.Prior=weight.arm.prior,ending_candidate_model=candidate_model2)
 
 }
 

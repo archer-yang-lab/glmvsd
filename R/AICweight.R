@@ -1,4 +1,4 @@
-AICweight<-function(x,y,cand.mod){
+AICweight<-function(x,y,candidate_model){
 	
 	n<-length(y)
 	p<-ncol(x)
@@ -7,12 +7,12 @@ AICweight<-function(x,y,cand.mod){
 	if(is.matrix(x) == "FASLE") stop("x must be matrix with n rows")
 	if(is.vector(y)=="FALSE") stop("y must be a vector")
 	
-	if(missing(cand.mod)) stop("missing candidate model")
+	if(missing(candidate_model)) stop("missing candidate model")
 
 
-	cand.nonzero<-apply(cand.mod,1,sum)
+	cand.nonzero<-apply(candidate_model,1,sum)
 	o<-order(cand.nonzero)
-	model<-cand.mod[o,]
+	model<-candidate_model[o,]
     nonzero<-apply(model,1,sum)
     m<-dim(model)[1]
 
