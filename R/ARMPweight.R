@@ -1,8 +1,4 @@
 ARMPweight<-function(x,y,n_rep=100,psi=1,candidate_model,n_train=ceiling(n/2)){
-	
-	#candidate_model: m*p matrix, list of candiate model selected. 
-	#n_rep: number of replication in data split
-	#n_train:number of observation in the training set
 	y <- drop(y)
 	x <- as.matrix(x)
 	p<-NCOL(x)
@@ -25,32 +21,31 @@ model<-model.ordered[rowSums(model.ordered)<n_train, ]
 nonzero<-rowSums(model)
 
 m <- NROW(model)
-D1<-matrix(NA, n_rep, m)
+d1<-matrix(NA, n_rep, m)
 s1<-matrix(NA, n_rep, m)
 
 for (i in 1:n_rep){
-	train<-sample(n,n_train,replace=F)
-	x.test<-x[-train,]
-	y.test<-y[-train]
-	x.train<-x[train,]
-	y.train<-y[train]
-      for (j in 1:m)
-	  {
-        if (any(model[j,])==1)
-           {
-			mi.train <- x.train[, model[j,]==1] 
-			mi.test <- x.test[, model[j,]==1] 
-           LSL<-lm(y.train~mi.train)
-           pred<-cbind(1,mi.test)%*%LSL$coef
-           D1[i,j]<-sum((y.test-pred)^2)
-           s1[i,j]<-summary(LSL)$sigma
-		}
-		else{
-           LSL<-lm(y.train~1)
-           D1[i,j]<-sum((y.test-LSL$coef)^2)
-           s1[i,j]<-summary(LSL)$sigma
-          }
-	  }
+	tindex<-sample(n,n_train,replace=F)
+	if (any(model[1,]==1))
+    {
+			for (j in 1:m)
+			{
+	           LSL<-lm(y[tindex]~x[tindex, model[j,]==1])
+	           d1[i,j]<-sum((y[-tindex]-cbind(1,x[-tindex, model[j,]==1])%*%LSL$coef)^2)
+	           s1[i,j]<-summary(LSL)$sigma
+			}
+		
+	}
+	else{
+			d1[i,1]<-sum((y[-tindex]-mean(y[tindex]))^2)
+	        s1[i,1]<-sd(y[tindex])
+		    for (j in 2:m)
+			{
+	           LSL<-lm(y[tindex]~x[tindex, model[j,]==1])
+	           d1[i,j]<-sum((y[-tindex]-cbind(1,x[-tindex, model[j,]==1])%*%LSL$coef)^2)
+	           s1[i,j]<-summary(LSL)$sigma
+			}
+        }
 }
 
 
@@ -60,8 +55,8 @@ candidate_model2<-NULL
 
 for (j in 1:m)  #removing the model which create NA results
     {
-     if (all(is.na(D1[,j]))==FALSE&all(is.na(s1[,j]))==FALSE){
-     D2<-cbind(D2,D1[,j])
+     if (all(is.na(d1[,j]))==FALSE&all(is.na(s1[,j]))==FALSE){
+     D2<-cbind(D2,d1[,j])
      s2<-cbind(s2,s1[,j])
      candidate_model2<-rbind(candidate_model2,model[j,])
     }
