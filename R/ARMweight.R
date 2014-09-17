@@ -1,114 +1,72 @@
-ARMweight<-function(x,y,n_rep,candidate_model,n_train){
-	
-	#candidate_model: m*p matrix, list of candiate model selected. 
-	#n_rep: number of replication in data split
-	#n_train:number of observation in the training set
-
-	n<-length(y)
-	p<-NCOL(x)
-	
-	if(is.matrix(x) == "FASLE") stop("x must be matrix with n rows")
-	if(is.vector(y)=="FALSE") stop("y must be a vector")
-	
-	if(missing(candidate_model)) stop("missing candidate model")
-	if(missing(n_train)) stop("missing n_train")
-
-
-cand.nonzero<-apply(candidate_model,1,sum)
-o<-order(cand.nonzero)
-model.ordered<-candidate_model[o,]
-
-model<-model.ordered[apply(model.ordered,1,sum)<n_train,]
-
-nonzero<-apply(model,1,sum)
-
-m<-dim(model)[1]
-
-one<-matrix(rep(1,n-n_train),ncol=1)
-
-D1<-matrix(rep(0,n_rep*m),ncol=m)
-
-s1<-matrix(rep(0,n_rep*m),ncol=m)
-
-for (i in 1:n_rep){
-	train<-sample(n,n_train,replace=F)
-	x.test<-x[-train,]
-	y.test<-y[-train]
-	x.train<-x[train,]
-	y.train<-y[train]
-
-      for (j in 1:m)
-	  {
-		if (sum(model[j,])==0) 
-           {
-           LSL<-lm(y.train~1)
-           coef.train<-LSL$coef
-           pred<-one%*%coef.train
-           D1[i,j]<-sum((y.test-pred)^2)
-           s1[i,j]<-summary(LSL)$sigma
-           }
-           if (sum(model[j,])!=0)
-           {
-           mi.train<-matrix(x.train[,which(model[j,]==1)],ncol=nonzero[j])
-           mi.test<-matrix(x.test[,which(model[j,]==1)],ncol=nonzero[j])
-           LSL<-lm(y.train~mi.train)
-           coef.train<-LSL$coef
-           xnew<-cbind(one,mi.test)
-           pred<-xnew%*%coef.train
-           D1[i,j]<-sum((y.test-pred)^2)
-           s1[i,j]<-summary(LSL)$sigma
-		}
-	  }
-}
-
-
-D2<-NULL
-s2<-NULL
-candidate_model2<-NULL
-
-for (j in 1:m)    #removing the model which create NA results
-    {
-     if (all(is.na(D1[,j]))==FALSE&all(is.na(s1[,j]))==FALSE){
-     D2<-cbind(D2,D1[,j])
-     s2<-cbind(s2,s1[,j])
-     candidate_model2<-rbind(candidate_model2,model[j,])
+ARMPweight <- function(x, y, n_rep = 100, psi = 1, candidate_model, n_train = ceiling(n/2), 
+    prior = TRUE) {
+    y <- drop(y)
+    x <- as.matrix(x)
+    p <- NCOL(x)
+    n <- length(y)
+    
+    if (n != NROW(x)) 
+        stop("x and y have different number of observations")
+    if (n_train >= n) 
+        stop("Training size must be less than the number of observations")
+    
+    if (missing(candidate_model)) 
+        stop("Users must supply a candidate model.")
+    if (is.matrix(candidate_model) != TRUE) 
+        stop("Supplied model must be a matrix.")
+    if (NCOL(candidate_model) != NCOL(x)) 
+        stop("Number of variables in candidate model and x does not match.")
+    
+    model.ordered <- candidate_model[order(rowSums(candidate_model)), ]
+    model <- model.ordered[rowSums(model.ordered) < n_train, ]
+    n_mo <- NROW(model)
+    d1 <- matrix(NA, n_rep, n_mo)
+    s1 <- matrix(NA, n_rep, n_mo)
+    
+    for (i in 1:n_rep) {
+        tindex <- sample(n, n_train, replace = F)
+        if (any(model[1, ] == 1)) {
+            for (j in 1:n_mo) {
+                LSL <- lm(y[tindex] ~ x[tindex, model[j, ] == 1])
+                d1[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, model[j, 
+                  ] == 1]) %*% LSL$coef)^2)
+                s1[i, j] <- summary(LSL)$sigma
+            }
+        } else {
+            d1[i, 1] <- sum((y[-tindex] - mean(y[tindex]))^2)
+            s1[i, 1] <- sd(y[tindex])
+            for (j in 2:n_mo) {
+                LSL <- lm(y[tindex] ~ x[tindex, model[j, ] == 1])
+                d1[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, model[j, 
+                  ] == 1]) %*% LSL$coef)^2)
+                s1[i, j] <- summary(LSL)$sigma
+            }
+        }
     }
-}
-
-E<-matrix(rep(0,n_rep*dim(candidate_model2)[1]),nrow=n_rep)
-
-for(i in 1:n_rep)
-  {
-   for (j in 1:dim(candidate_model2)[1])
-    {
-     E[i,j]<-(-n/2)*log(s2[i,j])-(s2[i,j]^(-2))*D2[i,j]/2
+    
+    tmp_omit <- na.omit(t(s1))
+    index_omit <- attributes(tmp_omit)$na.action
+    s1 <- s1[, -index_omit]
+    d1 <- d1[, -index_omit]
+    model <- model[-index_omit, ]
+    sk <- rowSums(model)
+    lw_num <- (-n/2) * log(s1) - (1/sqrt(s1)) * d1/2
+    if (prior == TRUE) {
+        n_mo_new <- NCOL(d1)
+        ck <- rep(NA, n_mo_new)
+        if (sk[1] == 0) {
+            ck[1] <- 2 * log(sk[1] + 2)/choose(p, sk[1])
+            ck[2:n_mo_new] <- sk[2:n_mo_new] * log(exp(1) * p/sk[2:n_mo_new]) + 
+                2 * log(sk[2:n_mo_new] + 2)
+        } else {
+            ck <- sk * log(exp(1) * p/sk) + 2 * log(sk + 2)
+        }
+        lw_num <- sweep(lw_num, MARGIN = 2, psi * ck, "-")
     }
-  }
-
-for(i in 1:n_rep)
-  {
-   E.max<-max(E[i,])
-   for (j in 1:dim(E)[2])
-    {
-    	E[i,j]<-E[i,j]-E.max
-    }
-  }
-
-
-numerator<-matrix(rep(0,n_rep*dim(candidate_model2)[1]),nrow=n_rep)
-
- for (i in 1:n_rep){
- for(j in 1:dim(E)[2]){
- if (abs(E[i,j])>150) (numerator[i,j]==0)
- else numerator[i,j]=exp(E[i,j])
- }
- }
-
-denominator<-apply(numerator,1,sum)
-
-w.ARM<-numerator/denominator
-
-weight.ARM<-round(apply(w.ARM,2,mean),5)
-
-outlist<-list(weight.ARM=weight.ARM,ending_candidate_model=candidate_model2)
+    lw_num <- sweep(lw_num, MARGIN = 1, apply(lw_num, 1, max), "-")
+    w_num <- apply(lw_num, c(1, 2), function(x) ifelse(abs(x) > 700, 0, 
+        exp(x)))
+    w_den <- rowSums(w_num)
+    weight <- apply(w_num/w_den, 2, mean)
+    list(weight = weight, ending_candidate_model = model)
 }

@@ -41,47 +41,46 @@ vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, k = 10, base_model,
     }
     # compute weights    
     if (weight_fun == "ARM") {
-        ARM.weight <- ARMweight(x = x, y = y, n_rep = n_rep, candidate_model = candidate_model, 
-            n_train = n_train)
-        weight <- ARM.weight$weight.ARM
-        ending_candidate_model <- ARM.weight$ending_candidate_model
+        fit <- ARMweight(x = x, y = y, n_rep = n_rep, candidate_model = candidate_model, 
+            n_train = n_train, prior=FALSE)
+        weight <- fit$weight
+        ending_candidate_model <- fit$ending_candidate_model
     }
     
     if (weight_fun == "ARM.Prior") {
-        ARMP.weight <- ARMPweight(x = x, y = y, n_rep = n_rep, candidate_model = candidate_model, 
-            psi = psi, n_train = n_train)
-        weight <- ARMP.weight$weight.ARM.Prior
-        ending_candidate_model <- ARMP.weight$ending_candidate_model
+        fit <- ARMweight(x = x, y = y, n_rep = n_rep, candidate_model = candidate_model, 
+            psi = psi, n_train = n_train, prior=TRUE)
+        weight <- fit$weight
+        ending_candidate_model <- fit$ending_candidate_model
     }
     
     if (weight_fun == "AIC") {
-        AIC.weight <- AICweight(x = x, y = y, candidate_model = candidate_model)
-        weight <- AIC.weight$weight.AIC
-        ending_candidate_model <- AIC.weight$ending_candidate_model
+        fit <- AICweight(x = x, y = y, candidate_model = candidate_model)
+        weight <- fit$weight
+        ending_candidate_model <- fit$ending_candidate_model
     }
     
     if (weight_fun == "AIC.Prior") {
-        AICP.weight <- AICPweight(x = x, y = y, candidate_model = candidate_model, 
+        fit <- AICPweight(x = x, y = y, candidate_model = candidate_model, 
             psi = psi)
-        weight <- AICP.weight$weight.AIC.Prior
-        ending_candidate_model <- AICP.weight$ending_candidate_model
+        weight <- fit$weight
+        ending_candidate_model <- fit$ending_candidate_model
     }
     
     if (weight_fun == "BIC") {
-        BIC.weight <- BICweight(x = x, y = y, candidate_model = candidate_model)
-        weight <- BIC.weight$weight.BIC
-        ending_candidate_model <- BIC.weight$ending_candidate_model
+        fit <- BICweight(x = x, y = y, candidate_model = candidate_model)
+        weight <- fit$weight
+        ending_candidate_model <- fit$ending_candidate_model
     }
     
     if (weight_fun == "BIC.Prior") {
-        BICP.weight <- BICPweight(x = x, y = y, candidate_model = candidate_model, 
+        fit <- BICPweight(x = x, y = y, candidate_model = candidate_model, 
             psi = psi)
-        weight <- BICP.weight$weight.BIC.Prior
-        ending_candidate_model <- BICP.weight$ending_candidate_model
+        weight <- fit$weight
+        ending_candidate_model <- fit$ending_candidate_model
     }
-
-    DIFF <- symdiff(ending_candidate_model, base_model)
-    TMP_matrix <- sweep(candidate_model, MARGIN = 2, base_model, "-")
+    TMP_matrix <- sweep(ending_candidate_model, MARGIN = 2, base_model, "-")
+	DIFF <- rowSums(abs(TMP_matrix))
     DIFF_minus <- rowSums(TMP_matrix == -1)
     DIFF_plus <- rowSums(TMP_matrix == 1)
     VSD <- weight %*% DIFF  # vsd value
@@ -92,3 +91,5 @@ vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, k = 10, base_model,
     class(object) <- "vsd"
     object
 }
+
+
