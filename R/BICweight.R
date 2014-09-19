@@ -1,52 +1,36 @@
-BICweight<-function(x,y,candidate_model){
-	
-	n<-length(y)
-	p<-NCOL(x)
-	
-	
-	if(is.matrix(x) == "FASLE") stop("x must be matrix with n rows")
-	if(is.vector(y)=="FALSE") stop("y must be a vector")
-	
-	if(missing(candidate_model)) stop("missing candidate model")
-
-
-	cand.nonzero<-apply(candidate_model,1,sum)
-	o<-order(cand.nonzero)
-	model<-candidate_model[o,]
-    nonzero<-apply(model,1,sum)
-    m<-dim(model)[1]
-
-
-BIC<-rep(0,m)
-
-for (i in 1:m){
-if(nonzero[i]==0){
-LSL<-lm(y~1) 
-rss<-sum(summary(LSL)$res^2)
-BIC[i]<-n*log(rss/n)+nonzero[i]*log(n)
-}
-if(nonzero[i]!=0){
-x.new<-matrix(x[,which(model[i,]==1)],ncol=nonzero[i])
-LSL<-lm(y~x.new)
-rss<-sum(summary(LSL)$res^2)
-BIC[i]<-n*log(rss/n)+nonzero[i]*log(n)
-}
-}
-
-
- BIC2<-NULL
- m2<-NULL
-
- for(i in 1:m){
- if (is.na(BIC[i])==FALSE&abs(BIC[i])!=Inf){
- BIC2<-c(BIC2,BIC[i])
- m2<-rbind(m2,model[i,])
- }
- }
-
-BIC.new<-BIC2-min(BIC2)
-
-weight.BIC<-round(exp(-BIC.new/2)/sum(exp(-BIC.new/2)),5)
-
-outlist<-list(weight.BIC=weight.BIC,ending_candidate_model=m2)
+BICPweight <- function(x, y, candidate_model, psi, prior = TRUE) {
+    p <- NCOL(x)
+    n <- length(y)
+    n_mo <- NROW(candidate_model)
+    sk <- rowSums(candidate_model)
+    ik <- rep(NA, n_mo)
+    if (any(candidate_model[1, ] == 1)) {
+        for (i in 1:n_mo) {
+            LSL <- lm(y ~ x[, candidate_model[i, ] == 1])
+            rss <- crossprod(summary(LSL)$res, summary(LSL)$res)
+            ik[i] <- n * log(rss/n) + sk[i] * log(n)
+        }
+    } else {
+        rss <- sum((y - mean(y))^2)
+        ik[1] <- n * log(rss/n) + sk[1] * log(n)
+        for (i in 2:n_mo) {
+            LSL <- lm(y ~ x[, candidate_model[i, ] == 1])
+            rss <- crossprod(summary(LSL)$res, summary(LSL)$res)
+            ik[i] <- n * log(rss/n) + sk[i] * log(n)
+        }
+    }
+    if (prior == TRUE) {
+        ck <- rep(NA, n_mo)
+        if (sk[1] == 0) {
+            ck[1] <- 2 * log(sk[1] + 2)/choose(p, sk[1])
+            ck[2:n_mo] <- sk[2:n_mo] * log(exp(1) * p/sk[2:n_mo]) + 2 * 
+                log(sk[2:n_mo] + 2)
+        } else {
+            ck <- sk * log(exp(1) * p/sk) + 2 * log(sk + 2)
+        }
+        ik <- ik + psi * ck
+    }
+    ik <- ik - min(ik)
+    weight <- exp(-ik/2)/sum(exp(-ik/2))
+    outlist <- list(weight = weight)
 }

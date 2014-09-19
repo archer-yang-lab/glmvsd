@@ -1,8 +1,5 @@
 setwd('/Users/emeryyi/Dropbox/Research/13_glmvsd')
 library(vsd)#
-# x<-matrix(rnorm(50*8),ncol=8)#
-# y<-rnorm(50,0,1.5)#
-# best <- sample(c(1,0),8,replace=T)#
 library("MASS")#
 #
 n<-50#
@@ -32,10 +29,6 @@ set.seed(1000+i)#
 x<-mvrnorm(n,rep(0,d),sigma)#
 e<-rnorm(n,0,0.01)#
 y<-drop(x%*%beta+e)#
-best <- sample(c(1,0),65,replace=T)#
-#
-# fit<-vsd(x,y,n.train=40,n.sim=50,candidate="union",weight.function="ARM.Prior", best=best)#
-# #
 y <- drop(y)#
 x <- as.matrix(x)#
 p<-NCOL(x)#
@@ -43,156 +36,58 @@ n<-length(y)#
 lassofit<-glmnet(x=x,y=y,alpha=1,maxit=100000000)#
 scadfit<-ncvreg(X=x,y=y,family="gaussian",penalty="SCAD",max.iter=10000000)#
 mcpfit<-ncvreg(X=x,y=y,family="gaussian",penalty="MCP",max.iter=10000000)#
-  lasso.path<- as.matrix(lassofit$beta)#
-  scad.path<- as.matrix(scadfit$beta[-1,])#
-  mcp.path<- as.matrix(mcpfit$beta[-1,])#
 #
-  beta.path<-t(cbind(lasso.path,scad.path,mcp.path))#
-  ind.path<-(1-(beta.path==0))#
+lasso.path<- as.matrix(lassofit$beta)#
+scad.path<- as.matrix(scadfit$beta[-1,])#
+mcp.path<- as.matrix(mcpfit$beta[-1,])#
 #
-  candidate_model <- unique(ind.path)#
-  rownames(candidate_model) <- NULL#
+beta.path<-t(cbind(lasso.path,scad.path,mcp.path))#
+ind.path<-(1-(beta.path==0))#
+#
+candidate_model <- unique(ind.path)#
+rownames(candidate_model) <- NULL#
 #
 n_rep=100#
 n_train=ceiling(n/2)#
 psi=1
-y <- drop(y)#
-	x <- as.matrix(x)#
-	p<-NCOL(x)#
-	n<-length(y)#
-#
-	if (n != NROW(x)) #
-	    stop("x and y have different number of observations")#
-	if (n_train >= n) #
-	    stop("Training size must be less than the number of observations")#
-#
-	   if(missing(candidate_model)) stop("Users must supply a candidate model.")#
-	   if(is.matrix(candidate_model)!=TRUE) stop("Supplied model must be a matrix.")#
-	   if(NCOL(candidate_model)!=NCOL(x)) stop("Number of variables in candidate model and x does not match.")#
-cand.nonzero<-rowSums(candidate_model)#
-o<-order(cand.nonzero)#
-model.ordered<-candidate_model[o,]#
-model<-model.ordered[rowSums(model.ordered)<n_train, ]#
-nonzero<-rowSums(model)#
-#
-n_mo <- NROW(model)#
-d1<-matrix(NA, n_rep, n_mo)#
-s1<-matrix(NA, n_rep, n_mo)#
-#
-for (i in 1:n_rep){#
-	tindex<-sample(n,n_train,replace=F)#
-	if (any(model[1,]==1))#
-    {#
-			for (j in 1:n_mo)#
-			{#
-	           LSL<-lm(y[tindex]~x[tindex, model[j,]==1])#
-	           d1[i,j]<-sum((y[-tindex]-cbind(1,x[-tindex, model[j,]==1])%*%LSL$coef)^2)#
-	           s1[i,j]<-summary(LSL)$sigma#
-			}#
-	}#
-	else{#
-			d1[i,1]<-sum((y[-tindex]-mean(y[tindex]))^2)#
-	        s1[i,1]<-sd(y[tindex])#
-		    for (j in 2:n_mo)#
-			{#
-	           LSL<-lm(y[tindex]~x[tindex, model[j,]==1])#
-	           d1[i,j]<-sum((y[-tindex]-cbind(1,x[-tindex, model[j,]==1])%*%LSL$coef)^2)#
-	           s1[i,j]<-summary(LSL)$sigma#
-			}#
+candidate
+candidate_model <- candidate_model[rowSums(candidate_model) < (n-2), ]
+prior = TRUE
+ik
+ik<- ik - min(ik)
+sum(weigth)
+sum(weight)
+p <- NCOL(x)#
+    n <- length(y)#
+    n_mo <- NROW(candidate_model)#
+    sk <- rowSums(candidate_model)#
+    ik <- rep(NA, n_mo)#
+	if (any(candidate_model[1, ] == 1)) {#
+        for (i in 1:n_mo) {#
+            LSL <- lm(y ~ x[ , candidate_model[i, ] == 1])#
+			rss	<- crossprod(summary(LSL)$res, summary(LSL)$res)#
+            ik[i] <- n*log(rss/n)+sk[i]*log(n)#
         }#
-}#
-#
-tmp_omit <- na.omit(t(s1))#
-index_omit <- attributes(tmp_omit)$na.action#
-s1 <- s1[,-index_omit]#
-d1 <- d1[,-index_omit]#
-model <- model[-index_omit,]
-model
-dim(model)
-dim(s1)
-s`
-``
-s1
-i=1
-pstar <- rowSums(model)
-choose(p,pstar[i])
-pstar[i]
-pstar
-sk <- rowSums(model)
-k
-e
-exp(1)
-exp
-pi
-?pi
-d1
-dim(d1)
-ck<-rep(NA,NCOL(d1))
-if(sk[1]==0){#
- ck[1]<-2*log(sk[1]+2)/choose(p,sk[1])#
-}
-ck[2:,]
-NCOL(d1)
-ck[2:]
-ck[2:n_mo_new]<-sk[2:n_mo_new]*log(exp(1)*p/sk[2:n_mo_new])+2*log(sk[2:n_mo_new]+2)}
-n_mo_new <- NCOL(d1)
-ck<-rep(NA,n_mo_new)
-ck[1]<-2*log(sk[1]+2)/choose(p,sk[1])
-ck[2:n_mo_new]<-sk[2:n_mo_new]*log(exp(1)*p/sk[2:n_mo_new])+2*log(sk[2:n_mo_new]+2)
-ck<-sk*log(exp(1)*p/sk)+2*log(sk+2)
-p
-sk
-log(exp(1)*p/sk)
-n_mo_new <- NCOL(d1)#
-ck<-rep(NA,n_mo_new)#
-if(sk[1]==0){#
- ck[1]<-2*log(sk[1]+2)/choose(p,sk[1])#
- ck[2:n_mo_new] <- sk[2:n_mo_new]*log(exp(1)*p/sk[2:n_mo_new]) + 2 * log(sk[2:n_mo_new]+2)#
-}#
-else{#
- ck<-sk*log(exp(1)*p/sk)+2*log(sk+2)#
-}
-if(sk[1]==0){#
- ck[1]<-2*log(sk[1]+2)/choose(p,sk[1])#
- ck[2:n_mo_new] <- sk[2:n_mo_new]*log(exp(1)*p/sk[2:n_mo_new]) + 2 * log(sk[2:n_mo_new]+2)#
-}#
-else#
-{#
- ck<-sk*log(exp(1)*p/sk)+2*log(sk+2)#
-}
-n_mo_new <- NCOL(d1)#
-ck<-rep(NA,n_mo_new)#
-if(sk[1]==0){#
- ck[1]<-2*log(sk[1]+2)/choose(p,sk[1])#
- ck[2:n_mo_new] <- sk[2:n_mo_new]*log(exp(1)*p/sk[2:n_mo_new]) + 2 * log(sk[2:n_mo_new]+2)#
-}else{#
- ck<-sk*log(exp(1)*p/sk)+2*log(sk+2)#
-}
-E.prior <- (-n/2) * log(s1) - (1/sqrt(s1))*d1/2
-E.prior
-lw_num <- (-n/2) * log(s1) - (1/sqrt(s1))*d1/2
-length(ck)
-ck
-lw_num <- sweep((-n/2)*log(s1)-(1/sqrt(s1))*d1/2, MARGIN = 2, psi*ck, "-")
-rowMax
-rowmax
-apply(lw_num,1,max)
-lw_num_final <- sweep(lw_num, MARGIN = 1, apply(lw_num,1,max), "-")
-length(apply(lw_num,1,max))
-lw_num <- sweep((-n/2)*log(s1)-(1/sqrt(s1))*d1/2, MARGIN = 2, psi*ck, "-")#
-lw_num <- sweep(lw_num, MARGIN = 1, apply(lw_num,1,max), "-")
-lw_num[,lw_num>700]
-apply(lw_num, c(1,1), function(x){ifelse(abs(x)>700,0,x)})
-apply(lw_num, c(1,1), function(x) ifelse(abs(x)>700,0,x))
-lw_num
-apply(lw_num, c(1,2), function(x) ifelse(abs(x)>700,0,x))
-w_num <- apply(lw_num, c(1,2), function(x) ifelse(abs(x)>700,0,exp(x)))
-w_num
-dim(lw_num)
-rowSums(w_num)
-w_den <- rowSums(w_num)
-w.prior<-w_num/w_den
-w.prior
+    } else {#
+          rss <- sum((y - mean(y))^2)#
+          ik[1] <- n*log(rss/n)+sk[1]*log(n)#
+        for (i in 2:n_mo) {#
+            LSL <- lm(y ~ x[ , candidate_model[i, ] == 1])#
+			rss	<- crossprod(summary(LSL)$res, summary(LSL)$res)#
+            ik[i] <- n*log(rss/n)+sk[i]*log(n)#
+        }#
+    }#
+    if (prior == TRUE) {#
+        ck <- rep(NA, n_mo)#
+        if (sk[1] == 0) {#
+            ck[1] <- 2 * log(sk[1] + 2)/choose(p, sk[1])#
+            ck[2:n_mo] <- sk[2:n_mo] * log(exp(1) * p/sk[2:n_mo]) + #
+                2 * log(sk[2:n_mo] + 2)#
+        } else {#
+            ck <- sk * log(exp(1) * p/sk) + 2 * log(sk + 2)#
+        }#
+        ik <- ik + psi * ck#
+    }
 setwd('/Users/emeryyi/Dropbox/Research/googleproject/glmvsd/R')
-apply(w.prior,2,mean)
-sum(apply(w.prior,2,mean))
+weight <- exp(-ik/2)/sum(exp(-ik/2))
+weight

@@ -1,6 +1,6 @@
 vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, k = 10, base_model, 
     psi = 1, candidate = c("union", "supplied"), candidate_model, weight_fun = c("ARM", 
-        "ARM.Prior", "AIC", "AIC.Prior", "BIC", "BIC.Prior")) {
+        "ARM.Prior", "BIC", "BIC.Prior")) {
     # check data and parameter
     candidate <- match.arg(candidate)
     weight_fun <- match.arg(weight_fun)
@@ -27,8 +27,6 @@ vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, k = 10, base_model,
         mcp.path <- as.matrix(mcpfit$beta[-1, ])
         beta.path <- t(cbind(lasso.path, scad.path, mcp.path))
         ind.path <- (1 - (beta.path == 0))
-        candidate_model <- unique(ind.path)
-        rownames(candidate_model) <- NULL
     }
     if (candidate == "supplied") {
         if (missing(candidate_model)) 
@@ -39,47 +37,37 @@ vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, k = 10, base_model,
             stop("Number of variables in candidate model and x does not match.")
         ######################## add 0-1 check
     }
+    candidate_model <- unique(ind.path)
+    rownames(candidate_model) <- NULL
+    candidate_model <- candidate_model[order(rowSums(candidate_model)), ]
     # compute weights    
     if (weight_fun == "ARM") {
-        fit <- ARMweight(x = x, y = y, n_rep = n_rep, candidate_model = candidate_model, 
-            n_train = n_train, prior=FALSE)
+	    candidate_model <- candidate_model[rowSums(candidate_model) < (n_train-2), ]
+        fit <- ARMweight(x = x, y = y, candidate_model = candidate_model, 
+            n_train = n_train, n_rep = n_rep, psi = psi, prior=FALSE)
         weight <- fit$weight
-        ending_candidate_model <- fit$ending_candidate_model
     }
     
     if (weight_fun == "ARM.Prior") {
-        fit <- ARMweight(x = x, y = y, n_rep = n_rep, candidate_model = candidate_model, 
-            psi = psi, n_train = n_train, prior=TRUE)
+	    candidate_model <- candidate_model[rowSums(candidate_model) < (n_train-2), ]
+        fit <- ARMweight(x = x, y = y, candidate_model = candidate_model, 
+            n_train = n_train, n_rep = n_rep, psi = psi, prior=TRUE)
         weight <- fit$weight
-        ending_candidate_model <- fit$ending_candidate_model
-    }
-    
-    if (weight_fun == "AIC") {
-        fit <- AICweight(x = x, y = y, candidate_model = candidate_model)
-        weight <- fit$weight
-        ending_candidate_model <- fit$ending_candidate_model
-    }
-    
-    if (weight_fun == "AIC.Prior") {
-        fit <- AICPweight(x = x, y = y, candidate_model = candidate_model, 
-            psi = psi)
-        weight <- fit$weight
-        ending_candidate_model <- fit$ending_candidate_model
     }
     
     if (weight_fun == "BIC") {
-        fit <- BICweight(x = x, y = y, candidate_model = candidate_model)
+	    candidate_model <- candidate_model[rowSums(candidate_model) < (n-2), ]
+        fit <- BICweight(x = x, y = y, candidate_model = candidate_model, psi = psi, prior=FALSE)
         weight <- fit$weight
-        ending_candidate_model <- fit$ending_candidate_model
     }
     
     if (weight_fun == "BIC.Prior") {
-        fit <- BICPweight(x = x, y = y, candidate_model = candidate_model, 
-            psi = psi)
+	    candidate_model <- candidate_model[rowSums(candidate_model) < (n-2), ]
+        fit <- BICweight(x = x, y = y, candidate_model = candidate_model, 
+            psi = psi, prior=TRUE)
         weight <- fit$weight
-        ending_candidate_model <- fit$ending_candidate_model
     }
-    TMP_matrix <- sweep(ending_candidate_model, MARGIN = 2, base_model, "-")
+    TMP_matrix <- sweep(candidate_model, MARGIN = 2, base_model, "-")
 	DIFF <- rowSums(abs(TMP_matrix))
     DIFF_minus <- rowSums(TMP_matrix == -1)
     DIFF_plus <- rowSums(TMP_matrix == 1)
@@ -87,9 +75,8 @@ vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, k = 10, base_model,
     VSD_minus <- weight %*% DIFF_minus  #false positive
     VSD_plus <- weight %*% DIFF_plus  #false negative    
     object <- list(VSD = VSD, VSD_minus = VSD_minus, VSD_plus = VSD_plus, 
-        weight = weight, difference = DIFF)
+        weight = weight, difference = DIFF, candidate_model_cleaned = candidate_model)
     class(object) <- "vsd"
     object
 }
-
 
