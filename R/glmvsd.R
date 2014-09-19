@@ -1,4 +1,4 @@
-vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check, 
+glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check, 
     psi = 1, candidate = c("union", "supplied"), candidate_models, weight_fun = c("ARM", 
         "ARM.Prior", "BIC", "BIC.Prior")) {
     # check data and parameter
@@ -70,12 +70,12 @@ vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
 	DIFF <- rowSums(abs(TMP_matrix))
     DIFF_minus <- rowSums(TMP_matrix == -1)
     DIFF_plus <- rowSums(TMP_matrix == 1)
-    VSD <- weight %*% DIFF  # vsd value
+    VSD <- weight %*% DIFF  # glmvsd value
     VSD_minus <- weight %*% DIFF_minus  #false positive
     VSD_plus <- weight %*% DIFF_plus  #false negative    
     object <- list(VSD = VSD, VSD_minus = VSD_minus, VSD_plus = VSD_plus, 
         weight = weight, difference = DIFF, candidate_models_cleaned = candidate_models)
-    class(object) <- "vsd"
+    class(object) <- "glmvsd"
     object
 }
 

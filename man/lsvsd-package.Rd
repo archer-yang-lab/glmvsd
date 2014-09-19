@@ -1,5 +1,5 @@
-\name{vsd-package}
-\alias{vsd-package}
+\name{lsvsd-package}
+\alias{lsvsd-package}
 \docType{package}
 \title{
 Variable Selection Deviation
@@ -9,13 +9,13 @@ This package calculate the variable selection deviation (VSD) to measure the rel
 }
 \details{
 \tabular{ll}{
-Package: \tab vsd\cr
+Package: \tab lsvsd\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
 Date: \tab 2012-09-12\cr
 License: \tab What license is it under?\cr
 }
-The package is very simple to use. It calculates the variable selection deviation of the model selected. The functions: \code{vsd,ARMweight,ARMPweight,AICweight,AICPweight,BICweight,BICPweight}
+The package is very simple to use. It calculates the variable selection deviation of the model selected. The functions: \code{lsvsd,ARMweight,ARMPweight,AICweight,AICPweight,BICweight,BICPweight}
 }
 \author{
 Ying Nan and Yuhong Yang

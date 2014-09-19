@@ -1,3 +1,2 @@
-
 import(stats,glmnet,ncvreg)
-export(vsd,AICweight,AICPweight,ARMweight,ARMPweight,BICweight,BICPweight)
+export(vsd)

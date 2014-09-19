@@ -1,4 +1,4 @@
-Package: vsd
+Package: glmvsd
 Type: Package
 Title: Variable Selection Deviation
 Version: 1.0
