@@ -1,12 +1,14 @@
 Package: glmvsd
 Type: Package
-Title: Variable Selection Deviation
+Title: Variable selection diagnostics (VSD) measures for high-dimensional generalized linear models
 Version: 1.0
-Date: 2012-05-03
+Date: 2014-09-19
 Author: Ying Nan
-Maintainer: Ying Nan <nanx0006@umn.edu>
+Maintainer: Ying Nan <nanx0006@umn.edu>, Yi Yang <yiyang@umn.edu>, Yuhong Yang <yyang@stat.umn.edu>
 Depends: glmnet,ncvreg
 Imports: stats,glmnet,ncvreg
-Description: Calculating the variable selection deviation for regression. 
+Description: This package implements variable selection deviation measures for high-dimensional model selection methods such as LASSO, SCAD and MCP, to decide whether the sparse pattern identified by those methods is reliable. 
 License: GPL-2
+URL: https://github.com/emeryyi/glmvsd
 Packaged: 2012-09-13 03:33:15 UTC; nanx0006
+Date/Publication: 2014-9-19 08:00:50
