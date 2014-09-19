@@ -1,12 +1,12 @@
-BICPweight <- function(x, y, candidate_model, psi, prior = TRUE) {
+BICPweight <- function(x, y, candidate_models, psi, prior = TRUE) {
     p <- NCOL(x)
     n <- length(y)
-    n_mo <- NROW(candidate_model)
-    sk <- rowSums(candidate_model)
+    n_mo <- NROW(candidate_models)
+    sk <- rowSums(candidate_models)
     ik <- rep(NA, n_mo)
-    if (any(candidate_model[1, ] == 1)) {
+    if (any(candidate_models[1, ] == 1)) {
         for (i in 1:n_mo) {
-            LSL <- lm(y ~ x[, candidate_model[i, ] == 1])
+            LSL <- lm(y ~ x[, candidate_models[i, ] == 1])
             rss <- crossprod(summary(LSL)$res, summary(LSL)$res)
             ik[i] <- n * log(rss/n) + sk[i] * log(n)
         }
@@ -14,7 +14,7 @@ BICPweight <- function(x, y, candidate_model, psi, prior = TRUE) {
         rss <- sum((y - mean(y))^2)
         ik[1] <- n * log(rss/n) + sk[1] * log(n)
         for (i in 2:n_mo) {
-            LSL <- lm(y ~ x[, candidate_model[i, ] == 1])
+            LSL <- lm(y ~ x[, candidate_models[i, ] == 1])
             rss <- crossprod(summary(LSL)$res, summary(LSL)$res)
             ik[i] <- n * log(rss/n) + sk[i] * log(n)
         }

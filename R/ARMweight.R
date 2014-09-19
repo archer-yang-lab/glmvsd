@@ -1,17 +1,17 @@
-ARMPweight <- function(x, y, candidate_model, n_train, n_rep, psi, prior = TRUE) {
+ARMPweight <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) {
     p <- NCOL(x)
     n <- length(y)
-    n_mo <- NROW(candidate_model)
-    sk <- rowSums(candidate_model)
+    n_mo <- NROW(candidate_models)
+    sk <- rowSums(candidate_models)
     dk <- matrix(NA, n_rep, n_mo)
     sigma_k <- matrix(NA, n_rep, n_mo)
     for (i in 1:n_rep) {
         tindex <- sample(n, n_train, replace = F)
-        if (any(candidate_model[1, ] == 1)) {
+        if (any(candidate_models[1, ] == 1)) {
             for (j in 1:n_mo) {
-                LSL <- lm(y[tindex] ~ x[tindex, candidate_model[j, ] == 
+                LSL <- lm(y[tindex] ~ x[tindex, candidate_models[j, ] == 
                   1])
-                dk[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, candidate_model[j, 
+                dk[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, candidate_models[j, 
                   ] == 1]) %*% LSL$coef)^2)
                 sigma_k[i, j] <- summary(LSL)$sigma
             }
@@ -19,18 +19,14 @@ ARMPweight <- function(x, y, candidate_model, n_train, n_rep, psi, prior = TRUE)
             dk[i, 1] <- sum((y[-tindex] - mean(y[tindex]))^2)
             sigma_k[i, 1] <- sd(y[tindex])
             for (j in 2:n_mo) {
-                LSL <- lm(y[tindex] ~ x[tindex, candidate_model[j, ] == 
+                LSL <- lm(y[tindex] ~ x[tindex, candidate_models[j, ] == 
                   1])
-                dk[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, candidate_model[j, 
+                dk[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, candidate_models[j, 
                   ] == 1]) %*% LSL$coef)^2)
                 sigma_k[i, j] <- summary(LSL)$sigma
             }
         }
     }
-    # tmp_omit <- na.omit(t(sigma_k)) index_omit <-
-    # attributes(tmp_omit)$na.action sigma_k <- sigma_k[, -index_omit] dk
-    # <- dk[, -index_omit] candidate_model <- candidate_model[-index_omit,
-    # ]
     lw_num <- (-n/2) * log(sigma_k) - (1/sqrt(sigma_k)) * dk/2
     if (prior == TRUE) {
         ck <- rep(NA, n_mo)
@@ -46,7 +42,6 @@ ARMPweight <- function(x, y, candidate_model, n_train, n_rep, psi, prior = TRUE)
     lw_num <- sweep(lw_num, MARGIN = 1, apply(lw_num, 1, max), "-")
     w_num <- apply(lw_num, c(1, 2), function(x) ifelse(abs(x) > 700, 0, 
         exp(x)))
-    w_den <- rowSums(w_num)
-    weight <- apply(w_num/w_den, 2, mean)
+    weight <- apply(w_num/rowSums(w_num), 2, mean)
     list(weight = weight)
 }

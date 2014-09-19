@@ -1,5 +1,5 @@
-vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, k = 10, base_model, 
-    psi = 1, candidate = c("union", "supplied"), candidate_model, weight_fun = c("ARM", 
+vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check, 
+    psi = 1, candidate = c("union", "supplied"), candidate_models, weight_fun = c("ARM", 
         "ARM.Prior", "BIC", "BIC.Prior")) {
     # check data and parameter
     candidate <- match.arg(candidate)
@@ -12,9 +12,8 @@ vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, k = 10, base_model,
         stop("x and y have different number of observations")
     if (n_train >= n) 
         stop("Training size must be less than the number of observations")
-    if (missing(base_model)) 
+    if (missing(model_check)) 
         stop("User must provide a base model.")
-    
 	# use union option to compute candidate models
     if (candidate == "union") {
         lassofit <- glmnet(x = x, y = y, alpha = 1, maxit = 1e+08)
@@ -29,45 +28,45 @@ vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, k = 10, base_model,
         ind.path <- (1 - (beta.path == 0))
     }
     if (candidate == "supplied") {
-        if (missing(candidate_model)) 
+        if (missing(candidate_models)) 
             stop("Users must supply a candidate model.")
-        if (is.matrix(candidate_model) != TRUE) 
+        if (is.matrix(candidate_models) != TRUE) 
             stop("Supplied model must be a matrix.")
-        if (NCOL(candidate_model) != NCOL(x)) 
+        if (NCOL(candidate_models) != NCOL(x)) 
             stop("Number of variables in candidate model and x does not match.")
         ######################## add 0-1 check
     }
-    candidate_model <- unique(ind.path)
-    rownames(candidate_model) <- NULL
-    candidate_model <- candidate_model[order(rowSums(candidate_model)), ]
+    candidate_models <- unique(ind.path)
+    rownames(candidate_models) <- NULL
+    candidate_models <- candidate_models[order(rowSums(candidate_models)), ]
     # compute weights    
     if (weight_fun == "ARM") {
-	    candidate_model <- candidate_model[rowSums(candidate_model) < (n_train-2), ]
-        fit <- ARMweight(x = x, y = y, candidate_model = candidate_model, 
+	    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
+        fit <- ARMweight(x = x, y = y, candidate_models = candidate_models, 
             n_train = n_train, n_rep = n_rep, psi = psi, prior=FALSE)
         weight <- fit$weight
     }
     
     if (weight_fun == "ARM.Prior") {
-	    candidate_model <- candidate_model[rowSums(candidate_model) < (n_train-2), ]
-        fit <- ARMweight(x = x, y = y, candidate_model = candidate_model, 
+	    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
+        fit <- ARMweight(x = x, y = y, candidate_models = candidate_models, 
             n_train = n_train, n_rep = n_rep, psi = psi, prior=TRUE)
         weight <- fit$weight
     }
     
     if (weight_fun == "BIC") {
-	    candidate_model <- candidate_model[rowSums(candidate_model) < (n-2), ]
-        fit <- BICweight(x = x, y = y, candidate_model = candidate_model, psi = psi, prior=FALSE)
+	    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
+        fit <- BICweight(x = x, y = y, candidate_models = candidate_models, psi = psi, prior=FALSE)
         weight <- fit$weight
     }
     
     if (weight_fun == "BIC.Prior") {
-	    candidate_model <- candidate_model[rowSums(candidate_model) < (n-2), ]
-        fit <- BICweight(x = x, y = y, candidate_model = candidate_model, 
+	    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
+        fit <- BICweight(x = x, y = y, candidate_models = candidate_models, 
             psi = psi, prior=TRUE)
         weight <- fit$weight
     }
-    TMP_matrix <- sweep(candidate_model, MARGIN = 2, base_model, "-")
+    TMP_matrix <- sweep(candidate_models, MARGIN = 2, model_check, "-")
 	DIFF <- rowSums(abs(TMP_matrix))
     DIFF_minus <- rowSums(TMP_matrix == -1)
     DIFF_plus <- rowSums(TMP_matrix == 1)
@@ -75,7 +74,7 @@ vsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, k = 10, base_model,
     VSD_minus <- weight %*% DIFF_minus  #false positive
     VSD_plus <- weight %*% DIFF_plus  #false negative    
     object <- list(VSD = VSD, VSD_minus = VSD_minus, VSD_plus = VSD_plus, 
-        weight = weight, difference = DIFF, candidate_model_cleaned = candidate_model)
+        weight = weight, difference = DIFF, candidate_models_cleaned = candidate_models)
     class(object) <- "vsd"
     object
 }
