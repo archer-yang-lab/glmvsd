@@ -53,8 +53,6 @@ BugReport: \url{https://github.com/emeryyi/glmvsd}\cr
 
 \examples{
 # generate simulation data
-library(glmvsd)
-library(MASS)
 n <- 50
 p <- 8
 beta <- c(3,1.5,0,0,2,0,0,0)
