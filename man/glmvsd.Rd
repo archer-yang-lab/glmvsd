@@ -65,7 +65,7 @@ for(i in 1:p){
 
 x <- mvrnorm(n, rep(0,p), sigma)
 e <- rnorm(n)
-y <- x %*% beta + e
+y <- x \%*\% beta + e
 
 # user provide a model to be checked
 model_check <- c(0,1,1,1,0,0,0,1)
@@ -79,14 +79,16 @@ v_BIC <- glmvsd(x, y,
 model_check = model_check,
 method = "union", weight_function = "BIC")
 
-candidate_models = rbind(c(0,0,0,0,0,0,0,1), c(0,1,0,0,0,0,0,1), c(0,1,1,1,0,0,0,1), c(0,1,1,0,0,0,0,1), c(1,1,0,1,1,0,0,0), c(1,1,0,0,1,0,0,0))
+candidate_models = rbind(c(0,0,0,0,0,0,0,1), 
+c(0,1,0,0,0,0,0,1), c(0,1,1,1,0,0,0,1), 
+c(0,1,1,0,0,0,0,1), c(1,1,0,1,1,0,0,0), 
+c(1,1,0,0,1,0,0,0))
 
 v1_BIC <- glmvsd(x, y, 
 model_check = model_check, psi=1, 
 method = "customize", 
 candidate_models = candidate_models, 
 weight_function = "BIC.Prior")
-
 
 }
 
