@@ -1,7 +1,5 @@
-setwd('/Users/emeryyi/Dropbox/Research/13_glmvsd')
-library(vsd)#
 library("MASS")#
-#
+library(vsd)#
 n<-50#
 d=p<-65#
 #K<-10 #K-fold cv#
@@ -46,48 +44,21 @@ ind.path<-(1-(beta.path==0))#
 #
 candidate_model <- unique(ind.path)#
 rownames(candidate_model) <- NULL#
-#
-n_rep=100#
-n_train=ceiling(n/2)#
-psi=1
-candidate
-candidate_model <- candidate_model[rowSums(candidate_model) < (n-2), ]
-prior = TRUE
-ik
-ik<- ik - min(ik)
-sum(weigth)
-sum(weight)
-p <- NCOL(x)#
-    n <- length(y)#
-    n_mo <- NROW(candidate_model)#
-    sk <- rowSums(candidate_model)#
-    ik <- rep(NA, n_mo)#
-	if (any(candidate_model[1, ] == 1)) {#
-        for (i in 1:n_mo) {#
-            LSL <- lm(y ~ x[ , candidate_model[i, ] == 1])#
-			rss	<- crossprod(summary(LSL)$res, summary(LSL)$res)#
-            ik[i] <- n*log(rss/n)+sk[i]*log(n)#
-        }#
-    } else {#
-          rss <- sum((y - mean(y))^2)#
-          ik[1] <- n*log(rss/n)+sk[1]*log(n)#
-        for (i in 2:n_mo) {#
-            LSL <- lm(y ~ x[ , candidate_model[i, ] == 1])#
-			rss	<- crossprod(summary(LSL)$res, summary(LSL)$res)#
-            ik[i] <- n*log(rss/n)+sk[i]*log(n)#
-        }#
-    }#
-    if (prior == TRUE) {#
-        ck <- rep(NA, n_mo)#
-        if (sk[1] == 0) {#
-            ck[1] <- 2 * log(sk[1] + 2)/choose(p, sk[1])#
-            ck[2:n_mo] <- sk[2:n_mo] * log(exp(1) * p/sk[2:n_mo]) + #
-                2 * log(sk[2:n_mo] + 2)#
-        } else {#
-            ck <- sk * log(exp(1) * p/sk) + 2 * log(sk + 2)#
-        }#
-        ik <- ik + psi * ck#
-    }
+candidate_model <- candidate_model[order(rowSums(candidate_model)), ]
+candidata_model
+candidate_model
+setwd('/Users/emeryyi/Dropbox/Research/13_glmvsd')
+candidate_models <- unique(ind.path)#
+rownames(candidate_models) <- NULL#
+candidate_models <- candidate_models[order(rowSums(candidate_models)), ]
+candidate_model[1,1] = 2
+candidate_models[1,1] = 2
 setwd('/Users/emeryyi/Dropbox/Research/googleproject/glmvsd/R')
-weight <- exp(-ik/2)/sum(exp(-ik/2))
-weight
+if (missing(candidate_models)) #
+            stop("Users must supply a candidate model.")#
+        if (is.matrix(candidate_models) != TRUE) #
+            stop("Supplied model must be a matrix.")#
+        if (NCOL(candidate_models) != NCOL(x)) #
+            stop("Number of variables in candidate model and x does not match.")#
+	    if (!all(as.numeric(candidate_models) %in% c(0, 1))) #
+	        stop("There can only be 0 or 1 in candidate_models")

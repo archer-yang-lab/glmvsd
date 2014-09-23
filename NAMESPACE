@@ -1,2 +1,2 @@
-import(stats,glmnet,ncvreg)
-export(vsd)
+import(stats,glmnet,ncvreg,MASS)
+export(glmvsd)

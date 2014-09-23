@@ -1,4 +1,4 @@
-BICPweight <- function(x, y, candidate_models, psi, prior = TRUE) {
+BICweight <- function(x, y, candidate_models, psi, prior = TRUE) {
     p <- NCOL(x)
     n <- length(y)
     n_mo <- NROW(candidate_models)
