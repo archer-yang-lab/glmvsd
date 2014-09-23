@@ -87,6 +87,5 @@ model_check = model_check, psi=1,
 method = "customize", 
 candidate_models = candidate_models, 
 weight_function = "BIC.Prior")
-
 }
 
