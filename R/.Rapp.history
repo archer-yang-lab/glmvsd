@@ -1,64 +1,60 @@
-library("MASS")#
-library(vsd)#
-n<-50#
-d=p<-65#
-#K<-10 #K-fold cv#
-n.sim<-100 #number of repetition#
-#m<-30 #size of subsample in sequential instability#
-n.s<-100 #number of lambda in fitting lasso#
-n.train<-30#
-psi<-1#
+setwd('/Users/emeryyi/Dropbox/collaborator/Nanying')
+n=200 #
+p=8 #
 #
-beta<-c(3,1.5,0,0,2,0,0,0,10,5,5,2.5,2.5,1.25,1.25,0.675,0.675,0.3125,0.3125,rep(0,10),2*c(10,5,5,2.5,2.5,1.25,1.25,0.675,0.675,0.3125,0.3125),rep(0,10),rep(2.5,5),rep(1.5,5),rep(0.5,5))#
-b0<-c(1-as.numeric(beta==0))#
+n.folds = 5#
 #
-# AR(1), rho=0.5#
+b <- c(1,1,1,-3*sqrt(2)/2) #
+x=matrix(rnorm(n*p, mean=0, sd=1), n, p) #
+feta=x[, 1:4]%*%b #
+fprob=exp(feta)/(1+exp(feta))#
+y=rbinom(n, 1, fprob)#
+# user provide a model to be checked#
+model_check <- c(0,1,1,1,0,0,0,1)#
 #
-sigma<-matrix(0,d,d)#
+candidate_models = rbind(c(0,0,0,0,0,0,0,1), #
+c(0,1,0,0,0,0,0,1), c(1,1,1,1,0,0,0,0), #
+c(0,1,1,0,0,0,0,1), c(1,1,0,1,1,0,0,0), #
+c(1,1,0,0,1,0,0,0), c(0,0,0,0,0,0,0,0),#
+c(1,1,1,1,1,0,0,0))#
 #
- for(i in 1:d)#
- {#
-    for(j in 1:d)#
-      {#
-       sigma[i,j]<-0.5^abs(i-j)#
-      }#
- }#
-set.seed(1000+i)#
-x<-mvrnorm(n,rep(0,d),sigma)#
-e<-rnorm(n,0,0.01)#
-y<-drop(x%*%beta+e)#
-y <- drop(y)#
-x <- as.matrix(x)#
-p<-NCOL(x)#
-n<-length(y)#
-lassofit<-glmnet(x=x,y=y,alpha=1,maxit=100000000)#
-scadfit<-ncvreg(X=x,y=y,family="gaussian",penalty="SCAD",max.iter=10000000)#
-mcpfit<-ncvreg(X=x,y=y,family="gaussian",penalty="MCP",max.iter=10000000)#
-#
-lasso.path<- as.matrix(lassofit$beta)#
-scad.path<- as.matrix(scadfit$beta[-1,])#
-mcp.path<- as.matrix(mcpfit$beta[-1,])#
-#
-beta.path<-t(cbind(lasso.path,scad.path,mcp.path))#
-ind.path<-(1-(beta.path==0))#
-#
-candidate_model <- unique(ind.path)#
-rownames(candidate_model) <- NULL#
-candidate_model <- candidate_model[order(rowSums(candidate_model)), ]
-candidata_model
-candidate_model
-setwd('/Users/emeryyi/Dropbox/Research/13_glmvsd')
-candidate_models <- unique(ind.path)#
+n_rep = 100#
+n_train = ceiling(n/2)#
+psi = 1#
+candidate_models <- unique(candidate_models)#
 rownames(candidate_models) <- NULL#
-candidate_models <- candidate_models[order(rowSums(candidate_models)), ]
-candidate_model[1,1] = 2
-candidate_models[1,1] = 2
+candidate_models <- candidate_models[order(rowSums(candidate_models)), ]#
+candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]#
+#
+prior = FALSE
 setwd('/Users/emeryyi/Dropbox/Research/googleproject/glmvsd/R')
-if (missing(candidate_models)) #
-            stop("Users must supply a candidate model.")#
-        if (is.matrix(candidate_models) != TRUE) #
-            stop("Supplied model must be a matrix.")#
-        if (NCOL(candidate_models) != NCOL(x)) #
-            stop("Number of variables in candidate model and x does not match.")#
-	    if (!all(as.numeric(candidate_models) %in% c(0, 1))) #
-	        stop("There can only be 0 or 1 in candidate_models")
+p <- NCOL(x)#
+    n <- length(y)#
+    n_mo <- NROW(candidate_models)#
+    sk <- rowSums(candidate_models)#
+    ik <- rep(NA, n_mo)#
+    if (any(candidate_models[1, ] == 1)) {#
+        for (i in 1:n_mo) {#
+            glmfit <- glm(y ~ x[, candidate_models[i, ] == 1], family = "binomial")#
+			ik[i] <-glmfit$deviance + sk[i] * log(n)#
+        }#
+    } else {#
+		ik[1] <- -2*log(prod(mean(y)^y * (1-mean(y))^(1- y))) + sk[1]*log(n)#
+        for (i in 2:n_mo) {#
+            glmfit <- glm(y ~ x[, candidate_models[i, ] == 1], family = "binomial")#
+			ik[i] <-glmfit$deviance + sk[i] * log(n)#
+        }#
+    }#
+	if (prior == TRUE) {#
+        ck <- rep(NA, n_mo)#
+        if (sk[1] == 0) {#
+            ck[1] <- 2 * log(sk[1] + 2)/choose(p, sk[1])#
+            ck[2:n_mo] <- sk[2:n_mo] * log(exp(1) * p/sk[2:n_mo]) + 2 * #
+                log(sk[2:n_mo] + 2)#
+        } else {#
+            ck <- sk * log(exp(1) * p/sk) + 2 * log(sk + 2)#
+        }#
+        ik <- exp(ik/2 - psi*ck)#
+    }#
+	weight <- ik/sum(ik)#
+	list(weight = weight)

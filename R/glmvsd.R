@@ -1,6 +1,6 @@
 glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check, 
     psi = 1, family = c("gaussian", "binomial"), method = c("union", "customize"), 
-	candidate_models, weight_function = c("ARM", "ARM.Prior", "BIC", "BIC.Prior")) {
+	candidate_models, weight_function = c("AMM", "AMM.Prior", "BIC", "BIC.Prior")) {
     # check data and parameter
     family <- match.arg(family)
     method <- match.arg(method)
@@ -40,16 +40,16 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
     candidate_models <- candidate_models[order(rowSums(candidate_models)), ]
     # compute weights  
   	if (family == "gaussian"){
-	 if (weight_function == "ARM") {
+	 if (weight_function == "AMM") {
 		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
-	        fit <- lsARM(x = x, y = y, candidate_models = candidate_models, 
+	        fit <- lsAMM(x = x, y = y, candidate_models = candidate_models, 
 	            n_train = n_train, n_rep = n_rep, psi = psi, prior=FALSE)
 	        weight <- fit$weight
 	    }
 
-	    if (weight_function == "ARM.Prior") {
+	    if (weight_function == "AMM.Prior") {
 		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
-	        fit <- lsARM(x = x, y = y, candidate_models = candidate_models, 
+	        fit <- lsAMM(x = x, y = y, candidate_models = candidate_models, 
 	            n_train = n_train, n_rep = n_rep, psi = psi, prior=TRUE)
 	        weight <- fit$weight
 	    }
@@ -63,6 +63,34 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
 	    if (weight_function == "BIC.Prior") {
 		    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
 	        fit <- lsBIC(x = x, y = y, candidate_models = candidate_models, 
+	            psi = psi, prior=TRUE)
+	        weight <- fit$weight
+	    }
+	}
+	if (family == "binomial"){
+	 if (weight_function == "AMM") {
+		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
+	        fit <- logitAMM(x = x, y = y, candidate_models = candidate_models, 
+	            n_train = n_train, n_rep = n_rep, psi = psi, prior=FALSE)
+	        weight <- fit$weight
+	    }
+
+	    if (weight_function == "AMM.Prior") {
+		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
+	        fit <- logitAMM(x = x, y = y, candidate_models = candidate_models, 
+	            n_train = n_train, n_rep = n_rep, psi = psi, prior=TRUE)
+	        weight <- fit$weight
+	    }
+
+	    if (weight_function == "BIC") {
+		    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
+	        fit <- logitBIC(x = x, y = y, candidate_models = candidate_models, psi = psi, prior=FALSE)
+	        weight <- fit$weight
+	    }
+
+	    if (weight_function == "BIC.Prior") {
+		    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
+	        fit <- logitBIC(x = x, y = y, candidate_models = candidate_models, 
 	            psi = psi, prior=TRUE)
 	        weight <- fit$weight
 	    }
