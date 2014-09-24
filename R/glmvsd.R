@@ -1,12 +1,19 @@
 glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check, 
-    psi = 1, method = c("union", "customize"), candidate_models, weight_function = c("ARM", "ARM.Prior", "BIC", "BIC.Prior")) {
+    psi = 1, family = c("gaussian", "binomial"), method = c("union", "customize"), 
+	candidate_models, weight_function = c("ARM", "ARM.Prior", "BIC", "BIC.Prior")) {
     # check data and parameter
+    family <- match.arg(family)
     method <- match.arg(method)
     weight_function <- match.arg(weight_function)
     y <- drop(y)
+    y <- as.numeric(y)
     x <- as.matrix(x)
     p <- NCOL(x)
     n <- length(y)
+    if(family == "binomial"){
+	    if (!all(y %in% c(0, 1))) 
+	        stop("There can only be 0 or 1 in y")
+	}
     if (n != NROW(x)) 
         stop("x and y have different number of observations")
     if (n_train >= n) 
@@ -15,16 +22,8 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
         stop("User must provide a base model.")
 	# use union option to compute candidate models
     if (method == "union") {
-        lassofit <- glmnet(x = x, y = y, alpha = 1, maxit = 1e+6)
-        scadfit <- ncvreg(X = x, y = y, family = "gaussian", penalty = "SCAD", 
-            max.iter = 1e+6)
-        mcpfit <- ncvreg(X = x, y = y, family = "gaussian", penalty = "MCP", 
-            max.iter = 1e+6)
-        lasso.path <- as.matrix(lassofit$beta)
-        scad.path <- as.matrix(scadfit$beta[-1, ])
-        mcp.path <- as.matrix(mcpfit$beta[-1, ])
-        beta.path <- t(cbind(lasso.path, scad.path, mcp.path))
-        candidate_models <- (1 - (beta.path == 0))
+        if(family == "gaussian") candidate_models <- gaussianfit(x, y)
+        if(family == "binomial") candidate_models <- binomialfit(x, y)
     }
     if (method == "customize") {
         if (missing(candidate_models)) 
@@ -39,33 +38,35 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
     candidate_models <- unique(candidate_models)
     rownames(candidate_models) <- NULL
     candidate_models <- candidate_models[order(rowSums(candidate_models)), ]
-    # compute weights    
-    if (weight_function == "ARM") {
-	    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
-        fit <- ARMweight(x = x, y = y, candidate_models = candidate_models, 
-            n_train = n_train, n_rep = n_rep, psi = psi, prior=FALSE)
-        weight <- fit$weight
-    }
-    
-    if (weight_function == "ARM.Prior") {
-	    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
-        fit <- ARMweight(x = x, y = y, candidate_models = candidate_models, 
-            n_train = n_train, n_rep = n_rep, psi = psi, prior=TRUE)
-        weight <- fit$weight
-    }
-    
-    if (weight_function == "BIC") {
-	    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
-        fit <- BICweight(x = x, y = y, candidate_models = candidate_models, psi = psi, prior=FALSE)
-        weight <- fit$weight
-    }
-    
-    if (weight_function == "BIC.Prior") {
-	    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
-        fit <- BICweight(x = x, y = y, candidate_models = candidate_models, 
-            psi = psi, prior=TRUE)
-        weight <- fit$weight
-    }
+    # compute weights  
+  	if (family == "gaussian"){
+	 if (weight_function == "ARM") {
+		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
+	        fit <- lsARM(x = x, y = y, candidate_models = candidate_models, 
+	            n_train = n_train, n_rep = n_rep, psi = psi, prior=FALSE)
+	        weight <- fit$weight
+	    }
+
+	    if (weight_function == "ARM.Prior") {
+		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
+	        fit <- lsARM(x = x, y = y, candidate_models = candidate_models, 
+	            n_train = n_train, n_rep = n_rep, psi = psi, prior=TRUE)
+	        weight <- fit$weight
+	    }
+
+	    if (weight_function == "BIC") {
+		    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
+	        fit <- lsBIC(x = x, y = y, candidate_models = candidate_models, psi = psi, prior=FALSE)
+	        weight <- fit$weight
+	    }
+
+	    if (weight_function == "BIC.Prior") {
+		    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
+	        fit <- lsBIC(x = x, y = y, candidate_models = candidate_models, 
+	            psi = psi, prior=TRUE)
+	        weight <- fit$weight
+	    }
+	}
     TMP_matrix <- sweep(candidate_models, MARGIN = 2, model_check, "-")
 	DIFF <- rowSums(abs(TMP_matrix))
     DIFF_minus <- rowSums(TMP_matrix == -1)

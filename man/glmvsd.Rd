@@ -23,7 +23,7 @@ weight_function = c("ARM", "ARM.Prior", "BIC", "BIC.Prior"))
   \item{model_check}{The index of base model for calculating the VSD measure.}
 
   \item{psi}{The size of un-normalized prior weight. The default value is 1.}
-
+  \item{family}{Choose the family for GLM models. So far only \code{gaussian} and \code{binomial} are implemented. The default is \code{gaussian}.}
   \item{method}{Users choose one of the \code{union} and \code{customize}. If \code{method=="union"}, then the program automatically provide the candidate models as a union of solution path of Lasso, SCAD, and MCP; If \code{method="customize"}, users must provide their own set of candidate models in the input argument \code{candidate_models} as a matrix, each row of which is a 0/1 index vector representing whether each variable included/excluded in the model.}
 
   \item{candidate_models}{Only available when \code{method="customize"}. It is a matrix of candidate models. each row of which is a 0/1 index vector representing whether each variable included/excluded in the model.}
@@ -71,11 +71,13 @@ model_check <- c(0,1,1,1,0,0,0,1)
 # compute VSD for model_check 
 v_ARM <- glmvsd(x, y, n_train = ceiling(n/2), 
 n_rep=50, model_check = model_check, psi=1, 
-method = "union", weight_function = "ARM.Prior")
+family = "gaussian", method = "union", 
+weight_function = "ARM.Prior")
 
 v_BIC <- glmvsd(x, y, 
 model_check = model_check,
-method = "union", weight_function = "BIC")
+family = "gaussian", method = "union", 
+weight_function = "BIC")
 
 candidate_models = rbind(c(0,0,0,0,0,0,0,1), 
 c(0,1,0,0,0,0,0,1), c(0,1,1,1,0,0,0,1), 
@@ -84,6 +86,7 @@ c(1,1,0,0,1,0,0,0))
 
 v1_BIC <- glmvsd(x, y, 
 model_check = model_check, psi=1, 
+family = "gaussian",
 method = "customize", 
 candidate_models = candidate_models, 
 weight_function = "BIC.Prior")
