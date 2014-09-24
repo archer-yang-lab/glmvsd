@@ -15,11 +15,11 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
         stop("User must provide a base model.")
 	# use union option to compute candidate models
     if (method == "union") {
-        lassofit <- glmnet(x = x, y = y, alpha = 1, maxit = 1e+08)
+        lassofit <- glmnet(x = x, y = y, alpha = 1, maxit = 1e+6)
         scadfit <- ncvreg(X = x, y = y, family = "gaussian", penalty = "SCAD", 
-            max.iter = 1e+07)
+            max.iter = 1e+6)
         mcpfit <- ncvreg(X = x, y = y, family = "gaussian", penalty = "MCP", 
-            max.iter = 1e+07)
+            max.iter = 1e+6)
         lasso.path <- as.matrix(lassofit$beta)
         scad.path <- as.matrix(scadfit$beta[-1, ])
         mcp.path <- as.matrix(mcpfit$beta[-1, ])
