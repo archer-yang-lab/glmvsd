@@ -1,4 +1,4 @@
-logitAMM <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) {
+tdARM <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) {
     p <- NCOL(x)
     n <- length(y)
     n_mo <- NROW(candidate_models)
@@ -9,12 +9,10 @@ logitAMM <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) 
         if (any(candidate_models[1, ] == 1)) {
             for (j in 1:n_mo) {
                 glmfit <- glm(y[tindex] ~ x[tindex, candidate_models[j, ] == 
-                  1],family="binomial",control = list(maxit = 1000000))
+                  1],family=tweedie(var.power=1.5,link.power=0),control = list(maxit = 1e7))
 				gk <- cbind(1,x[-tindex, candidate_models[j, 
                   ] == 1])%*%glmfit$coef
-				fk <- exp(gk)/(exp(gk)+1) 
-				fk[gk > 700] <- 1
-				fk[gk < -700] <- 0
+				fk <- exp(gk)
 				w_num[i, j] <- prod(fk ^ y[-tindex] * (1-fk) ^ (1- y[-tindex]))
             }
 		} else {
@@ -22,25 +20,16 @@ logitAMM <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) 
 								(1-mean(y[tindex])) ^ (1- y[-tindex]))
 				for (j in 2:n_mo) {
 	                	glmfit <- glm(y[tindex] ~ x[tindex, candidate_models[j, ] == 
-		                  1],family="binomial",control = list(maxit = 1000000))
+		                  1],family=tweedie(var.power=1.5,link.power=0),control = list(maxit = 1e7))
 						gk <- cbind(1,x[-tindex, candidate_models[j, 
 		                  ] == 1])%*%glmfit$coef
-						fk <- exp(gk)/(exp(gk)+1) 
-						fk[gk > 700] <- 1
-						fk[gk < -700] <- 0
+						fk <- exp(gk) 
 						w_num[i, j] <- prod(fk ^ y[-tindex] * (1-fk) ^ (1- y[-tindex]))
 	            	}
 		}
     }		
 	if (prior == TRUE) {
-        ck <- rep(NA, n_mo)
-        if (sk[1] == 0) {
-            ck[1] <- 2 * log(sk[1] + 2)/choose(p, sk[1])
-            ck[2:n_mo] <- sk[2:n_mo] * log(exp(1) * p/sk[2:n_mo]) + 2 * 
-                log(sk[2:n_mo] + 2)
-        } else {
-            ck <- sk * log(exp(1) * p/sk) + 2 * log(sk + 2)
-        }
+        ck <- ck_compute(n_mo, sk, p)
         w_num <- sweep(w_num, MARGIN = 2, exp(-psi * ck), "*")
     }
 	weight <- apply(w_num/rowSums(w_num), 2, mean)

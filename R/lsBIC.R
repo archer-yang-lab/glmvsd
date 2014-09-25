@@ -20,14 +20,7 @@ lsBIC <- function(x, y, candidate_models, psi, prior = TRUE) {
         }
     }
     if (prior == TRUE) {
-        ck <- rep(NA, n_mo)
-        if (sk[1] == 0) {
-            ck[1] <- 2 * log(sk[1] + 2)/choose(p, sk[1])
-            ck[2:n_mo] <- sk[2:n_mo] * log(exp(1) * p/sk[2:n_mo]) + 2 * 
-                log(sk[2:n_mo] + 2)
-        } else {
-            ck <- sk * log(exp(1) * p/sk) + 2 * log(sk + 2)
-        }
+        ck <- ck_compute(n_mo, sk, p)
         ik <- ik + psi * ck
     }
     ik <- ik - min(ik)

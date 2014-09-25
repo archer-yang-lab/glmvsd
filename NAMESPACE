@@ -1,2 +1,2 @@
-import("stats","glmnet","ncvreg","MASS", "HDtweedie", "splines", "statmod")
+import("stats","glmnet","ncvreg","MASS", "HDtweedie", "splines", "statmod", "tweedie")
 export(glmvsd)

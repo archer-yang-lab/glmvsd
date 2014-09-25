@@ -1,4 +1,4 @@
-lsAMM <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) {
+lsARM <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) {
     p <- NCOL(x)
     n <- length(y)
     n_mo <- NROW(candidate_models)
@@ -29,14 +29,7 @@ lsAMM <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) {
     }
     lw_num <- (-n/2) * log(sigma_k) - (1/sqrt(sigma_k)) * dk/2
     if (prior == TRUE) {
-        ck <- rep(NA, n_mo)
-        if (sk[1] == 0) {
-            ck[1] <- 2 * log(sk[1] + 2)/choose(p, sk[1])
-            ck[2:n_mo] <- sk[2:n_mo] * log(exp(1) * p/sk[2:n_mo]) + 2 * 
-                log(sk[2:n_mo] + 2)
-        } else {
-            ck <- sk * log(exp(1) * p/sk) + 2 * log(sk + 2)
-        }
+        ck <- ck_compute(n_mo, sk, p)
         lw_num <- sweep(lw_num, MARGIN = 2, psi * ck, "-")
     }
     lw_num <- sweep(lw_num, MARGIN = 1, apply(lw_num, 1, max), "-")
