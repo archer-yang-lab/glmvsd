@@ -1,6 +1,7 @@
-setwd('/Users/emeryyi/Dropbox/collaborator/Nanying')
-n=200 #
-p=8 #
+library(glmvsd)#
+#
+n = 300 #
+p = 8#
 #
 n.folds = 5#
 #
@@ -10,51 +11,41 @@ feta=x[, 1:4]%*%b #
 fprob=exp(feta)/(1+exp(feta))#
 y=rbinom(n, 1, fprob)#
 # user provide a model to be checked#
-model_check <- c(0,1,1,1,0,0,0,1)#
+model_check <- c(0,1,1,1,0,0,0,1,rep(0,p-8))#
 #
-candidate_models = rbind(c(0,0,0,0,0,0,0,1), #
-c(0,1,0,0,0,0,0,1), c(1,1,1,1,0,0,0,0), #
-c(0,1,1,0,0,0,0,1), c(1,1,0,1,1,0,0,0), #
-c(1,1,0,0,1,0,0,0), c(0,0,0,0,0,0,0,0),#
-c(1,1,1,1,1,0,0,0))#
-#
-n_rep = 100#
+candidate_models = #
+rbind(c(0,0,0,0,0,0,0,1,rep(0,p-8)), #
+c(0,1,0,0,0,0,0,1,rep(0,p-8)), c(1,1,1,1,0,0,0,0,rep(0,p-8)), #
+c(0,1,1,0,0,0,0,1,rep(0,p-8)), c(1,1,0,1,1,0,0,0,rep(0,p-8)), #
+c(1,1,0,0,1,0,0,0,rep(0,p-8)), c(0,0,0,0,0,0,0,0,rep(0,p-8)),#
+c(1,1,1,1,1,0,0,0,rep(0,p-8)))
+setwd('/Users/emeryyi/Dropbox/collaborator/Nanying')
 n_train = ceiling(n/2)#
-psi = 1#
+n_rep = 100#
 candidate_models <- unique(candidate_models)#
 rownames(candidate_models) <- NULL#
 candidate_models <- candidate_models[order(rowSums(candidate_models)), ]#
-candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]#
-#
-prior = FALSE
-setwd('/Users/emeryyi/Dropbox/Research/googleproject/glmvsd/R')
+candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
 p <- NCOL(x)#
     n <- length(y)#
     n_mo <- NROW(candidate_models)#
     sk <- rowSums(candidate_models)#
-    ik <- rep(NA, n_mo)#
-    if (any(candidate_models[1, ] == 1)) {#
-        for (i in 1:n_mo) {#
-            glmfit <- glm(y ~ x[, candidate_models[i, ] == 1], family = "binomial")#
-			ik[i] <-glmfit$deviance + sk[i] * log(n)#
-        }#
-    } else {#
-		ik[1] <- -2*log(prod(mean(y)^y * (1-mean(y))^(1- y))) + sk[1]*log(n)#
-        for (i in 2:n_mo) {#
-            glmfit <- glm(y ~ x[, candidate_models[i, ] == 1], family = "binomial")#
-			ik[i] <-glmfit$deviance + sk[i] * log(n)#
-        }#
-    }#
-	if (prior == TRUE) {#
-        ck <- rep(NA, n_mo)#
-        if (sk[1] == 0) {#
-            ck[1] <- 2 * log(sk[1] + 2)/choose(p, sk[1])#
-            ck[2:n_mo] <- sk[2:n_mo] * log(exp(1) * p/sk[2:n_mo]) + 2 * #
-                log(sk[2:n_mo] + 2)#
-        } else {#
-            ck <- sk * log(exp(1) * p/sk) + 2 * log(sk + 2)#
-        }#
-        ik <- exp(ik/2 - psi*ck)#
-    }#
-	weight <- ik/sum(ik)#
-	list(weight = weight)
+    w_num <- matrix(NA, n_rep, n_mo)
+i = 1
+j = 1
+tindex <- sample(n, n_train, replace = F)
+j=2
+glmfit <- glm(y[tindex] ~ x[tindex, candidate_models[j, ] == #
+                  1],family="binomial",control = list(maxit = 1000000))
+gk <- cbind(1,x[-tindex, candidate_models[j, #
+                  ] == 1])%*%glmfit$coef
+gk
+gk <- x[-tindex, candidate_models[j, #
+                  ] == 1]%*%glmfit$coef[-1] + glmfit$coef[1]
+glmfit$coef[-1]
+x[-tindex, candidate_models[j, #
+                  ] == 1]
+setwd('/Users/emeryyi/Dropbox/Research/googleproject/glmvsd/R')
+x[-tindex, candidate_models[j, #
+                  ] == 1]%*%glmfit$coef[-1]
+?%*%

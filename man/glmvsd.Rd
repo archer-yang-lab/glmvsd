@@ -7,7 +7,8 @@ The package calculate the variable selection deviation (VSD) to measure the unce
 \usage{
 glmvsd(x, y, n_train = ceiling(n/2), 
 n_rep = 100, model_check, 
-psi = 1, method = c("union", "customize"), 
+psi = 1, family = c("gaussian", "binomial"), 
+method = c("union", "customize"), 
 candidate_models, 
 weight_function = c("AMM", "AMM.Prior", "BIC", "BIC.Prior"))
 }
@@ -52,6 +53,8 @@ BugReport: \url{https://github.com/emeryyi/glmvsd}\cr
 }
 
 \examples{
+# REGRESSION CASE
+
 # generate simulation data
 n <- 50
 p <- 8
@@ -60,7 +63,6 @@ sigma <- matrix(0,p,p)
 for(i in 1:p){
    for(j in 1:p) sigma[i,j] <- 0.5^abs(i-j)
 }
-
 x <- mvrnorm(n, rep(0,p), sigma)
 e <- rnorm(n)
 y <- x \%*\% beta + e
@@ -68,17 +70,19 @@ y <- x \%*\% beta + e
 # user provide a model to be checked
 model_check <- c(0,1,1,1,0,0,0,1)
 
-# compute VSD for model_check 
+# compute VSD for model_check using AMM with prior
 v_AMM <- glmvsd(x, y, n_train = ceiling(n/2), 
 n_rep=50, model_check = model_check, psi=1, 
 family = "gaussian", method = "union", 
 weight_function = "AMM.Prior")
 
+# compute VSD for model_check using BIC
 v_BIC <- glmvsd(x, y, 
 model_check = model_check,
 family = "gaussian", method = "union", 
 weight_function = "BIC")
 
+# user supplied candidate models
 candidate_models = rbind(c(0,0,0,0,0,0,0,1), 
 c(0,1,0,0,0,0,0,1), c(0,1,1,1,0,0,0,1), 
 c(0,1,1,0,0,0,0,1), c(1,1,0,1,1,0,0,0), 
@@ -90,5 +94,50 @@ family = "gaussian",
 method = "customize", 
 candidate_models = candidate_models, 
 weight_function = "BIC.Prior")
+
+# CLASSIFICATION CASE
+
+# generate simulation data
+n = 300 
+p = 8
+b <- c(1,1,1,-3*sqrt(2)/2) 
+x=matrix(rnorm(n*p, mean=0, sd=1), n, p) 
+feta=x[, 1:4]%*%b 
+fprob=exp(feta)/(1+exp(feta))
+y=rbinom(n, 1, fprob)
+
+# user provide a model to be checked
+model_check <- c(0,1,1,1,0,0,0,1)
+
+# compute VSD for model_check using AMM
+b_AMM1 <- glmvsd(x, y, n_train = ceiling(n/2),
+family = "binomial", 
+n_rep=50, model_check = model_check, psi=1, 
+method = "union", weight_function = "AMM")
+
+# compute VSD for model_check using BIC with prior
+b_BIC <- glmvsd(x, y, n_train = ceiling(n/2),
+family = "binomial",
+n_rep=50, model_check = model_check, psi=1, 
+method = "union", weight_function = "BIC.Prior")
+
+candidate_models = 
+rbind(c(0,0,0,0,0,0,0,1), 
+c(0,1,0,0,0,0,0,1), 
+c(1,1,1,1,0,0,0,0), 
+c(0,1,1,0,0,0,0,1), 
+c(1,1,0,1,1,0,0,0), 
+c(1,1,0,0,1,0,0,0), 
+c(0,0,0,0,0,0,0,0),
+c(1,1,1,1,1,0,0,0))
+
+# compute VSD for model_check using BIC
+# user supplied candidate models
+b_BIC1 <- glmvsd(x, y, 
+family = "binomial",
+model_check = model_check, psi=1, 
+method = "customize", 
+candidate_models = candidate_models, 
+weight_function = "BIC")
 }
 
