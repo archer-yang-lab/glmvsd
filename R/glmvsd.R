@@ -1,6 +1,6 @@
 glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check, 
-    psi = 1, family = c("gaussian", "binomial"), method = c("union", "customize"), 
-	candidate_models, weight_function = c("AMM", "AMM.Prior", "BIC", "BIC.Prior")) {
+    psi = 1, family = c("gaussian", "binomial", "tweedie"), method = c("union", "customize"), 
+	candidate_models, weight_function = c("AMM", "BIC"), prior = TRUE) {
     # check data and parameter
     family <- match.arg(family)
     method <- match.arg(method)
@@ -12,7 +12,11 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
     n <- length(y)
     if(family == "binomial"){
 	    if (!all(y %in% c(0, 1))) 
-	        stop("There can only be 0 or 1 in y")
+	        stop("There can only be 0 or 1 in y when using binomial family")
+	}
+	if(family == "tweedie"){
+	    if (any(y < 0)) 
+	        stop("y must be nonzero when using Tweedie family")
 	}
     if (n != NROW(x)) 
         stop("x and y have different number of observations")
@@ -24,6 +28,7 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
     if (method == "union") {
         if(family == "gaussian") candidate_models <- gaussianfit(x, y)
         if(family == "binomial") candidate_models <- binomialfit(x, y)
+        if(family == "tweedie") candidate_models <- tweediefit(x, y)
     }
     if (method == "customize") {
         if (missing(candidate_models)) 
@@ -35,6 +40,7 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
 	    if (!all(as.numeric(candidate_models) %in% c(0, 1))) 
 	        stop("There can only be 0 or 1 in candidate_models")
     }
+    # clean the candidate models
     candidate_models <- unique(candidate_models)
     rownames(candidate_models) <- NULL
     candidate_models <- candidate_models[order(rowSums(candidate_models)), ]
@@ -43,27 +49,12 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
 	 if (weight_function == "AMM") {
 		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
 	        fit <- lsAMM(x = x, y = y, candidate_models = candidate_models, 
-	            n_train = n_train, n_rep = n_rep, psi = psi, prior=FALSE)
+	            n_train = n_train, n_rep = n_rep, psi = psi, prior=prior)
 	        weight <- fit$weight
 	    }
-
-	    if (weight_function == "AMM.Prior") {
-		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
-	        fit <- lsAMM(x = x, y = y, candidate_models = candidate_models, 
-	            n_train = n_train, n_rep = n_rep, psi = psi, prior=TRUE)
-	        weight <- fit$weight
-	    }
-
 	    if (weight_function == "BIC") {
 		    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
-	        fit <- lsBIC(x = x, y = y, candidate_models = candidate_models, psi = psi, prior=FALSE)
-	        weight <- fit$weight
-	    }
-
-	    if (weight_function == "BIC.Prior") {
-		    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
-	        fit <- lsBIC(x = x, y = y, candidate_models = candidate_models, 
-	            psi = psi, prior=TRUE)
+	        fit <- lsBIC(x = x, y = y, candidate_models = candidate_models, psi = psi, prior=prior)
 	        weight <- fit$weight
 	    }
 	}
@@ -71,27 +62,25 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
 	 if (weight_function == "AMM") {
 		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
 	        fit <- logitAMM(x = x, y = y, candidate_models = candidate_models, 
-	            n_train = n_train, n_rep = n_rep, psi = psi, prior=FALSE)
+	            n_train = n_train, n_rep = n_rep, psi = psi, prior=prior)
 	        weight <- fit$weight
 	    }
-
-	    if (weight_function == "AMM.Prior") {
-		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
-	        fit <- logitAMM(x = x, y = y, candidate_models = candidate_models, 
-	            n_train = n_train, n_rep = n_rep, psi = psi, prior=TRUE)
-	        weight <- fit$weight
-	    }
-
 	    if (weight_function == "BIC") {
 		    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
-	        fit <- logitBIC(x = x, y = y, candidate_models = candidate_models, psi = psi, prior=FALSE)
+	        fit <- logitBIC(x = x, y = y, candidate_models = candidate_models, psi = psi, prior=prior)
 	        weight <- fit$weight
 	    }
-
-	    if (weight_function == "BIC.Prior") {
+	}
+	if (family == "tweedie"){
+	 if (weight_function == "AMM") {
+		    candidate_models <- candidate_models[rowSums(candidate_models) < (n_train-2), ]
+	        fit <- tdAMM(x = x, y = y, candidate_models = candidate_models, 
+	            n_train = n_train, n_rep = n_rep, psi = psi, prior=prior)
+	        weight <- fit$weight
+	    }
+	    if (weight_function == "BIC") {
 		    candidate_models <- candidate_models[rowSums(candidate_models) < (n-2), ]
-	        fit <- logitBIC(x = x, y = y, candidate_models = candidate_models, 
-	            psi = psi, prior=TRUE)
+	        fit <- tdBIC(x = x, y = y, candidate_models = candidate_models, psi = psi, prior=prior)
 	        weight <- fit$weight
 	    }
 	}
