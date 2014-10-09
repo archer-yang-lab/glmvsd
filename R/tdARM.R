@@ -12,19 +12,21 @@ tdARM <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) {
                   1],family=tweedie(var.power=1.5,link.power=0),control = list(maxit = 1e7))
 				gk <- cbind(1,x[-tindex, candidate_models[j, 
                   ] == 1])%*%glmfit$coef
-				fk <- exp(gk)
-				w_num[i, j] <- prod(fk ^ y[-tindex] * (1-fk) ^ (1- y[-tindex]))
+				dev <- dtweedie.nlogl(phi=1, y[-tindex], mu = exp(gk), power = 1.5)
+				w_num[i, j] <- exp(-0.5*dev) 
             }
 		} else {
-				w_num[i, 1] <- prod(mean(y[tindex]) ^ y[-tindex] * 
-								(1-mean(y[tindex])) ^ (1- y[-tindex]))
+				glmfit <- glm(y[tindex] ~ 1,family=tweedie(var.power=1.5,link.power=0),
+					control = list(maxit = 1e7))
+				dev <- dtweedie.nlogl(phi=1, y[-tindex], mu = exp(glmfit$coef), power = 1.5)
+				w_num[i, 1] <- exp(-0.5*dev) 
 				for (j in 2:n_mo) {
 	                	glmfit <- glm(y[tindex] ~ x[tindex, candidate_models[j, ] == 
 		                  1],family=tweedie(var.power=1.5,link.power=0),control = list(maxit = 1e7))
 						gk <- cbind(1,x[-tindex, candidate_models[j, 
 		                  ] == 1])%*%glmfit$coef
-						fk <- exp(gk) 
-						w_num[i, j] <- prod(fk ^ y[-tindex] * (1-fk) ^ (1- y[-tindex]))
+						dev <- dtweedie.nlogl(phi=1, y[-tindex], mu = exp(gk), power = 1.5)
+						w_num[i, j] <- exp(-0.5*dev)
 	            	}
 		}
     }		

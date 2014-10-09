@@ -37,3 +37,12 @@ ck_compute <- function(n_mo, sk, p) {
 	}
 	ck
 }
+
+dtweedie.nlogl <- function(phi, y, mu, power) {
+    ans <- -2 * sum( log( dtweedie( y=y, mu=mu, phi=phi, power=power ) ) )
+    if ( is.infinite( ans ) ) {
+      # If infinite, replace with saddlepoint estimate?
+        ans <- sum( tweedie.dev(y=y, mu=mu, power=power) )/length( y )
+     }    
+    ans
+}

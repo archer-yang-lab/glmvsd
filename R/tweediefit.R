@@ -3,9 +3,6 @@ tweediefit <- function(x, y) {
     lassofit <- HDtweedie(x = x, y = y, alpha = 1, maxit = 1e+06)
     # fit elastic net model
     enetfit <- HDtweedie(x = x, y = y, alpha = 0.5, maxit = 1e+06)
-    # fit tweedie GLM model
-    tweediefit <- glm.fit(x = x, y = y, family = tweedie(var.power = 1.5, 
-        link.power = 0))
     # expand x matrix using 5 basis splines for group lasso
     ex <- expnd(x)
     gp <- rep(1:NCOL(x), each = 5)
@@ -13,6 +10,9 @@ tweediefit <- function(x, y) {
     glassofit <- HDtweedie(x = ex, y = y, group = gp, alpha = 1, maxit = 1e+06)
     # fit group elastic net
     genetfit <- HDtweedie(x = ex, y = y, group = gp, alpha = 0.5, maxit = 1e+06)
+    # fit tweedie GLM model
+    tweediefit <- glm.fit(x = x, y = y, family = tweedie(var.power = 1.5, 
+        link.power = 0))
     # stepwise selection both side
     bothfit <- step.tweedie(tweediefit, y, x, 1.5, grpscp = 1:NCOL(x), 
         bn = NCOL(x), ix = 1:NCOL(x), iy = 1:NCOL(x), direction = "both", 
