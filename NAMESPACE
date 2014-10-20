@@ -1,2 +1,3 @@
-import("stats","glmnet","ncvreg","MASS", "HDtweedie", "splines", "statmod", "tweedie")
+import("stats","glmnet","ncvreg","MASS")
 export(glmvsd)
+export(stability.test)

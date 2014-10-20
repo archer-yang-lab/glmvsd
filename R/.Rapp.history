@@ -1,53 +1,4 @@
-library(MASS)#
-library(mgcv)#
-library(ncvreg)#
-library(glmnet)#
-n<-50#
-d=p<-60#
-K<-10 #K-fold cv#
-n.sim<-100 #number of repetition#
-m<-30 #size of subsample in sequential instability#
-n.s<-100 #number of lambda in fitting lasso#
-tau<-seq(0.05,1,0.05) #perturbation size#
-#
-beta<-c(3,1.5,0,0,2,0,0,0,rep(0,52))#
-b0<-c(1-as.numeric(beta==0))#
-#
-# AR(1), rho=0.5#
-#
-sigma<-matrix(0,d,d)#
-#
- for(i in 1:d)#
- {#
-    for(j in 1:d)#
-      {#
-       sigma[i,j]<-0.5^abs(i-j)#
-      }#
- }#
-#
-# for(k in 1:50){#
-# set.seed(100+k)#
-x<-mvrnorm(n,rep(0,d),sigma)#
-e<-rnorm(n,0,3)#
-y<-x%*%beta+e#
-modelfit <- function(x, y, nfolds, penalty = c("lasso", "scad", "mcp")) {#
-	penalty <- match.arg(penalty)#
-    y <- drop(y)#
-    y <- as.numeric(y)#
-    x <- as.matrix(x)#
-	if(penalty == "lasso"){					#
-		cvfit <- cv.glmnet(x=x,y=y,nfolds=nfolds,alpha=1,type.measure="mse",maxit=1e6)#
-		coefit<-coef(cvfit,s="lambda.min")}#
-	if(penalty == "mcp"){#
-		cvfit<-cv.ncvreg(X=x,y=y,nfolds=nfolds,penalty="MCP",family="gaussian",max.iter=1e6)#
-		coefit<-cvfit$fit$beta[,cvfit$min]}#
-	if(penalty == "scad"){#
-		cvfit<-cv.ncvreg(X=x,y=y,nfolds=nfolds,penalty="SCAD",family="gaussian",max.iter=1e6)#
-	coefit<-cvfit$fit$beta[,cvfit$min]}#
-	modelfit<- 1-(coefit[-1]==0)#
-	list(coefit = coefit, modelfit = modelfit)#
-}#
-#
+setwd('/Users/emeryyi/Dropbox/Research/googleproject/glmvsd/R')
 stability.test <- function(x, y, method=c("seq", "bs", "perturb"), #
 		penalty = c("lasso", "scad", "mcp"), nrep = 50, remove = 0.2,#
 		tau = 0.5, nfolds = 5) {#
@@ -98,19 +49,5 @@ stability.test <- function(x, y, method=c("seq", "bs", "perturb"), #
 	out <- sum(abs(sweep(model.sub,MARGIN=2,full$modelfit,"-")))/nrep#
 	out#
 }#
-stability.test(x, y, method="seq", #
-		penalty = "lasso", nrep = 10, remove = 0.2,#
-		tau = 0.5, nfolds = 5)
-stability.test(x, y, method="bs", #
-		penalty = "lasso", nrep = 10, remove = 0.2,#
-		tau = 0.5, nfolds = 5)
-stability.test(x, y, method="perturb", #
-		penalty = "lasso", nrep = 10, remove = 0.2,#
-		tau = 0.5, nfolds = 5)
-stability.test(x, y, method="perturb", #
-		penalty = "scad", nrep = 10, remove = 0.2,#
-		tau = 0.5, nfolds = 5)
-setwd('/Users/emeryyi/Dropbox/Research/googleproject/glmvsd/R')
-stability.test(x, y, method="perturb", #
-		penalty = "mcp", nrep = 10, remove = 0.2,#
-		tau = 0.5, nfolds = 5)
+#
+prompt(stability.test)

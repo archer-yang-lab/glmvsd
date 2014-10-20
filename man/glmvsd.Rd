@@ -75,13 +75,13 @@ model_check <- c(0,1,1,1,0,0,0,1)
 v_ARM <- glmvsd(x, y, n_train = ceiling(n/2), 
 n_rep=50, model_check = model_check, psi=1, 
 family = "gaussian", method = "union", 
-weight_function = "ARM_Prior")
+weight_function = "ARM", prior = TRUE)
 
 # compute VSD for model_check using BIC
 v_BIC <- glmvsd(x, y, 
 model_check = model_check,
 family = "gaussian", method = "union", 
-weight_function = "BIC")
+weight_function = "BIC", prior = TRUE)
 
 # user supplied candidate models
 candidate_models = rbind(c(0,0,0,0,0,0,0,1), 
@@ -94,7 +94,7 @@ model_check = model_check, psi=1,
 family = "gaussian",
 method = "customize", 
 candidate_models = candidate_models, 
-weight_function = "BIC_Prior")
+weight_function = "BIC", prior = TRUE)
 
 # CLASSIFICATION CASE
 
@@ -103,24 +103,19 @@ n = 300
 p = 8
 b <- c(1,1,1,-3*sqrt(2)/2) 
 x=matrix(rnorm(n*p, mean=0, sd=1), n, p) 
-feta=x[, 1:4]%*%b 
+feta=x[, 1:4]\%*\%b 
 fprob=exp(feta)/(1+exp(feta))
 y=rbinom(n, 1, fprob)
 
 # user provide a model to be checked
 model_check <- c(0,1,1,1,0,0,0,1)
 
-# compute VSD for model_check using ARM
-b_ARM1 <- glmvsd(x, y, n_train = ceiling(n/2),
-family = "binomial", 
-n_rep=50, model_check = model_check, psi=1, 
-method = "union", weight_function = "ARM")
-
 # compute VSD for model_check using BIC with prior
 b_BIC <- glmvsd(x, y, n_train = ceiling(n/2),
 family = "binomial",
 n_rep=50, model_check = model_check, psi=1, 
-method = "union", weight_function = "BIC_Prior")
+method = "union", weight_function = "BIC", 
+prior = TRUE)
 
 candidate_models = 
 rbind(c(0,0,0,0,0,0,0,1), 

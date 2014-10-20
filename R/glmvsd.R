@@ -1,5 +1,5 @@
 glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check, 
-    psi = 1, family = c("gaussian", "binomial", "tweedie"), method = c("union", 
+    psi = 1, family = c("gaussian", "binomial"), method = c("union", 
         "customize"), candidate_models, weight_function = c("ARM", "BIC"), 
     prior = TRUE) {
     # check data and parameter
@@ -15,10 +15,10 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
         if (!all(y %in% c(0, 1))) 
             stop("There can only be 0 or 1 in y when using binomial family")
     }
-    if (family == "tweedie") {
-        if (any(y < 0)) 
-            stop("y must be nonzero when using Tweedie family")
-    }
+    # if (family == "tweedie") {
+    #     if (any(y < 0)) 
+    #         stop("y must be nonzero when using Tweedie family")
+    # }
     if (n != NROW(x)) 
         stop("x and y have different number of observations")
     if (n_train >= n) 
@@ -31,8 +31,8 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
             candidate_models <- gaussianfit(x, y)
         if (family == "binomial") 
             candidate_models <- binomialfit(x, y)
-        if (family == "tweedie") 
-            candidate_models <- tweediefit(x, y)
+        # if (family == "tweedie") 
+        #     candidate_models <- tweediefit(x, y)
     }
     if (method == "customize") {
         if (missing(candidate_models)) 
@@ -82,22 +82,22 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
             weight <- fit$weight
         }
     }
-    if (family == "tweedie") {
-        if (weight_function == "ARM") {
-            candidate_models <- candidate_models[rowSums(candidate_models) < 
-                (n_train - 2), ]
-            fit <- tdARM(x = x, y = y, candidate_models = candidate_models, 
-                n_train = n_train, n_rep = n_rep, psi = psi, prior = prior)
-            weight <- fit$weight
-        }
-        if (weight_function == "BIC") {
-            candidate_models <- candidate_models[rowSums(candidate_models) < 
-                (n - 2), ]
-            fit <- tdBIC(x = x, y = y, candidate_models = candidate_models, 
-                psi = psi, prior = prior)
-            weight <- fit$weight
-        }
-    }
+    # if (family == "tweedie") {
+    #     if (weight_function == "ARM") {
+    #         candidate_models <- candidate_models[rowSums(candidate_models) < 
+    #             (n_train - 2), ]
+    #         fit <- tdARM(x = x, y = y, candidate_models = candidate_models, 
+    #             n_train = n_train, n_rep = n_rep, psi = psi, prior = prior)
+    #         weight <- fit$weight
+    #     }
+    #     if (weight_function == "BIC") {
+    #         candidate_models <- candidate_models[rowSums(candidate_models) < 
+    #             (n - 2), ]
+    #         fit <- tdBIC(x = x, y = y, candidate_models = candidate_models, 
+    #             psi = psi, prior = prior)
+    #         weight <- fit$weight
+    #     }
+    # }
     TMP_matrix <- sweep(candidate_models, MARGIN = 2, model_check, "-")
     DIFF <- rowSums(abs(TMP_matrix))
     DIFF_minus <- rowSums(TMP_matrix == -1)
