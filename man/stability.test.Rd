@@ -7,7 +7,10 @@ Instability tests
 This function calculate the sequential, parametric bootstrap and perturbation instability measures for linear regression with Lasso, SCAD and MCP penalty. 
 }
 \usage{
-stability.test(x, y, method = c("seq", "bs", "perturb"), penalty = c("lasso", "scad", "mcp"), nrep = 50, remove = 0.2, tau = 0.5, nfolds = 5)
+stability.test(x, y, 
+method = c("seq", "bs", "perturb"), 
+penalty = c("lasso", "scad", "mcp"), 
+nrep = 50, remove = 0.2, tau = 0.5, nfolds = 5)
 }
 
 \arguments{
@@ -36,9 +39,9 @@ BugReport: \url{https://github.com/emeryyi/glmvsd}\cr
 \examples{
 
 # generate simulation data
-n <- 100
-p <- 70
-beta<-c(rep(2.5,5),rep(1.5,5),rep(0.5,5),rep(0,55))
+n <- 50
+p <- 8
+beta<-c(2.5,1.5,0.5,rep(0,5))
 sigma<-matrix(0,p,p)
 for(i in 1:p){
    for(j in 1:p) sigma[i,j] <- 0.5^abs(i-j)
@@ -47,6 +50,8 @@ x <- mvrnorm(n, rep(0,p), sigma)
 e <- rnorm(n)
 y <- x \%*\% beta + e
 
-ins_seq <- stability.test(x, y, method = "seq", penalty = "scad", nrep = 100, remove = 0.1, tau = 0.2, nfolds = 5)
+ins_seq <- stability.test(x, y, method = "seq", 
+penalty = "scad", nrep = 20, 
+remove = 0.1, tau = 0.2, nfolds = 5)
 }
 
