@@ -1,4 +1,4 @@
-logitBIC <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) {
+logitBIC <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE) {
     p <- NCOL(x)
     n <- length(y)
     n_mo <- NROW(candidate_models)

@@ -1,11 +1,11 @@
-lsARM <- function(x, y, candidate_models, n_train, n_rep, psi, prior = TRUE) {
+lsARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE) {
     p <- NCOL(x)
     n <- length(y)
     n_mo <- NROW(candidate_models)
     sk <- rowSums(candidate_models)
-    dk <- matrix(NA, n_rep, n_mo)
-    sigma_k <- matrix(NA, n_rep, n_mo)
-    for (i in 1:n_rep) {
+    dk <- matrix(NA, no_rep, n_mo)
+    sigma_k <- matrix(NA, no_rep, n_mo)
+    for (i in 1:no_rep) {
         tindex <- sample(n, n_train, replace = F)
         if (any(candidate_models[1, ] == 1)) {
             for (j in 1:n_mo) {

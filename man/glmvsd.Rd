@@ -6,7 +6,7 @@ The package calculate the variable selection deviation (VSD) to measure the unce
 }
 \usage{
 glmvsd(x, y, n_train = ceiling(n/2), 
-n_rep = 100, model_check, 
+no_rep = 100, model_check, 
 psi = 1, family = c("gaussian", "binomial"), 
 method = c("union", "customize"), 
 candidate_models, 
@@ -19,17 +19,17 @@ weight_function = c("ARM", "BIC"), prior = TRUE)
 
   \item{n_train}{Size of training set when the weight function is ARM or ARM with prior. The default value is \code{n_train}=ceiling(n/2).}
 
-  \item{n_rep}{Number of replications when the weight function is ARM and ARM with prior. The default value is \code{n_rep=100}.}
+  \item{no_rep}{Number of replications when the weight function is ARM and ARM with prior. The default value is \code{no_rep=100}.}
 
-  \item{model_check}{The index of base model for calculating the VSD measure.}
+  \item{model_check}{The index of the model to be assessed by calculating the VSD measures.}
 
-  \item{psi}{The size of un-normalized prior weight. The default value is 1.}
+  \item{psi}{A positive number to control the improvement of the prior weight. The default value is 1.}
   \item{family}{Choose the family for GLM models. So far only \code{gaussian}, \code{binomial} and \code{tweedie} are implemented. The default is \code{gaussian}.}
-  \item{method}{Users choose one of the \code{union} and \code{customize}. If \code{method=="union"}, then the program automatically provide the candidate models as a union of solution path of Lasso, SCAD, and MCP; If \code{method="customize"}, users must provide their own set of candidate models in the input argument \code{candidate_models} as a matrix, each row of which is a 0/1 index vector representing whether each variable included/excluded in the model.}
+  \item{method}{User chooses one of the \code{union} and \code{customize}. If \code{method=="union"}, then the program automatically provides the candidate models as a union of solution paths of Lasso, SCAD, and MCP; If \code{method="customize"}, the user must provide their own set of candidate models in the input argument \code{candidate_models} as a matrix, each row of which is a 0/1 index vector representing whether each variable is included/excluded in the model.}
 
-  \item{candidate_models}{Only available when \code{method="customize"}. It is a matrix of candidate models. each row of which is a 0/1 index vector representing whether each variable included/excluded in the model.}
+  \item{candidate_models}{Only available when \code{method="customize"}. It is a matrix of candidate models, each row of which is a 0/1 index vector representing whether each variable is included/excluded in the model.}
 
-  \item{weight_function}{Options for computing weights for VSD measure. Users choose one of the \code{ARM}, \code{BIC}. The default is \code{ARM}.}
+  \item{weight_function}{Options for computing weights for VSD measure. User chooses one of the \code{ARM}, \code{BIC}. The default is \code{ARM}.}
   \item{prior}{Whether use prior in the weight function. The default is \code{TRUE}.}
 }
 
@@ -40,8 +40,8 @@ See Reference section.
 \value{
 A "glmvsd" object is retured. The components are:
  \item{VSD}{Variable selection deviation (VSD) value.}
- \item{VSD_minus}{The lower VSD value of \code{model_check}, representing a degree of false negative of  \code{model_check}.}
- \item{VSD_plus}{The upper VSD value of \code{model_check} model, representing a degree of false positive of  \code{model_check}.}
+ \item{VSD_minus}{The lower VSD value of \code{model_check}, representing the number of predictors in the model (\code{model_check}) not quite justified at the present sample size.}
+ \item{VSD_plus}{The upper VSD value of \code{model_check} model, representing the number of predictors missed by the model (\code{model_check}).}
  \item{weight}{The weight for each candidate model.}
  \item{DIFF}{Counting the variable differences between candidate models and \code{model_check}.}
 \item{candidate_models_cleaned}{Cleaned candidate models: the duplicated candidate models are cleaned; When computing VSD weights using BIC, the models with more than n-2 variables are removed (n is the number of observaitons); When computing VSD weights using ARM, the models with more than n_train-2 variables  are removed (n_train is the number of training observations).}
@@ -73,7 +73,7 @@ model_check <- c(0,1,1,1,0,0,0,1)
 
 # compute VSD for model_check using ARM with prior
 v_ARM <- glmvsd(x, y, n_train = ceiling(n/2), 
-n_rep=50, model_check = model_check, psi=1, 
+no_rep=50, model_check = model_check, psi=1, 
 family = "gaussian", method = "union", 
 weight_function = "ARM", prior = TRUE)
 
@@ -113,7 +113,7 @@ model_check <- c(0,1,1,1,0,0,0,1)
 # compute VSD for model_check using BIC with prior
 b_BIC <- glmvsd(x, y, n_train = ceiling(n/2),
 family = "binomial",
-n_rep=50, model_check = model_check, psi=1, 
+no_rep=50, model_check = model_check, psi=1, 
 method = "union", weight_function = "BIC", 
 prior = TRUE)
 

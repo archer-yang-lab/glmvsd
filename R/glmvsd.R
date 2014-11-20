@@ -1,4 +1,4 @@
-glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check, 
+glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100, model_check, 
     psi = 1, family = c("gaussian", "binomial"), method = c("union", 
         "customize"), candidate_models, weight_function = c("ARM", "BIC"), 
     prior = TRUE) {
@@ -55,7 +55,7 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
     if (family == "gaussian") {
         if (weight_function == "ARM") {
             fit <- lsARM(x = x, y = y, candidate_models = candidate_models, 
-                n_train = n_train, n_rep = n_rep, psi = psi, prior = prior)
+                n_train = n_train, no_rep = no_rep, psi = psi, prior = prior)
         }
         if (weight_function == "BIC") {
             fit <- lsBIC(x = x, y = y, candidate_models = candidate_models, 
@@ -65,7 +65,7 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
     if (family == "binomial") {
         if (weight_function == "ARM") {
             fit <- logitARM(x = x, y = y, candidate_models = candidate_models, 
-                n_train = n_train, n_rep = n_rep, psi = psi, prior = prior)
+                n_train = n_train, no_rep = no_rep, psi = psi, prior = prior)
         }
         if (weight_function == "BIC") {
             fit <- logitBIC(x = x, y = y, candidate_models = candidate_models, 
