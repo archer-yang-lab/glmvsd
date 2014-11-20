@@ -49,55 +49,31 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), n_rep = 100, model_check,
     rownames(candidate_models) <- NULL
     candidate_models <- candidate_models[order(rowSums(candidate_models)), 
         ]
+    candidate_models <- candidate_models[rowSums(candidate_models) < 
+        (n_train - 2), ]
     # compute weights
     if (family == "gaussian") {
         if (weight_function == "ARM") {
-            candidate_models <- candidate_models[rowSums(candidate_models) < 
-                (n_train - 2), ]
             fit <- lsARM(x = x, y = y, candidate_models = candidate_models, 
                 n_train = n_train, n_rep = n_rep, psi = psi, prior = prior)
-            weight <- fit$weight
         }
         if (weight_function == "BIC") {
-            candidate_models <- candidate_models[rowSums(candidate_models) < 
-                (n - 2), ]
             fit <- lsBIC(x = x, y = y, candidate_models = candidate_models, 
                 psi = psi, prior = prior)
-            weight <- fit$weight
         }
     }
     if (family == "binomial") {
         if (weight_function == "ARM") {
-            candidate_models <- candidate_models[rowSums(candidate_models) < 
-                (n_train - 2), ]
             fit <- logitARM(x = x, y = y, candidate_models = candidate_models, 
                 n_train = n_train, n_rep = n_rep, psi = psi, prior = prior)
-            weight <- fit$weight
         }
         if (weight_function == "BIC") {
-            candidate_models <- candidate_models[rowSums(candidate_models) < 
-                (n - 2), ]
             fit <- logitBIC(x = x, y = y, candidate_models = candidate_models, 
                 psi = psi, prior = prior)
-            weight <- fit$weight
         }
     }
-    # if (family == "tweedie") {
-    #     if (weight_function == "ARM") {
-    #         candidate_models <- candidate_models[rowSums(candidate_models) < 
-    #             (n_train - 2), ]
-    #         fit <- tdARM(x = x, y = y, candidate_models = candidate_models, 
-    #             n_train = n_train, n_rep = n_rep, psi = psi, prior = prior)
-    #         weight <- fit$weight
-    #     }
-    #     if (weight_function == "BIC") {
-    #         candidate_models <- candidate_models[rowSums(candidate_models) < 
-    #             (n - 2), ]
-    #         fit <- tdBIC(x = x, y = y, candidate_models = candidate_models, 
-    #             psi = psi, prior = prior)
-    #         weight <- fit$weight
-    #     }
-    # }
+    weight <- fit$weight
+	# compute VSD etc
     TMP_matrix <- sweep(candidate_models, MARGIN = 2, model_check, "-")
     DIFF <- rowSums(abs(TMP_matrix))
     DIFF_minus <- rowSums(TMP_matrix == -1)
