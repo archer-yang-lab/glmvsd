@@ -27,7 +27,7 @@ lsARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE) {
             }
         }
     }
-    lw_num <- (-n/2) * log(sigma_k) - (1/sqrt(sigma_k)) * dk/2
+    lw_num <- (-n/2) * log(sigma_k) - ((sigma_k)^(-2)) * dk/2
     if (prior == TRUE) {
         ck <- ck_compute(n_mo, sk, p)
         lw_num <- sweep(lw_num, MARGIN = 2, psi * ck, "-")

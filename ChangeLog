@@ -1,6 +1,9 @@
 CHANGELOG - Record of Changes for glmvsd
 Please find below the list of the various changes and improvements that were part of each successive update.
 
+1.2:
+* [fixed] Fixed a bug in lsARM.R.
+
 1.1:
 * [fixed] Fixed some typos in the manual.
 * [adjusted] Fixed a bug in BIC weight calculation.
