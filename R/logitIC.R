@@ -1,4 +1,5 @@
-logitBIC <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE) {
+logitIC <- function(x, y, candidate_models, n_train, no_rep, psi, 
+	type = c("BIC", "AIC"), prior = TRUE) {
     p <- NCOL(x)
     n <- length(y)
     n_mo <- NROW(candidate_models)
@@ -7,14 +8,16 @@ logitBIC <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE)
     if (any(candidate_models[1, ] == 1)) {
         for (i in 1:n_mo) {
             glmfit <- glm(y ~ x[, candidate_models[i, ] == 1], family = "binomial")
-            ik[i] <- glmfit$deviance + sk[i] * log(n)
+            if(type == "BIC") ik[i] <- glmfit$deviance + sk[i] * log(n)
+			else ik[i] <- glmfit$deviance + sk[i] * 2
         }
     } else {
         ik[1] <- -2 * log(prod(mean(y)^y * (1 - mean(y))^(1 - y))) + sk[1] * 
             log(n)
         for (i in 2:n_mo) {
             glmfit <- glm(y ~ x[, candidate_models[i, ] == 1], family = "binomial")
-            ik[i] <- glmfit$deviance + sk[i] * log(n)
+            if(type == "BIC") ik[i] <- glmfit$deviance + sk[i] * log(n)
+			else ik[i] <- glmfit$deviance + sk[i] * 2
         }
     }
     if (prior == TRUE) {

@@ -1,4 +1,5 @@
-lsBIC <- function(x, y, candidate_models, psi, prior = TRUE) {
+lsIC <- function(x, y, candidate_models, psi, prior = TRUE, 
+	type = c("BIC","AIC")) {
     p <- NCOL(x)
     n <- length(y)
     n_mo <- NROW(candidate_models)
@@ -8,7 +9,8 @@ lsBIC <- function(x, y, candidate_models, psi, prior = TRUE) {
         for (i in 1:n_mo) {
             LSL <- lm(y ~ x[, candidate_models[i, ] == 1])
             rss <- crossprod(summary(LSL)$res, summary(LSL)$res)
-            ik[i] <- n * log(rss/n) + sk[i] * log(n)
+			if(type == "BIC") ik[i] <- n * log(rss/n) + sk[i] * log(n)
+            else ik[i] <- n * log(rss/n) + sk[i] * 2
         }
     } else {
         rss <- sum((y - mean(y))^2)
@@ -16,7 +18,8 @@ lsBIC <- function(x, y, candidate_models, psi, prior = TRUE) {
         for (i in 2:n_mo) {
             LSL <- lm(y ~ x[, candidate_models[i, ] == 1])
             rss <- crossprod(summary(LSL)$res, summary(LSL)$res)
-            ik[i] <- n * log(rss/n) + sk[i] * log(n)
+            if(type == "BIC") ik[i] <- n * log(rss/n) + sk[i] * log(n)
+            else ik[i] <- n * log(rss/n) + sk[i] * 2
         }
     }
     if (prior == TRUE) {
