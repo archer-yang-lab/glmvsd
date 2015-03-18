@@ -10,7 +10,7 @@ no_rep = 100, model_check,
 psi = 1, family = c("gaussian", "binomial"), 
 method = c("union", "customize"), 
 candidate_models, 
-weight_function = c("ARM", "BIC"), prior = TRUE)
+weight_function = c("ARM", "AIC", "BIC"), prior = TRUE)
 }
 \arguments{
   \item{x}{Matrix of predictors.}
@@ -29,7 +29,7 @@ weight_function = c("ARM", "BIC"), prior = TRUE)
 
   \item{candidate_models}{Only available when \code{method="customize"}. It is a matrix of candidate models, each row of which is a 0/1 index vector representing whether each variable is included/excluded in the model.}
 
-  \item{weight_function}{Options for computing weights for VSD measure. User chooses one of the \code{ARM}, \code{BIC}. The default is \code{ARM}.}
+  \item{weight_function}{Options for computing weights for VSD measure. User chooses one of the \code{ARM}, \code{AIC} and \code{BIC}. The default is \code{ARM}.}
   \item{prior}{Whether use prior in the weight function. The default is \code{TRUE}.}
 }
 
@@ -44,7 +44,7 @@ A "glmvsd" object is retured. The components are:
  \item{VSD_plus}{The upper VSD value of \code{model_check} model, representing the number of predictors missed by the model (\code{model_check}).}
  \item{weight}{The weight for each candidate model.}
  \item{DIFF}{Counting the variable differences between candidate models and \code{model_check}.}
-\item{candidate_models_cleaned}{Cleaned candidate models: the duplicated candidate models are cleaned; When computing VSD weights using BIC, the models with more than n-2 variables are removed (n is the number of observaitons); When computing VSD weights using ARM, the models with more than n_train-2 variables  are removed (n_train is the number of training observations).}
+\item{candidate_models_cleaned}{Cleaned candidate models: the duplicated candidate models are cleaned; When computing VSD weights using AIC and BIC, the models with more than n-2 variables are removed (n is the number of observaitons); When computing VSD weights using ARM, the models with more than n_train-2 variables  are removed (n_train is the number of training observations).}
 }
 
 \references{
@@ -76,6 +76,12 @@ v_ARM <- glmvsd(x, y, n_train = ceiling(n/2),
 no_rep=50, model_check = model_check, psi=1, 
 family = "gaussian", method = "union", 
 weight_function = "ARM", prior = TRUE)
+
+# compute VSD for model_check using AIC
+v_AIC <- glmvsd(x, y, 
+model_check = model_check,
+family = "gaussian", method = "union", 
+weight_function = "AIC", prior = TRUE)
 
 # compute VSD for model_check using BIC
 v_BIC <- glmvsd(x, y, 
@@ -129,11 +135,11 @@ c(1,1,1,1,1,0,0,0))
 
 # compute VSD for model_check using BIC
 # user supplied candidate models
-b_BIC1 <- glmvsd(x, y, 
+b_AIC <- glmvsd(x, y, 
 family = "binomial",
 model_check = model_check, psi=1, 
 method = "customize", 
 candidate_models = candidate_models, 
-weight_function = "BIC")
+weight_function = "AIC")
 }
 

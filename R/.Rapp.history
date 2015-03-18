@@ -1,53 +1,23 @@
 setwd('/Users/emeryyi/Dropbox/Research/googleproject/glmvsd/R')
-stability.test <- function(x, y, method=c("seq", "bs", "perturb"), #
-		penalty = c("lasso", "scad", "mcp"), nrep = 50, remove = 0.2,#
-		tau = 0.5, nfolds = 5) {#
-	# model check#
-	method <- match.arg(method)#
-    penalty <- match.arg(penalty)#
-    y <- drop(y)#
-    y <- as.numeric(y)#
-    x <- as.matrix(x)#
-    p <- NCOL(x)#
-    n <- length(y)#
-    if (n != NROW(x)) #
-        stop("x and y have different number of observations")#
-    if (nrep < 10) #
-        stop("The number of repitition must be greater than 10.")#
-	if (remove<=0 || remove>=1)  #
-	   stop("The proportion of data to be removed for sequential stability test must be in (0,1).")#
-	if (tau<=0 || tau>1) #
-	    stop("The perturbation size (tau) must be in (0,1].")#
-	# fit#
-	full <- modelfit(x, y, nfolds, penalty)#
-	fitted <- drop(cbind(rep(1,n),x)%*%full$coefit)#
-	sigmafit<-sqrt(sum((y-fitted)^2)/(n-sum(full$modelfit)))#
-	####################sequential#############
-	model.sub<-matrix(NA, nrep, p)#
-	if(method == "seq"){#
-		m<-floor(n*(1-remove))#
-		for (i in 1:nrep){#
-			a <- sample(n,m,replace=F)#
-			model.sub[i, ] <- modelfit(x=x[a,],y=y[a],nfolds,penalty)$modelfit#
-		}#
-	}#
-	####################Bootstrap#####################
-	if(method == "bs"){#
-	    for (i in 1:nrep){#
-	    	y.star <- rnorm(n,fitted,sigmafit)#
-			model.sub[i, ] <- modelfit(x=x,y=y.star,nfolds,penalty)$modelfit#
-		}#
-	}#
-	####################Perturbation#####################
-	if(method == "perturb"){#
-		for (i in 1:nrep){#
-			y.star<-rnorm(n,y,sqrt(tau)*sigmafit)#
-			model.sub[i, ] <- modelfit(x=x,y=y.star,nfolds,penalty)$modelfit#
-		}#
-	}#
-	# results collection#
-	out <- sum(abs(sweep(model.sub,MARGIN=2,full$modelfit,"-")))/nrep#
-	out#
-}#
+ncvfit <- function(x, y, family = c("gaussian","binomial")) {#
+	mlasso = cv.glmnet(x = x, y = y, family = family, intercept = TRUE,#
+	                  standardize = FALSE, alpha = 1, nfolds = 5)#
+	beta.mlasso = as.vector(coef(mlasso, s = "lambda.1se"))[-1]#
 #
-prompt(stability.test)
+	beta_mat <- matrix(NA, length(beta.mlasso),length(mlasso$lambda))#
+	b0 <- rep(NA,length(mlasso$lambda))#
+	for (i in seq_along(mlasso$lambda)) {#
+		lambda = mlasso$lambda[i]#
+		beta = beta.mlasso#
+	  ## two-step LLA with LASSO initial#
+	  for (j in 1:2) {#
+	    pf = penalty_deriv(abs(beta), lambda)#
+	    lla = glmnet(x = X, y = Y, family = "gaussian", intercept = TRUE,#
+	                 standardize = FALSE, penalty.factor = pf, lambda = 1)#
+	    beta = as.vector(lla$beta)#
+	  }#
+		beta_mat[,i] <- beta#
+		b0[i] <- lla$a0#
+	}#
+	list(beta_mat = beta_mat, b0 = b0)#
+}

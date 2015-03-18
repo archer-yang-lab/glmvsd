@@ -1,6 +1,9 @@
 CHANGELOG - Record of Changes for glmvsd
 Please find below the list of the various changes and improvements that were part of each successive update.
 
+1.3:
+* [added] Now AIC weight is supported.
+
 1.2:
 * [fixed] Fixed a bug in lsARM.R.
 

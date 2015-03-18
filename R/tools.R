@@ -9,3 +9,5 @@ ck_compute <- function(n_mo, sk, p) {
 	}
 	ck
 }
+
+
