@@ -10,7 +10,7 @@ no_rep = 100, model_check,
 psi = 1, family = c("gaussian", "binomial"), 
 method = c("union", "customize"), 
 candidate_models, 
-weight_type = c("ARM", "AIC", "BIC"), prior = TRUE)
+weight_type = c("BIC", "AIC", "ARM"), prior = TRUE)
 }
 \arguments{
   \item{x}{Matrix of predictors.}
@@ -29,7 +29,7 @@ weight_type = c("ARM", "AIC", "BIC"), prior = TRUE)
 
   \item{candidate_models}{Only available when \code{method="customize"}. It is a matrix of candidate models, each row of which is a 0/1 index vector representing whether each variable is included/excluded in the model.}
 
-  \item{weight_type}{Options for computing weights for VSD measure. User chooses one of the \code{ARM}, \code{AIC} and \code{BIC}. The default is \code{ARM}.}
+  \item{weight_type}{Options for computing weights for VSD measure. User chooses one of the \code{ARM}, \code{AIC} and \code{BIC}. The default is \code{BIC}.}
   \item{prior}{Whether use prior in the weight function. The default is \code{TRUE}.}
 }
 
@@ -133,7 +133,7 @@ c(1,1,0,0,1,0,0,0),
 c(0,0,0,0,0,0,0,0),
 c(1,1,1,1,1,0,0,0))
 
-# compute VSD for model_check using BIC
+# compute VSD for model_check using AIC
 # user supplied candidate models
 b_AIC <- glmvsd(x, y, 
 family = "binomial",

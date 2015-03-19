@@ -1,6 +1,6 @@
 glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100, model_check, 
     psi = 1, family = c("gaussian", "binomial"), method = c("union", 
-        "customize"), candidate_models, weight_type = c("ARM", "AIC", "BIC"), 
+        "customize"), candidate_models, weight_type = c("BIC", "AIC", "ARM"), 
     prior = TRUE) {
     # check data and parameter
     family <- match.arg(family)
