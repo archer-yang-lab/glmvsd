@@ -1,11 +1,11 @@
 glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100, model_check, 
     psi = 1, family = c("gaussian", "binomial"), method = c("union", 
-        "customize"), candidate_models, weight_function = c("ARM", "AIC", "BIC"), 
+        "customize"), candidate_models, weight_type = c("ARM", "AIC", "BIC"), 
     prior = TRUE) {
     # check data and parameter
     family <- match.arg(family)
     method <- match.arg(method)
-    weight_function <- match.arg(weight_function)
+    weight_type <- match.arg(weight_type)
     y <- drop(y)
     y <- as.numeric(y)
     x <- as.matrix(x)
@@ -53,29 +53,29 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100, model_check,
         (n_train - 2), ]
     # compute weights
     if (family == "gaussian") {
-        if (weight_function == "ARM") {
+        if (weight_type == "ARM") {
             fit <- lsARM(x = x, y = y, candidate_models = candidate_models, 
                 n_train = n_train, no_rep = no_rep, psi = psi, prior = prior)
         }
-        if (weight_function == "AIC") {
+        if (weight_type == "AIC") {
             fit <- lsIC(x = x, y = y, candidate_models = candidate_models, 
                 psi = psi, prior = prior, type = "AIC")
         }
-        if (weight_function == "BIC") {
+        if (weight_type == "BIC") {
             fit <- lsIC(x = x, y = y, candidate_models = candidate_models, 
                 psi = psi, prior = prior, type = "BIC")
         }
     }
     if (family == "binomial") {
-        if (weight_function == "ARM") {
+        if (weight_type == "ARM") {
             fit <- logitARM(x = x, y = y, candidate_models = candidate_models, 
                 n_train = n_train, no_rep = no_rep, psi = psi, prior = prior)
         }
-        if (weight_function == "AIC") {
+        if (weight_type == "AIC") {
             fit <- logitIC(x = x, y = y, candidate_models = candidate_models, 
                 psi = psi, prior = prior, type = "AIC")
         }
-        if (weight_function == "BIC") {
+        if (weight_type == "BIC") {
             fit <- logitIC(x = x, y = y, candidate_models = candidate_models, 
                 psi = psi, prior = prior, type = "BIC")
         }

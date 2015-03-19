@@ -10,7 +10,7 @@ no_rep = 100, model_check,
 psi = 1, family = c("gaussian", "binomial"), 
 method = c("union", "customize"), 
 candidate_models, 
-weight_function = c("ARM", "AIC", "BIC"), prior = TRUE)
+weight_type = c("ARM", "AIC", "BIC"), prior = TRUE)
 }
 \arguments{
   \item{x}{Matrix of predictors.}
@@ -29,7 +29,7 @@ weight_function = c("ARM", "AIC", "BIC"), prior = TRUE)
 
   \item{candidate_models}{Only available when \code{method="customize"}. It is a matrix of candidate models, each row of which is a 0/1 index vector representing whether each variable is included/excluded in the model.}
 
-  \item{weight_function}{Options for computing weights for VSD measure. User chooses one of the \code{ARM}, \code{AIC} and \code{BIC}. The default is \code{ARM}.}
+  \item{weight_type}{Options for computing weights for VSD measure. User chooses one of the \code{ARM}, \code{AIC} and \code{BIC}. The default is \code{ARM}.}
   \item{prior}{Whether use prior in the weight function. The default is \code{TRUE}.}
 }
 
@@ -75,19 +75,19 @@ model_check <- c(0,1,1,1,0,0,0,1)
 v_ARM <- glmvsd(x, y, n_train = ceiling(n/2), 
 no_rep=50, model_check = model_check, psi=1, 
 family = "gaussian", method = "union", 
-weight_function = "ARM", prior = TRUE)
+weight_type = "ARM", prior = TRUE)
 
 # compute VSD for model_check using AIC
 v_AIC <- glmvsd(x, y, 
 model_check = model_check,
 family = "gaussian", method = "union", 
-weight_function = "AIC", prior = TRUE)
+weight_type = "AIC", prior = TRUE)
 
 # compute VSD for model_check using BIC
 v_BIC <- glmvsd(x, y, 
 model_check = model_check,
 family = "gaussian", method = "union", 
-weight_function = "BIC", prior = TRUE)
+weight_type = "BIC", prior = TRUE)
 
 # user supplied candidate models
 candidate_models = rbind(c(0,0,0,0,0,0,0,1), 
@@ -100,7 +100,7 @@ model_check = model_check, psi=1,
 family = "gaussian",
 method = "customize", 
 candidate_models = candidate_models, 
-weight_function = "BIC", prior = TRUE)
+weight_type = "BIC", prior = TRUE)
 
 # CLASSIFICATION CASE
 
@@ -120,7 +120,7 @@ model_check <- c(0,1,1,1,0,0,0,1)
 b_BIC <- glmvsd(x, y, n_train = ceiling(n/2),
 family = "binomial",
 no_rep=50, model_check = model_check, psi=1, 
-method = "union", weight_function = "BIC", 
+method = "union", weight_type = "BIC", 
 prior = TRUE)
 
 candidate_models = 
@@ -140,6 +140,6 @@ family = "binomial",
 model_check = model_check, psi=1, 
 method = "customize", 
 candidate_models = candidate_models, 
-weight_function = "AIC")
+weight_type = "AIC")
 }
 
