@@ -11,9 +11,13 @@ lsARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE) {
             for (j in 1:n_mo) {
                 LSL <- lm(y[tindex] ~ x[tindex, candidate_models[j, ] == 
                   1])
-                dk[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, candidate_models[j, 
-                  ] == 1]) %*% LSL$coef)^2)
                 sigma_k[i, j] <- summary(LSL)$sigma
+				if(any(is.na(LSL$coef))){
+					dk[i, j] <- Inf
+					}else{
+				        dk[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, candidate_models[j, 
+		                  ] == 1]) %*% LSL$coef)^2)
+					}
             }
         } else {
             dk[i, 1] <- sum((y[-tindex] - mean(y[tindex]))^2)
@@ -21,9 +25,13 @@ lsARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE) {
             for (j in 2:n_mo) {
                 LSL <- lm(y[tindex] ~ x[tindex, candidate_models[j, ] == 
                   1])
-                dk[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, candidate_models[j, 
-                  ] == 1]) %*% LSL$coef)^2)
-                sigma_k[i, j] <- summary(LSL)$sigma
+	            sigma_k[i, j] <- summary(LSL)$sigma		
+				if(any(is.na(LSL$coef))){
+					dk[i, j] <- Inf
+					}else{
+				        dk[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, candidate_models[j, 
+		                  ] == 1]) %*% LSL$coef)^2)
+					}
             }
         }
     }

@@ -10,12 +10,15 @@ logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE)
             for (j in 1:n_mo) {
                 glmfit <- glm(y[tindex] ~ x[tindex, candidate_models[j, 
                   ] == 1], family = "binomial", control = list(maxit = 1e7))
-                gk <- cbind(1, x[-tindex, candidate_models[j, ] == 1]) %*% 
-                  glmfit$coef
-                fk <- exp(gk)/(exp(gk) + 1)
-                fk[gk > 700] <- 1
-                fk[gk < -700] <- 0
-                w_num[i, j] <- prod(fk^y[-tindex] * (1 - fk)^(1 - y[-tindex]))
+				if(any(is.na(glmfit$coef))){w_num[i, j] <- 0
+					}else{
+						gk <- cbind(1, x[-tindex, candidate_models[j, ] == 1]) %*% 
+		                  glmfit$coef
+		                fk <- exp(gk)/(exp(gk) + 1)
+		                fk[gk > 700] <- 1
+		                fk[gk < -700] <- 0
+		                w_num[i, j] <- prod(fk^y[-tindex] * (1 - fk)^(1 - y[-tindex]))
+				}  
             }
         } else {
             w_num[i, 1] <- prod(mean(y[tindex])^y[-tindex] * (1 - mean(y[tindex]))^(1 - 
@@ -23,12 +26,15 @@ logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE)
             for (j in 2:n_mo) {
                 glmfit <- glm(y[tindex] ~ x[tindex, candidate_models[j, 
                   ] == 1], family = "binomial", control = list(maxit = 1e7))
-                gk <- cbind(1, x[-tindex, candidate_models[j, ] == 1]) %*% 
-                  glmfit$coef
-                fk <- exp(gk)/(exp(gk) + 1)
-                fk[gk > 700] <- 1
-                fk[gk < -700] <- 0
-                w_num[i, j] <- prod(fk^y[-tindex] * (1 - fk)^(1 - y[-tindex]))
+				if(any(is.na(glmfit$coef))){w_num[i, j] <- 0
+					}else{
+						gk <- cbind(1, x[-tindex, candidate_models[j, ] == 1]) %*% 
+		                  glmfit$coef
+		                fk <- exp(gk)/(exp(gk) + 1)
+		                fk[gk > 700] <- 1
+		                fk[gk < -700] <- 0
+		                w_num[i, j] <- prod(fk^y[-tindex] * (1 - fk)^(1 - y[-tindex]))
+				}
             }
         }
     }
