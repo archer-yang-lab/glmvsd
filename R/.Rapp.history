@@ -1,23 +1,116 @@
-setwd('/Users/emeryyi/Dropbox/Research/googleproject/glmvsd/R')
-ncvfit <- function(x, y, family = c("gaussian","binomial")) {#
-	mlasso = cv.glmnet(x = x, y = y, family = family, intercept = TRUE,#
-	                  standardize = FALSE, alpha = 1, nfolds = 5)#
-	beta.mlasso = as.vector(coef(mlasso, s = "lambda.1se"))[-1]#
+library(glmvsd)#
+library(glmnet)#
+library(ncvreg)#
+# if (!exists(".Random.seed")) runif(1)#
+# initial.seed <- .Random.seed # keep track of the initial seed#
+# save(initial.seed, file = paste("RandomSeed-1.rda", sep = ""))#
 #
-	beta_mat <- matrix(NA, length(beta.mlasso),length(mlasso$lambda))#
-	b0 <- rep(NA,length(mlasso$lambda))#
-	for (i in seq_along(mlasso$lambda)) {#
-		lambda = mlasso$lambda[i]#
-		beta = beta.mlasso#
-	  ## two-step LLA with LASSO initial#
-	  for (j in 1:2) {#
-	    pf = penalty_deriv(abs(beta), lambda)#
-	    lla = glmnet(x = X, y = Y, family = "gaussian", intercept = TRUE,#
-	                 standardize = FALSE, penalty.factor = pf, lambda = 1)#
-	    beta = as.vector(lla$beta)#
-	  }#
-		beta_mat[,i] <- beta#
-		b0[i] <- lla$a0#
-	}#
-	list(beta_mat = beta_mat, b0 = b0)#
-}
+load(file = paste("RandomSeed-1.rda", sep = ""))#
+assign(".Random.seed", initial.seed, .GlobalEnv)#
+#
+covmat <- function(rho, p) {#
+  rho^(abs(outer(seq(p), seq(p), "-")))#
+}#
+#
+n.sim <- 100#
+n <- 50 #
+p <- 40#
+b <- c(rep(3,15),rep(0,25))#
+true_m <- (1 - (b == 0))
+z1<-rnorm(n,0,1)#
+z2<-rnorm(n,0,1)#
+z3<-rnorm(n,0,1)#
+#
+x1_5<-matrix(rnorm(n*5,0,0.1),ncol=5,nrow=n) + z1#
+x6_10<-matrix(rnorm(n*5,0,0.1),ncol=5,nrow=n) + z2#
+x11_15<-matrix(rnorm(n*5,0,0.1),ncol=5,nrow=n) + z3#
+xrest<-matrix(rnorm(n*5,0,1),ncol=25,nrow=n)#
+x <- cbind(x1_5,x6_10,x11_15,xrest)#
+#
+# x = matrix(rnorm(n*p), n, p) %*% sqrtmat#
+feta <- x %*% b #
+fprob <- exp(feta)/(1+exp(feta))#
+y <- rbinom(n, 1, fprob)
+x
+y
+cvfit <- cv.glmnet(x=x,y=y,alpha=1,maxit=1e6, family="binomial")#
+tmp <- cvfit$glmnet.fit$beta#
+beta.path <- as.matrix(tmp[,cvfit$lambda==cvfit$lambda.min])#
+model_check <- drop(1 - (beta.path == 0))#
+tmp <- true_m-model_check
+beta.path
+n <- 100 #
+p <- 40
+z1<-rnorm(n,0,1)#
+z2<-rnorm(n,0,1)#
+z3<-rnorm(n,0,1)#
+#
+x1_5<-matrix(rnorm(n*5,0,0.1),ncol=5,nrow=n) + z1#
+x6_10<-matrix(rnorm(n*5,0,0.1),ncol=5,nrow=n) + z2#
+x11_15<-matrix(rnorm(n*5,0,0.1),ncol=5,nrow=n) + z3#
+xrest<-matrix(rnorm(n*5,0,1),ncol=25,nrow=n)#
+x <- cbind(x1_5,x6_10,x11_15,xrest)#
+#
+# x = matrix(rnorm(n*p), n, p) %*% sqrtmat#
+feta <- x %*% b #
+fprob <- exp(feta)/(1+exp(feta))#
+y <- rbinom(n, 1, fprob)#
+#
+cvfit <- cv.glmnet(x=x,y=y,alpha=1,maxit=1e6, family="binomial")#
+tmp <- cvfit$glmnet.fit$beta#
+beta.path <- as.matrix(tmp[,cvfit$lambda==cvfit$lambda.min])#
+model_check <- drop(1 - (beta.path == 0))#
+tmp <- true_m-model_check
+cvfit<-cv.ncvreg(X=x,y=y,penalty="MCP",family="binomial",max.iter=1e4)#
+coefit<-cvfit$fit$beta[,cvfit$min]#
+model_check<- 1-(coefit[-1]==0)#
+tmp <- true_m-model_check
+cvfit<-cv.ncvreg(X=x,y=y,penalty="MCP",alpha=0.5,family="binomial",max.iter=1e4)#
+coefit<-cvfit$fit$beta[,cvfit$min]#
+model_check<- 1-(coefit[-1]==0)#
+tmp <- true_m-model_check
+cvfit <- cv.glmnet(x=x,y=y,alpha=0.2,maxit=1e6, family="binomial")#
+tmp <- cvfit$glmnet.fit$beta#
+beta.path <- as.matrix(tmp[,cvfit$lambda==cvfit$lambda.min])#
+model_check <- drop(1 - (beta.path == 0))#
+tmp <- true_m-model_check
+cvfit <- cv.glmnet(x=x,y=y,alpha=0.5,maxit=1e6, family="binomial")#
+tmp <- cvfit$glmnet.fit$beta#
+beta.path <- as.matrix(tmp[,cvfit$lambda==cvfit$lambda.min])#
+model_check <- drop(1 - (beta.path == 0))#
+tmp <- true_m-model_check
+cvfit <- cv.glmnet(x=x,y=y,alpha=0.1,maxit=1e6, family="binomial")#
+tmp <- cvfit$glmnet.fit$beta#
+beta.path <- as.matrix(tmp[,cvfit$lambda==cvfit$lambda.min])#
+model_check <- drop(1 - (beta.path == 0))#
+tmp <- true_m-model_check
+cvfit <- cv.glmnet(x=x,y=y,alpha=0.9,maxit=1e6, family="binomial")#
+tmp <- cvfit$glmnet.fit$beta#
+beta.path <- as.matrix(tmp[,cvfit$lambda==cvfit$lambda.min])#
+model_check <- drop(1 - (beta.path == 0))#
+tmp <- true_m-model_check
+setwd('/Users/emeryyi/Dropbox/Research/13_glmvsd/code/GLMVSD_simulation/example3')
+cvfit <- cv.glmnet(x=x,y=y,alpha=0.95,maxit=1e6, family="binomial")#
+tmp <- cvfit$glmnet.fit$beta#
+beta.path <- as.matrix(tmp[,cvfit$lambda==cvfit$lambda.min])#
+model_check <- drop(1 - (beta.path == 0))#
+tmp <- true_m-model_check
+model_check
+enetfit <- glmnet(x = x, y = y, family = "gaussian", #
+				alpha = 0.5, maxit = 1e+06)
+lassofit <- glmnet(x = x, y = y, family = "gaussian", #
+				alpha = 1, maxit = 1e+06)#
+    enetfit <- glmnet(x = x, y = y, family = "gaussian", #
+				alpha = 0.5, maxit = 1e+06)#
+    scadfit <- ncvreg(X = x, y = y, family = "gaussian", penalty = "SCAD", #
+        warn = FALSE, max.iter = 1e+04)#
+    mcpfit <- ncvreg(X = x, y = y, family = "gaussian", penalty = "MCP", #
+        warn = FALSE, max.iter = 1e+04)#
+    lasso.path <- as.matrix(lassofit$beta)#
+    enet.path <- as.matrix(enetfit$beta)#
+    scad.path <- as.matrix(scadfit$beta[-1, ])#
+    mcp.path <- as.matrix(mcpfit$beta[-1, ])#
+    beta.path <- t(cbind(lasso.path, enet.path, scad.path, mcp.path))
+candidate_models <- (1 - (beta.path == 0))
+setwd('/Users/emeryyi/Dropbox/Research/googleproject/glmvsd/R')
+candidate_models
