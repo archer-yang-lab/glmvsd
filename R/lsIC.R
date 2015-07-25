@@ -24,7 +24,7 @@ lsIC <- function(x, y, candidate_models, psi, prior = TRUE,
     }
     if (prior == TRUE) {
         ck <- ck_compute(n_mo, sk, p)
-        ik <- ik + psi * ck
+        ik <- ik + 2 * psi * ck
     }
     ik <- ik - min(ik)
     weight <- exp(-ik/2)/sum(exp(-ik/2))
