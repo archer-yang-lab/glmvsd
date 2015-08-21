@@ -3,6 +3,7 @@ Please find below the list of the various changes and improvements that were par
 
 1.3:
 * [added] Now AIC weight is supported.
+* [fixed] Fixed a bug in lsIC.R and logitIC.R.
 
 1.2:
 * [fixed] Fixed a bug in lsARM.R.
