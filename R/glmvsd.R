@@ -1,7 +1,7 @@
 glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100, model_check, 
     psi = 1, family = c("gaussian", "binomial"), method = c("union", 
         "customize"), candidate_models, weight_type = c("BIC", "AIC", "ARM"), 
-    prior = TRUE) {
+    prior = TRUE, parallel = FALSE) {
     # check data and parameter
     family <- match.arg(family)
     method <- match.arg(method)
@@ -55,7 +55,7 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100, model_check,
     if (family == "gaussian") {
         if (weight_type == "ARM") {
             fit <- lsARM(x = x, y = y, candidate_models = candidate_models, 
-                n_train = n_train, no_rep = no_rep, psi = psi, prior = prior)
+                n_train = n_train, no_rep = no_rep, psi = psi, prior = prior, parallel)
         }
         if (weight_type == "AIC") {
             fit <- lsIC(x = x, y = y, candidate_models = candidate_models, 
@@ -69,7 +69,7 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100, model_check,
     if (family == "binomial") {
         if (weight_type == "ARM") {
             fit <- logitARM(x = x, y = y, candidate_models = candidate_models, 
-                n_train = n_train, no_rep = no_rep, psi = psi, prior = prior)
+                n_train = n_train, no_rep = no_rep, psi = psi, prior = prior, parallel)
         }
         if (weight_type == "AIC") {
             fit <- logitIC(x = x, y = y, candidate_models = candidate_models, 

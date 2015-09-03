@@ -1,40 +1,24 @@
-lsARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE) {
+lsARM <- function(x, y, candidate_models, 
+					n_train, no_rep, psi, 
+					prior = TRUE, parallel) {
     p <- NCOL(x)
     n <- length(y)
     n_mo <- NROW(candidate_models)
     sk <- rowSums(candidate_models)
     dk <- matrix(NA, no_rep, n_mo)
     sigma_k <- matrix(NA, no_rep, n_mo)
-    for (i in 1:no_rep) {
-        tindex <- sample(n, n_train, replace = F)
-        if (any(candidate_models[1, ] == 1)) {
-            for (j in 1:n_mo) {
-                LSL <- lm(y[tindex] ~ x[tindex, candidate_models[j, ] == 
-                  1])
-                sigma_k[i, j] <- summary(LSL)$sigma
-				if(any(is.na(LSL$coef))){
-					dk[i, j] <- Inf
-					}else{
-				        dk[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, candidate_models[j, 
-		                  ] == 1]) %*% LSL$coef)^2)
-					}
-            }
-        } else {
-            dk[i, 1] <- sum((y[-tindex] - mean(y[tindex]))^2)
-            sigma_k[i, 1] <- sd(y[tindex])
-            for (j in 2:n_mo) {
-                LSL <- lm(y[tindex] ~ x[tindex, candidate_models[j, ] == 
-                  1])
-	            sigma_k[i, j] <- summary(LSL)$sigma		
-				if(any(is.na(LSL$coef))){
-					dk[i, j] <- Inf
-					}else{
-				        dk[i, j] <- sum((y[-tindex] - cbind(1, x[-tindex, candidate_models[j, 
-		                  ] == 1]) %*% LSL$coef)^2)
-					}
-            }
-        }
-    }
+	if(parallel){
+		outlist = foreach(i = seq(no_rep), .packages = c("glmvsd")) %dopar%{
+			lsARMcore(x, y, candidate_models, n_train, no_rep)
+		}
+		w_num <- matrix(unlist(outlist),no_rep,n_mo,byrow=TRUE)
+	}else{
+		for (i in 1:no_rep) {
+			res <- logitARMcore(x, y, candidate_models, n_train, no_rep)
+	        sigma_k[i, ] <- res$sigma_k
+			dk[i, ] <- res$dk
+	    }
+	}
     lw_num <- (-n/2) * log(sigma_k) - ((sigma_k)^(-2)) * dk/2
     if (prior == TRUE) {
         ck <- ck_compute(n_mo, sk, p)
