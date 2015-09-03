@@ -1,4 +1,4 @@
-lsARMcore <- function(x, y, candidate_models, n_train, no_rep) {
+lsARMcore <- function(x, y, candidate_models, n_train) {
 	p <- NCOL(x)
     n <- length(y)
     n_mo <- NROW(candidate_models)

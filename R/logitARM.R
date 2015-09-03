@@ -7,13 +7,15 @@ logitARM <- function(x, y, candidate_models,
     sk <- rowSums(candidate_models)
     w_num <- matrix(NA, no_rep, n_mo)
 	if(parallel){
+		n_core <- detectCores()
+		registerDoParallel(cores=n_core)
 		outlist = foreach(i = seq(no_rep), .packages = c("glmvsd")) %dopar%{
-			logitARMcore(x, y, candidate_models, n_train, no_rep)
+			logitARMcore(x, y, candidate_models, n_train)
 		} 
 		w_num <- matrix(unlist(outlist),no_rep,n_mo,byrow=TRUE)
 	}else{
 		for (i in 1:no_rep) {
-	        w_num[i, ] <- logitARMcore(x, y, candidate_models, n_train, no_rep)
+	        w_num[i, ] <- logitARMcore(x, y, candidate_models, n_train)
 	    }
 	}
     if (prior == TRUE) {

@@ -8,15 +8,17 @@ lsARM <- function(x, y, candidate_models,
     dk <- matrix(NA, no_rep, n_mo)
     sigma_k <- matrix(NA, no_rep, n_mo)
 	if(parallel){
+		n_core <- detectCores()
+		registerDoParallel(cores=n_core)
 		outlist = foreach(i = seq(no_rep), .packages = c("glmvsd")) %dopar%{
-			lsARMcore(x, y, candidate_models, n_train, no_rep)
+			lsARMcore(x, y, candidate_models, n_train)
 		}
 		res <- melt(outlist)
 		sigma_k <- matrix(res$value[res$L2=="sigma_k"],no_rep,n_mo,byrow=TRUE)
 		dk <- matrix(res$value[res$L2=="dk"],no_rep,n_mo,byrow=TRUE)
 	}else{
 		for (i in 1:no_rep) {
-			res <- lsARMcore(x, y, candidate_models, n_train, no_rep)
+			res <- lsARMcore(x, y, candidate_models, n_train)
 	        sigma_k[i, ] <- res$sigma_k
 			dk[i, ] <- res$dk
 	    }
