@@ -11,10 +11,12 @@ lsARM <- function(x, y, candidate_models,
 		outlist = foreach(i = seq(no_rep), .packages = c("glmvsd")) %dopar%{
 			lsARMcore(x, y, candidate_models, n_train, no_rep)
 		}
-		w_num <- matrix(unlist(outlist),no_rep,n_mo,byrow=TRUE)
+		res <- melt(outlist)
+		sigma_k <- matrix(res$value[res$L2=="sigma_k"],no_rep,n_mo,byrow=TRUE)
+		dk <- matrix(res$value[res$L2=="dk"],no_rep,n_mo,byrow=TRUE)
 	}else{
 		for (i in 1:no_rep) {
-			res <- logitARMcore(x, y, candidate_models, n_train, no_rep)
+			res <- lsARMcore(x, y, candidate_models, n_train, no_rep)
 	        sigma_k[i, ] <- res$sigma_k
 			dk[i, ] <- res$dk
 	    }
