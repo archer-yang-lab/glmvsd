@@ -1,6 +1,14 @@
 CHANGELOG - Record of Changes for glmvsd
 Please find below the list of the various changes and improvements that were part of each successive update.
 
+1.5:
+* [improved] Package brglm is used to replace logistf.
+* [improved] Multiple check models can be supplied now.
+ 
+1.4:
+* [improved] Logistic function calculation and parallel processing for mixing.
+* [added] Package logistf is used to reduce bias in logistic MLE.
+
 1.3:
 * [added] Now AIC weight is supported.
 * [fixed] Fixed a bug in lsIC.R and logitIC.R.

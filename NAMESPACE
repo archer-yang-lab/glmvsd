@@ -1,3 +1,3 @@
-import("stats","glmnet","ncvreg","MASS","foreach", "reshape2")
+import("stats","glmnet","ncvreg","MASS","parallel","brglm")
 export(glmvsd)
 export(stability.test)
