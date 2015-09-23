@@ -1,5 +1,5 @@
 logitIC <- function(x, y, candidate_models, psi,
-                    type = c("BIC", "AIC"), prior = TRUE) {
+                    type = c("BIC", "AIC"), prior = TRUE, reduce_bias = FALSE) {
   p <- NCOL(x)
   n <- length(y)
   type <- match.arg(type)
@@ -8,14 +8,14 @@ logitIC <- function(x, y, candidate_models, psi,
   ik <- rep(NA, n_mo)
   if (any(candidate_models[1, ] == 1)) {
     for (i in seq(n_mo)) {
-      glmfit <- brglm(y ~ x[, candidate_models[i, ] == 1], family = binomial)
+      glmfit <- if(reduce_bias==TRUE) brglm(y ~ x[, candidate_models[i, ] == 1], family = binomial) else glm(y ~ x[, candidate_models[i, ] == 1], family = binomial)
       ik[i] <- if (type == "BIC") extractAIC(glmfit, k=log(n))[2] else extractAIC(glmfit)[2]
     }   
   } else {
-    glmfit <- brglm(y ~ 1, family=binomial)
+    glmfit <- if(reduce_bias==TRUE) brglm(y ~ 1, family=binomial) else glm(y ~ 1, family=binomial)
     ik[1] <- if (type == "BIC") extractAIC(glmfit, k=log(n))[2] else extractAIC(glmfit)[2]
     for (i in seq(2, n_mo)) {
-      glmfit <- brglm(y ~ x[, candidate_models[i, ] == 1], family = binomial)
+      glmfit <- if(reduce_bias==TRUE) brglm(y ~ x[, candidate_models[i, ] == 1], family = binomial) else glm(y ~ x[, candidate_models[i, ] == 1], family = binomial)
       ik[i] <- if (type == "BIC") extractAIC(glmfit, k=log(n))[2] else extractAIC(glmfit)[2]
     }
   }

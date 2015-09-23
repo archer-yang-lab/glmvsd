@@ -1,4 +1,4 @@
-logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE) {
+logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE, reduce_bias = FALSE) {
   p <- NCOL(x)
   n <- length(y)
   n_mo <- NROW(candidate_models)
@@ -10,7 +10,7 @@ logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE)
     if (any(candidate_models[1, ] == 1)) {
       for (j in seq(n_mo)) {
         varindex <- (candidate_models[j, ] == 1)
-        glmfit <- brglm(y[tindex] ~ x[tindex, varindex], family = binomial)
+        glmfit <- if(reduce_bias==TRUE) brglm(y[tindex] ~ x[tindex, varindex], family = binomial) else glm(y[tindex] ~ x[tindex, varindex], family = binomial)
         if (any(is.na(glmfit$coef))) {
           wts[j] <- 0
         } else {
@@ -23,7 +23,7 @@ logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE)
       wts[1] <- prod(mean(y[tindex])^(y[-tindex]) * (1 - mean(y[tindex]))^(1 - y[-tindex]))
       for (j in seq(2, n_mo)) {
         varindex <- (candidate_models[j, ] == 1)
-        glmfit <- brglm(y[tindex] ~ x[tindex, varindex], family = binomial)
+        glmfit <- if(reduce_bias==TRUE) brglm(y[tindex] ~ x[tindex, varindex], family = binomial) else glm(y[tindex] ~ x[tindex, varindex], family = binomial) 
         if(any(is.na(glmfit$coef))) {
           wts[j] <- 0
         } else {
