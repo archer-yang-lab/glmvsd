@@ -23,6 +23,7 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100,
         stop("Training size must be less than the number of observations")
     if (missing(model_check)) 
         stop("User must provide a base model.")
+	if(is.vector(model_check)) model_check <- matrix(model_check,nrow=1)
     # use union option to compute candidate models
     if (method == "union") {
       if (family == "gaussian") 
