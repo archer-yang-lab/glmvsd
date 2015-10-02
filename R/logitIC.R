@@ -23,6 +23,7 @@ logitIC <- function(x, y, candidate_models, psi,
     ck <- ck_compute(n_mo, sk, p)
     ik <- ik + 2 * psi * ck
   }
+  ik <- ik - min(ik)
   weight <- exp(-ik/2)/sum(exp(-ik/2))
   list(weight = weight)
 }
