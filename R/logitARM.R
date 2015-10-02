@@ -5,43 +5,43 @@ logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE,
   sk <- rowSums(candidate_models)
   
   wt_calc <- function(rep_id) {
-    wts <- rep(NA, n_mo)
+    lw_num <- rep(NA, n_mo)
     tindex <- sample(n, n_train, replace = FALSE)
     if (any(candidate_models[1, ] == 1)) {
       for (j in seq(n_mo)) {
         varindex <- (candidate_models[j, ] == 1)
         glmfit <- if(reduce_bias==TRUE) brglm(y[tindex] ~ x[tindex, varindex], family = binomial) else glm(y[tindex] ~ x[tindex, varindex], family = binomial)
-        if (any(is.na(glmfit$coef))) {
-          wts[j] <- 0
-        } else {
+        # if (any(is.na(glmfit$coef))) {
+        #   lw_num[j] <- 0
+        # } else {
           gk <- as.vector(cbind(1, x[-tindex, varindex]) %*% glmfit$coef)
           fk <- ifelse(gk < 0, exp(gk)/(1 + exp(gk)), 1/(1 + exp(-gk)))
-          wts[j] <- prod(fk^(y[-tindex]) * (1 - fk)^(1 - y[-tindex]))
-        }  
+          lw_num[j] <- sum(log(fk) * y[-tindex] + log(1 - fk) * (1 - y[-tindex]))
+        # }  
       }
     } else {
-      wts[1] <- prod(mean(y[tindex])^(y[-tindex]) * (1 - mean(y[tindex]))^(1 - y[-tindex]))
+      lw_num[1] <- sum(log(mean(y[tindex])) * (y[-tindex]) + log(1 - mean(y[tindex])) * (1 - y[-tindex]))
       for (j in seq(2, n_mo)) {
         varindex <- (candidate_models[j, ] == 1)
         glmfit <- if(reduce_bias==TRUE) brglm(y[tindex] ~ x[tindex, varindex], family = binomial) else glm(y[tindex] ~ x[tindex, varindex], family = binomial) 
-        if(any(is.na(glmfit$coef))) {
-          wts[j] <- 0
-        } else {
+        # if(any(is.na(glmfit$coef))) {
+        #   lw_num[j] <- 0
+        # } else {
           gk <- as.vector(cbind(1, x[-tindex, varindex]) %*% glmfit$coef)
           fk <- ifelse(gk < 0, exp(gk)/(1 + exp(gk)), 1/(1 + exp(-gk)))
-          wts[j] <- prod(fk^(y[-tindex]) * (1 - fk)^(1 - y[-tindex]))
-        }
+          lw_num[j] <- sum(log(fk) * y[-tindex] + log(1 - fk) * (1 - y[-tindex]))
+        # }
       }
     }
-    return(wts)
+    return(lw_num)
   }
-  library(parallel)
-  w_num <- matrix(unlist(mclapply(seq(no_rep), wt_calc)), nrow = no_rep, ncol = n_mo, byrow = TRUE)
-  
+  lw_num <- matrix(unlist(mclapply(seq(no_rep), wt_calc)), nrow = no_rep, ncol = n_mo, byrow = TRUE)
   if (prior == TRUE) {
     ck <- ck_compute(n_mo, sk, p)
-    w_num <- sweep(w_num, MARGIN = 2, exp(-psi * ck), "*")
+    lw_num <- sweep(lw_num, MARGIN = 2, psi * ck, "-")
   }
+  lw_num <- sweep(lw_num, MARGIN = 1, apply(lw_num, 1, max), "-")
+  w_num <- apply(lw_num, c(1, 2), function(x) ifelse(abs(x) > 700, 0, exp(x)))
   weight <- colMeans(w_num/rowSums(w_num))
   list(weight = weight)
 }
