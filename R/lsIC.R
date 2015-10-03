@@ -1,5 +1,5 @@
-lsIC <- function(x, y, candidate_models, psi, prior = TRUE, 
-	type = c("BIC","AIC")) {
+lsIC <- function(x, y, candidate_models, psi, 
+	type = c("BIC","AIC"), prior = TRUE) {
     p <- NCOL(x)
     n <- length(y)
     n_mo <- NROW(candidate_models)
@@ -28,5 +28,5 @@ lsIC <- function(x, y, candidate_models, psi, prior = TRUE,
     }
     ik <- ik - min(ik)
     weight <- exp(-ik/2)/sum(exp(-ik/2))
-    outlist <- list(weight = weight)
+    list(weight = weight)
 }

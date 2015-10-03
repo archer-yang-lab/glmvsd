@@ -11,26 +11,26 @@ logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE,
       for (j in seq(n_mo)) {
         varindex <- (candidate_models[j, ] == 1)
         glmfit <- if(reduce_bias==TRUE) brglm(y[tindex] ~ x[tindex, varindex], family = binomial) else glm(y[tindex] ~ x[tindex, varindex], family = binomial)
-        # if (any(is.na(glmfit$coef))) {
-        #   lw_num[j] <- 0
-        # } else {
+        if (any(is.na(glmfit$coef))) {
+          lw_num[j] <- -Inf  
+        } else {
           gk <- as.vector(cbind(1, x[-tindex, varindex]) %*% glmfit$coef)
           fk <- ifelse(gk < 0, exp(gk)/(1 + exp(gk)), 1/(1 + exp(-gk)))
           lw_num[j] <- sum(log(fk) * y[-tindex] + log(1 - fk) * (1 - y[-tindex]))
-        # }  
+        }
       }
     } else {
       lw_num[1] <- sum(log(mean(y[tindex])) * (y[-tindex]) + log(1 - mean(y[tindex])) * (1 - y[-tindex]))
       for (j in seq(2, n_mo)) {
         varindex <- (candidate_models[j, ] == 1)
         glmfit <- if(reduce_bias==TRUE) brglm(y[tindex] ~ x[tindex, varindex], family = binomial) else glm(y[tindex] ~ x[tindex, varindex], family = binomial) 
-        # if(any(is.na(glmfit$coef))) {
-        #   lw_num[j] <- 0
-        # } else {
+        if(any(is.na(glmfit$coef))) {
+          lw_num[j] <- -Inf  
+        } else {
           gk <- as.vector(cbind(1, x[-tindex, varindex]) %*% glmfit$coef)
           fk <- ifelse(gk < 0, exp(gk)/(1 + exp(gk)), 1/(1 + exp(-gk)))
           lw_num[j] <- sum(log(fk) * y[-tindex] + log(1 - fk) * (1 - y[-tindex]))
-        # }
+        }
       }
     }
     return(lw_num)
@@ -41,7 +41,8 @@ logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE,
     lw_num <- sweep(lw_num, MARGIN = 2, psi * ck, "-")
   }
   lw_num <- sweep(lw_num, MARGIN = 1, apply(lw_num, 1, max), "-")
-  w_num <- apply(lw_num, c(1, 2), function(x) ifelse(abs(x) > 700, 0, exp(x)))
+  w_num <- exp(lw_num)
+  # w_num <- apply(lw_num, c(1, 2), function(x) ifelse(abs(x) > 700, 0, exp(x)))
   weight <- colMeans(w_num/rowSums(w_num))
   list(weight = weight)
 }
