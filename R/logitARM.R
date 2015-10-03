@@ -42,7 +42,6 @@ logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE,
   }
   lw_num <- sweep(lw_num, MARGIN = 1, apply(lw_num, 1, max), "-")
   w_num <- exp(lw_num)
-  # w_num <- apply(lw_num, c(1, 2), function(x) ifelse(abs(x) > 700, 0, exp(x)))
   weight <- colMeans(w_num/rowSums(w_num))
   list(weight = weight)
 }
