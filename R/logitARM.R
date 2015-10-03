@@ -14,9 +14,8 @@ logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE,
         if (any(is.na(glmfit$coef))) {
           lw_num[j] <- -Inf  
         } else {
-          gk <- as.vector(cbind(1, x[-tindex, varindex]) %*% glmfit$coef)
-          fk <- ifelse(gk < 0, exp(gk)/(1 + exp(gk)), 1/(1 + exp(-gk)))
-          lw_num[j] <- sum(log(fk) * y[-tindex] + log(1 - fk) * (1 - y[-tindex]))
+          dk <- as.vector(cbind(1, x[-tindex, varindex]) %*% glmfit$coef)
+	      lw_num[j] <- sum((dk-log(1 + exp(dk))) * y[-tindex] - log(1+exp(dk)) * (1 - y[-tindex]))
         }
       }
     } else {
@@ -27,9 +26,8 @@ logitARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE,
         if(any(is.na(glmfit$coef))) {
           lw_num[j] <- -Inf  
         } else {
-          gk <- as.vector(cbind(1, x[-tindex, varindex]) %*% glmfit$coef)
-          fk <- ifelse(gk < 0, exp(gk)/(1 + exp(gk)), 1/(1 + exp(-gk)))
-          lw_num[j] <- sum(log(fk) * y[-tindex] + log(1 - fk) * (1 - y[-tindex]))
+          dk <- as.vector(cbind(1, x[-tindex, varindex]) %*% glmfit$coef)
+	      lw_num[j] <- sum((dk-log(1 + exp(dk))) * y[-tindex] - log(1+exp(dk)) * (1 - y[-tindex]))
         }
       }
     }
