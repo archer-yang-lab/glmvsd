@@ -41,7 +41,7 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100,
       if (!all(as.numeric(candidate_models) %in% c(0, 1))) 
         stop("There can only be 0 or 1 in candidate_models")
     }
-    # clean the candidate models
+    # clean the candidate models mk
     candidate_models <- unique(candidate_models)
     rownames(candidate_models) <- NULL
     candidate_models <- candidate_models[order(rowSums(candidate_models)), ]
@@ -75,21 +75,40 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100,
     }
     weight <- fit$weight
 	  # compute VSD etc
-    no_checkmod <- NROW(model_check)
-    VSD <- rep(NA, no_checkmod)
-    VSD_minus <- rep(NA, no_checkmod)
-    VSD_plus <- rep(NA, no_checkmod)
-    for (mindex in seq(no_checkmod)) {
-      TMP_matrix <- sweep(candidate_models, MARGIN = 2, model_check[mindex, ], "-")
-      DIFF <- rowSums(abs(TMP_matrix))
-      DIFF_minus <- rowSums(TMP_matrix == -1)
-      DIFF_plus <- rowSums(TMP_matrix == 1)
-      VSD[mindex] <- sum(weight*DIFF)  # glmvsd value
-      VSD_minus[mindex] <- sum(weight*DIFF_minus)  # false positive
-      VSD_plus[mindex] <- sum(weight*DIFF_plus)  # false negative 
-    }
-    object <- list(VSD = VSD, VSD_minus = VSD_minus, VSD_plus = VSD_plus, 
-                   weight = weight, candidate_models_cleaned = candidate_models)
+	  # initialization
+	  no_checkmod <- NROW(model_check)
+	  VSD <- rep(NA, no_checkmod)
+	  VSD_minus <- rep(NA, no_checkmod)
+	  VSD_plus <- rep(NA, no_checkmod)
+	  Fmeasure <- rep(NA, no_checkmod)
+	  Gmeasure <- rep(NA, no_checkmod)
+	  # size of m0
+	  model_check_size <- rowSums(model_check)
+	  # size of mk
+	  candidate_models_size <- rowSums(candidate_models)
+	  # start the loop
+	  for (mindex in seq(no_checkmod)) {
+	    # compare m0 and mk
+	    TMP_matrix <- sweep(candidate_models, MARGIN = 2, model_check[mindex, ], "-")
+	    diff <- rowSums(abs(TMP_matrix))
+	    diff_plus <- rowSums(TMP_matrix == 1)
+	    diff_minus <- rowSums(TMP_matrix == -1)
+	    # compute VSD and VSD plus and minus
+	    VSD[mindex] <- sum(weight*diff)  # glmvsd value
+	    VSD_plus[mindex] <- sum(weight*diff_plus)  # false negative 
+	    VSD_minus[mindex] <- sum(weight*diff_minus)  # false positive
+	    # compute F measure and G measure using precision and recall
+	    Prcision <- (model_check_size[mindex]-diff_minus)/model_check_size[mindex]
+	    Recall <- (model_check_size[mindex]-diff_minus)/candidate_models_size
+	    Fmeasure_tmp <- 2*(Prcision*Recall)/(Prcision+Recall)
+	    Gmeasure_tmp <- sqrt(Prcision*Recall)
+	    Fmeasure[mindex] <- sum(weight*Fmeasure_tmp, na.rm = TRUE)
+	    Gmeasure[mindex] <- sum(weight*Gmeasure_tmp, na.rm = TRUE)
+	  }
+    # output 
+    object <- list(candidate_models_cleaned = candidate_models, VSD = VSD, VSD_minus = VSD_minus, VSD_plus = VSD_plus,  
+	    			Fmeasure = Fmeasure, Gmeasure = Gmeasure,
+                   weight = weight)
     class(object) <- "glmvsd"
     object
 }
