@@ -1,9 +1,9 @@
 stability.test <- function(x, y, method=c("seq", "bs", "perturb"), 
                            penalty = c("lasso", "scad", "mcp"), nrep = 50, 
-                           remove = 0.2, tau = 0.5, nfolds = 5) {
+                           remove = 0.2, tau = 0.5, nfolds = 5, 
+					  family=c("gaussian","binomial")) {
   # model check
   method <- match.arg(method)
-  penalty <- match.arg(penalty)
   y <- drop(y)
   y <- as.numeric(y)
   x <- as.matrix(x)
@@ -18,7 +18,7 @@ stability.test <- function(x, y, method=c("seq", "bs", "perturb"),
   if (tau<=0 || tau>1) 
     stop("The perturbation size (tau) must be in (0,1].")
   # fit
-  full <- modelfit(x, y, nfolds, penalty)
+  full <- modelfit(x, y, nfolds, penalty, family)
   fitted <- drop(cbind(rep(1,n),x)%*%full$coefit)
   sigmafit<-sqrt(sum((y-fitted)^2)/(n-sum(full$modelfit)))
   ####################sequential############

@@ -5,12 +5,12 @@
 The package calculate the variable selection deviation (VSD) to measure the uncertainty of the selection in terms of inclusion of predictors in the model.
 }
 \usage{
-glmvsd(x, y, n_train = ceiling(n/2), 
-no_rep = 100, model_check, 
-psi = 1, family = c("gaussian", "binomial"), 
-method = c("union", "customize"), 
-candidate_models, 
-weight_type = c("BIC", "AIC", "ARM"), prior = TRUE)
+glmvsd(x, y, n_train = ceiling(n/2), no_rep = 100,
+                 n_train_bound = n_train - 2, n_bound = n - 2,
+                 model_check, psi = 1, family = c("gaussian",
+                 "binomial"), method = c("union", "customize"),
+                 candidate_models, weight_type = c("BIC", "AIC",
+                 "ARM"), prior = TRUE, reduce_bias = FALSE)
 }
 \arguments{
   \item{x}{Matrix of predictors.}
@@ -21,8 +21,9 @@ weight_type = c("BIC", "AIC", "ARM"), prior = TRUE)
 
   \item{no_rep}{Number of replications when the weight function is ARM and ARM with prior. The default value is \code{no_rep=100}.}
 
+  \item{n_train_bound}{When computing the weights using \code{"ARM"}, the candidate models with the size larger than \code{n_train_bound} will be dropped. The default value is \code{n_train-2}.}
+  \item{n_bound}{When computing the weights using \code{"AIC"} or \code{"BIC"}, the candidate models with the size larger than \code{n_train_bound} will be dropped. The default value is \code{n-2}.}
   \item{model_check}{The index of the model to be assessed by calculating the VSD measures.}
-
   \item{psi}{A positive number to control the improvement of the prior weight. The default value is 1.}
   \item{family}{Choose the family for GLM models. So far only \code{gaussian}, \code{binomial} and \code{tweedie} are implemented. The default is \code{gaussian}.}
   \item{method}{User chooses one of the \code{union} and \code{customize}. If \code{method=="union"}, then the program automatically provides the candidate models as a union of solution paths of Lasso, SCAD, and MCP; If \code{method="customize"}, the user must provide their own set of candidate models in the input argument \code{candidate_models} as a matrix, each row of which is a 0/1 index vector representing whether each variable is included/excluded in the model.}
@@ -31,6 +32,7 @@ weight_type = c("BIC", "AIC", "ARM"), prior = TRUE)
 
   \item{weight_type}{Options for computing weights for VSD measure. User chooses one of the \code{ARM}, \code{AIC} and \code{BIC}. The default is \code{BIC}.}
   \item{prior}{Whether use prior in the weight function. The default is \code{TRUE}.}
+  \item{reduce_bias}{If the binomial model is used, occasionally the algorithm might has convergence issue when the problem of so-called complete separation or quasi-complete separation happens. Users can set \code{reduce_bias=TRUE} to solve the issue. The algorithm will use an adjusted-score approach when ftting the binomial model for computing the weights. This method is developed in Firth, D. (1993). Bias reduction of maximum likelihood estimates. Biometrika 80, 27-38.}
 }
 
 \details{
