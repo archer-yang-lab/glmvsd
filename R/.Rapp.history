@@ -253,288 +253,87 @@ y=X%*%beta.star + rnorm(n, mean=0, sd=sqrt(1/omega.star))
 ##  pick a positive value for lam
 lam=0.5
 1+1
-source("binomialfit.R", chdir = TRUE)#
-source("tools.R", chdir = TRUE)#
-source("modelfit.R", chdir = TRUE)#
-library(glmnet)#
-library(ncvreg)#
-# library(glmvsd)#
-n.sim <- 100#
-n <- 1000 #
-p <- 8#
+sqrt(0.1)
+?options()
+options(latexcmd ="/Library/TeX/texbin/")
+options(R_LATEXCMD ="/Library/TeX/texbin/")
+getOption(’tikzLatex’)
+getOption('tikzLatex')
+getOption('R_LATEXCMD')
+options(R_LATEXCMD ='/Library/TeX/texbin/')
+options(tikzLatex = '/Library/TeX/texbin/')
+setwd('/Users/yiyang/Dropbox/collaborator/ChenglongYe/final_simu_need to run/linear case/plot')
+setwd('/Users/yiyang')
+options(tikzLatex = '/Library/TeX/texbin/latex')
+require(tikzDevice)
+a@1
+?@
+@
+load("/Users/yiyang/Dropbox/collaborator/ChenglongYe/final_simu_need to run/linear case/output_li_simu_1_zeromean.rda")
+ls()
+100/6
+15*5
+17*5
+library(Rcpp)
+library(glmvsd)#
+load("colon.rda")#
 #
-b <- c(24, 12, 0, 0, 16, 0, 0, 0) #
-true_m <- (1 - (b == 0))#
-no_checkmod <- 3#
-x <- matrix(rnorm(n*p), n, p)#
-# x = matrix(rnorm(n*p), n, p) %*% sqrtmat#
-feta <- x %*% b #
-fprob <- ifelse(feta < 0, exp(feta)/(1+exp(feta)), 1/(1 + exp(-feta)))#
-y <- rbinom(n, 1, fprob)#
+# generate simulation data#
+y=1/2*y+1/2#
+colon=cbind(y,x)#
+colon=data.frame(colon)#
+n<-nrow(x)#
+p=ncol(x)#
+ins_seq <- stability.test(x, y, method = "bs", #
+family="binomial",#
+penalty = "SCAD", nrep = 5, nfolds = 5)#
 #
-model_check <- matrix(NA, nrow=no_checkmod, ncol=p,#
-                      dimnames=list(c("lasso","mcp","scad"),#
-                                    paste("V",seq(p),sep="")))#
-## model_check from lasso
-source("binomialfit.R", chdir = TRUE)#
-source("tools.R", chdir = TRUE)#
-source("modelfit.R", chdir = TRUE)#
-library(glmnet)#
-library(ncvreg)#
-# library(glmvsd)#
-n.sim <- 100#
-n <- 1000 #
-p <- 8#
+ins_seq <- stability.test(x, y, method = "bs", #
+family="binomial",#
+penalty = "LASSO", nrep = 5, nfolds = 5)#
+ins_seq <- stability.test(x, y, method = "bs", #
+family="binomial",#
+penalty = "MCP", nrep = 5, nfolds = 5)
+ins_seq
+setwd('/Users/yiyang/Dropbox/collaborator/ChenglongYe/realdata/colon')
+library(glmvsd)#
+load("colon.rda")#
 #
-b <- c(24, 12, 0, 0, 16, 0, 0, 0) #
-true_m <- (1 - (b == 0))#
-no_checkmod <- 3#
-x <- matrix(rnorm(n*p), n, p)#
-# x = matrix(rnorm(n*p), n, p) %*% sqrtmat#
-feta <- x %*% b #
-fprob <- ifelse(feta < 0, exp(feta)/(1+exp(feta)), 1/(1 + exp(-feta)))#
-y <- rbinom(n, 1, fprob)#
-#
-model_check <- matrix(NA, nrow=no_checkmod, ncol=p,#
-                      dimnames=list(c("lasso","mcp","scad"),#
-                                    paste("V",seq(p),sep="")))#
-## model_check from lasso#
-cvfit <- cv.glmnet(x = x, y = y, alpha = 1, maxit = 1e6, family = "binomial")#
-tmp <- cvfit$glmnet.fit$beta#
-beta.path <- as.matrix(tmp[,cvfit$lambda==cvfit$lambda.min])#
-model_check[1, ] <- drop(1 - (beta.path == 0))#
-#
-## model_check from mcp#
-cvfit <- cv.ncvreg(X = x, y = y, penalty = "MCP", family = "binomial", max.iter = 1e6)#
-coefit <- cvfit$fit$beta[, cvfit$min]#
-model_check[2, ] <- 1 - (coefit[-1] == 0)#
-#
-## model_check from scad#
-cvfit <- cv.ncvreg(X = x, y = y, penalty = "SCAD", family = "binomial", max.iter = 1e6)#
-coefit <- cvfit$fit$beta[, cvfit$min]#
-model_check[3, ] <- 1 - (coefit[-1] == 0)
-n_train = ceiling(n/2)#
-no_rep = 100 #
-n_train_bound = n_train-2#
-n_bound = n-2#
-model_check#
-psi = 1#
-family = "binomial"#
-method = "union"#
-weight_type = "ARM"#
-prior = TRUE#
-reduce_bias = FALSE#
-    # check data and parameter#
-    y <- drop(y)#
-    y <- as.numeric(y)#
-    x <- as.matrix(x)#
-    p <- NCOL(x)#
-    n <- length(y)#
-    if (family == "binomial") {#
-      if (!all(y %in% c(0, 1))) #
-        stop("There can only be 0 or 1 in y when using binomial family")#
-    }#
-    if (n != NROW(x)) #
-        stop("x and y have different number of observations")#
-    if (n_train >= n) #
-        stop("Training size must be less than the number of observations")#
-    if (missing(model_check)) #
-        stop("User must provide a base model.")#
-	if(is.vector(model_check)) model_check <- matrix(model_check,nrow=1)#
-    # use union option to compute candidate models#
-    if (method == "union") {#
-      if (family == "gaussian") #
-        candidate_models <- gaussianfit(x, y)#
-      if (family == "binomial") #
-        candidate_models <- binomialfit(x, y)#
-    }#
-    if (method == "customize") {#
-      if (missing(candidate_models)) #
-        stop("Users must supply a candidate model.")#
-      if (!is.matrix(candidate_models)) #
-        stop("Supplied model must be a matrix.")#
-      if (NCOL(candidate_models) != NCOL(x)) #
-        stop("Number of variables in candidate model and x does not match.")#
-      if (!all(as.numeric(candidate_models) %in% c(0, 1))) #
-        stop("There can only be 0 or 1 in candidate_models")#
-    }#
-    # clean the candidate models#
-    candidate_models <- unique(candidate_models)#
-    rownames(candidate_models) <- NULL#
-    candidate_models <- candidate_models[order(rowSums(candidate_models)), ]#
-    if (weight_type == "ARM") {#
-      candidate_models <- candidate_models[rowSums(candidate_models) < n_train_bound, ]#
-    }else{#
-	  candidate_models <- candidate_models[rowSums(candidate_models) < n_bound, ]#
+# generate simulation data#
+y=1/2*y+1/2#
+colon=cbind(y,x)#
+colon=data.frame(colon)#
+n<-nrow(x)#
+p=ncol(x)
+modelfit <- function(x, y, nfolds, #
+	penalty = c("LASSO", "SCAD", "MCP"),#
+	family=c("gaussian","binomial")) {#
+  penalty <- match.arg(penalty)#
+  family <- match.arg(family)#
+  y <- drop(y)#
+  y <- as.numeric(y)#
+  x <- as.matrix(x)#
+  if(penalty == "LASSO"){					#
+    cvfit <- cv.glmnet(x=x,y=y,nfolds=nfolds,alpha=1,#
+	    		type.measure="deviance",maxit=1e6,family=family)#
+    coefit<-coef(cvfit,s="lambda.min")#
+	}#
+  if(penalty == "MCP" || penalty == "SCAD"){#
+    cvfit<-cv.ncvreg(X=x,y=y,nfolds=nfolds,penalty=penalty,#
+	    		family=family,max.iter=1e4)#
+    coefit<-cvfit$fit$beta[,cvfit$min]#
+	}#
+  modelfit <- 1-(coefit[-1]==0)#
+  list(coefit = coefit, modelfit = modelfit)#
 }
-type="BIC"#
-p <- NCOL(x)#
-n <- length(y)#
-type <- match.arg(type)#
-n_mo <- NROW(candidate_models)#
-sk <- rowSums(candidate_models)#
-ik <- rep(NA, n_mo)#
-if (any(candidate_models[1, ] == 1)) {#
-  for (i in seq(n_mo)) {#
-    glmfit <- if(reduce_bias==TRUE) brglm(y ~ x[, candidate_models[i, ] == 1], family = binomial) else glm(y ~ x[, candidate_models[i, ] == 1], family = binomial)#
-    ik[i] <- if (type == "BIC") extractAIC(glmfit, k=log(n))[2] else extractAIC(glmfit)[2]#
-  }   #
-} else {#
-  glmfit <- if(reduce_bias==TRUE) brglm(y ~ 1, family=binomial) else glm(y ~ 1, family=binomial)#
-  ik[1] <- if (type == "BIC") extractAIC(glmfit, k=log(n))[2] else extractAIC(glmfit)[2]#
-  for (i in seq(2, n_mo)) {#
-    glmfit <- if(reduce_bias==TRUE) brglm(y ~ x[, candidate_models[i, ] == 1], family = binomial) else glm(y ~ x[, candidate_models[i, ] == 1], family = binomial)#
-    ik[i] <- if (type == "BIC") extractAIC(glmfit, k=log(n))[2] else extractAIC(glmfit)[2]#
-  }#
-}#
-if (prior == TRUE) {#
-  ck <- ck_compute(n_mo, sk, p)#
-  ik <- ik + 2 * psi * ck#
-}#
-ik <- ik - min(ik)#
-weight <- exp(-ik/2)/sum(exp(-ik/2))#
-list(weight = weight)
-candidate_models
-no_checkmod <- NROW(model_check)
-no_checkmod
-VSD <- rep(NA, no_checkmod)
-VSD_minus <- rep(NA, no_checkmod)
-VSD_plus <- rep(NA, no_checkmod)
-model_check
-mindex=1
-model_check_size[mindex, ]
-model_check_size[mindex]
-(model_check_size[mindex]-DIFF_minus)
-model_check_size <- rowSums(model_check)
-model_check_size
-candidate_models_size <- rowSums(candidate_models)
-mindex=2
-TMP_matrix <- sweep(candidate_models, MARGIN = 2, model_check[mindex, ], "-")
-DIFF <- rowSums(abs(TMP_matrix))
-DIFF_minus <- rowSums(TMP_matrix == -1)
-DIFF_plus <- rowSums(TMP_matrix == 1)
-model_check_size[mindex]-DIFF_minus
-candidate_models_size
-(model_check_size[mindex]-DIFF_minus)/candidate_models_size
-Prcision <- rep(NA, no_checkmod)
-Recall <- rep(NA, no_checkmod)
-Fmeasure <- rep(NA, no_checkmod)
-Gmeasure <- rep(NA, no_checkmod)
-Prcision[mindex] <- (model_check_size[mindex]-DIFF_minus)/model_check_size[mindex]
-Prcision[mindex]
-(model_check_size[mindex]-DIFF_minus)/model_check_size[mindex]
-Prcision <- (model_check_size[mindex]-DIFF_minus)/model_check_size[mindex]
-Recall <- (model_check_size[mindex]-DIFF_minus)/candidate_models_size
-Prcision
-2*(Prcision*Recall)/(Prcision+Recall)
-sqrt(Prcision*Recall)
-Fmeasure[mindex] <- sum(weight*Fmeasure_tmp)
-Fmeasure[mindex]
-?sum
-Fmeasure_tmp <- 2*(Prcision*Recall)/(Prcision+Recall)
-Gmeasure_tmp <- sqrt(Prcision*Recall)
-Fmeasure_tmp
-Gmeasure_tmp
-weight*Fmeasure_tmp
-weight*Gmeasure_tmp
-sum(weight*Fmeasure_tmp, na.rm = TRUE)
-sum(weight*Gmeasure_tmp, na.rm = TRUE)
-mindex
-VSD[mindex] <- sum(weight*DIFF)  # glmvsd value
-VSD[mindex]
-VSD_minus[mindex] <- sum(weight*DIFF_minus)  # false positive
-VSD_minus[mindex]
-VSD_plus[mindex]
-no_checkmod <- NROW(model_check)#
-VSD <- rep(NA, no_checkmod)#
-VSD_minus <- rep(NA, no_checkmod)#
-VSD_plus <- rep(NA, no_checkmod)#
-Fmeasure <- rep(NA, no_checkmod)#
-Gmeasure <- rep(NA, no_checkmod)#
-model_check_size <- rowSums(model_check)#
-candidate_models_size <- rowSums(candidate_models)#
-for (mindex in seq(no_checkmod)) {#
-  TMP_matrix <- sweep(candidate_models, MARGIN = 2, model_check[mindex, ], "-")#
-  DIFF <- rowSums(abs(TMP_matrix))#
-  DIFF_minus <- rowSums(TMP_matrix == -1)#
-  DIFF_plus <- rowSums(TMP_matrix == 1)#
-  Prcision <- (model_check_size[mindex]-DIFF_minus)/model_check_size[mindex]#
-  Recall <- (model_check_size[mindex]-DIFF_minus)/candidate_models_size#
-  Fmeasure_tmp <- 2*(Prcision*Recall)/(Prcision+Recall)#
-  Gmeasure_tmp <- sqrt(Prcision*Recall)#
-  Fmeasure[mindex] <- sum(weight*Fmeasure_tmp, na.rm = TRUE)#
-  Gmeasure[mindex] <- sum(weight*Gmeasure_tmp, na.rm = TRUE)#
-  VSD[mindex] <- sum(weight*DIFF)  # glmvsd value#
-  VSD_minus[mindex] <- sum(weight*DIFF_minus)  # false positive#
-  VSD_plus[mindex] <- sum(weight*DIFF_plus)  # false negative #
-}
-no_checkmod <- NROW(model_check)#
-VSD <- rep(NA, no_checkmod)#
-VSD_minus <- rep(NA, no_checkmod)#
-VSD_plus <- rep(NA, no_checkmod)#
-Fmeasure <- rep(NA, no_checkmod)#
-Gmeasure <- rep(NA, no_checkmod)#
-model_check_size <- rowSums(model_check)#
-candidate_models_size <- rowSums(candidate_models)#
-for (mindex in seq(no_checkmod)) {#
-  # 	#
-  TMP_matrix <- sweep(candidate_models, MARGIN = 2, model_check[mindex, ], "-")#
-  diff <- rowSums(abs(TMP_matrix))#
-  diff_plus <- rowSums(TMP_matrix == 1)#
-  diff_minus <- rowSums(TMP_matrix == -1)#
-  # compute VSD and VSD plus and minus#
-  VSD[mindex] <- sum(weight*diff)  # glmvsd value#
-  VSD_plus[mindex] <- sum(weight*diff_plus)  # false negative #
-  VSD_minus[mindex] <- sum(weight*diff_minus)  # false positive#
-  # compute F measure and G measure using precision and recall#
-  Prcision <- (model_check_size[mindex]-diff_minus)/model_check_size[mindex]#
-  Recall <- (model_check_size[mindex]-diff_minus)/candidate_models_size#
-  Fmeasure_tmp <- 2*(Prcision*Recall)/(Prcision+Recall)#
-  Gmeasure_tmp <- sqrt(Prcision*Recall)#
-  Fmeasure[mindex] <- sum(weight*Fmeasure_tmp, na.rm = TRUE)#
-  Gmeasure[mindex] <- sum(weight*Gmeasure_tmp, na.rm = TRUE)#
-}
-Fmeasure
-Gmeasure
-Recall
-VSD_minus
-VSD_plus
-setwd('/Users/yiyang/Dropbox/collaborator/ChenglongYe/debug')
-VSD
-no_checkmod <- NROW(model_check)#
-	  VSD <- rep(NA, no_checkmod)#
-	  VSD_minus <- rep(NA, no_checkmod)#
-	  VSD_plus <- rep(NA, no_checkmod)#
-	  Fmeasure <- rep(NA, no_checkmod)#
-	  Gmeasure <- rep(NA, no_checkmod)#
-	  # size of m0#
-	  model_check_size <- rowSums(model_check)#
-	  # size of mk#
-	  candidate_models_size <- rowSums(candidate_models)#
-	  # start the loop#
-	  for (mindex in seq(no_checkmod)) {#
-	    # compare m0 and mk#
-	    TMP_matrix <- sweep(candidate_models, MARGIN = 2, model_check[mindex, ], "-")#
-	    diff <- rowSums(abs(TMP_matrix))#
-	    diff_plus <- rowSums(TMP_matrix == 1)#
-	    diff_minus <- rowSums(TMP_matrix == -1)#
-	    # compute VSD and VSD plus and minus#
-	    VSD[mindex] <- sum(weight*diff)  # glmvsd value#
-	    VSD_plus[mindex] <- sum(weight*diff_plus)  # false negative #
-	    VSD_minus[mindex] <- sum(weight*diff_minus)  # false positive#
-	    # compute F measure and G measure using precision and recall#
-	    Prcision <- (model_check_size[mindex]-diff_minus)/model_check_size[mindex]#
-	    Recall <- (model_check_size[mindex]-diff_minus)/candidate_models_size#
-	    Fmeasure_tmp <- 2*(Prcision*Recall)/(Prcision+Recall)#
-	    Gmeasure_tmp <- sqrt(Prcision*Recall)#
-	    Fmeasure[mindex] <- sum(weight*Fmeasure_tmp, na.rm = TRUE)#
-	    Gmeasure[mindex] <- sum(weight*Gmeasure_tmp, na.rm = TRUE)#
-	  }
-object <- list(VSD = VSD, VSD_minus = VSD_minus, VSD_plus = VSD_plus,  #
-	    			Fmeasure = Fmeasure, Gmeasure = Gmeasure,#
-                   weight = weight, candidate_models_cleaned = candidate_models)
-object <- list(candidate_models_cleaned = candidate_models, VSD = VSD, VSD_minus = VSD_minus, VSD_plus = VSD_plus,  #
-	    			Fmeasure = Fmeasure, Gmeasure = Gmeasure,#
-                   weight = weight)
+penalty="LASSO"
+family="binomial"
+nfolds=5
+full <- modelfit(x, y, nfolds, penalty, family)
+fitted <- drop(cbind(rep(1,n),x)%*%full$coefit)
+fitted
+rbinom(n, 1, exp(fitted)/(1+exp(fitted)))
 setwd('/Users/yiyang/Dropbox/Research/googleproject/glmvsd/R')
-object
+y.star <- rbinom(n, 1, exp(fitted)/(1+exp(fitted)))
+y.star
+''
