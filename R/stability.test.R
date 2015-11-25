@@ -4,6 +4,8 @@ stability.test <- function(x, y, method=c("seq", "bs", "perturb"),
 					  family=c("gaussian","binomial")) {
   # model check
   method <- match.arg(method)
+  penalty <- match.arg(penalty)
+  family <- match.arg(family)
   y <- drop(y)
   y <- as.numeric(y)
   x <- as.matrix(x)
@@ -31,14 +33,14 @@ stability.test <- function(x, y, method=c("seq", "bs", "perturb"),
     }
   }
   ####################Bootstrap####################
-  if(method == "bs"){
+  if(family=="gaussian" && method == "bs"){
     for (i in 1:nrep){
       y.star <- rnorm(n,fitted,sigmafit)
       model.sub[i, ] <- modelfit(x=x,y=y.star,nfolds,penalty)$modelfit
     }
   }
   ####################Perturbation####################
-  if(method == "perturb"){
+  if(family=="gaussian" && method == "perturb"){
     for (i in 1:nrep){
       y.star<-rnorm(n,y,sqrt(tau)*sigmafit)
       model.sub[i, ] <- modelfit(x=x,y=y.star,nfolds,penalty)$modelfit
