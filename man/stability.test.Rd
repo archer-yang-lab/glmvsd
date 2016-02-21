@@ -9,8 +9,9 @@ This function calculate the sequential, parametric bootstrap and perturbation in
 \usage{
 stability.test(x, y, 
 method = c("seq", "bs", "perturb"), 
-penalty = c("lasso", "scad", "mcp"), 
-nrep = 50, remove = 0.2, tau = 0.5, nfolds = 5)
+penalty = c("LASSO", "SCAD", "MCP"), 
+nrep = 50, remove = 0.2, tau = 0.5, nfolds = 5,
+family=c("gaussian","binomial"))
 }
 
 \arguments{
@@ -22,6 +23,7 @@ nrep = 50, remove = 0.2, tau = 0.5, nfolds = 5)
   \item{remove}{The portion of observation to be removed when the sequential instability is calculated, default is 0.2.  }
   \item{tau}{The size of perturbation when perturbation instability is calculated. The range of \code{tau} is (0,1), default is 0.5 }
   \item{nfolds}{number of folds - default is 5. }
+  \item{family}{Choose the family for the instability test. So far only \code{gaussian}, \code{binomial} and \code{tweedie} are implemented. The default is \code{gaussian}.}
 }
 \details{
 See Reference section. 
@@ -51,7 +53,7 @@ e <- rnorm(n)
 y <- x \%*\% beta + e
 
 ins_seq <- stability.test(x, y, method = "seq", 
-penalty = "scad", nrep = 20, 
+penalty = "SCAD", nrep = 20, 
 remove = 0.1, tau = 0.2, nfolds = 5)
 }
 

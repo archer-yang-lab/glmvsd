@@ -2,7 +2,7 @@
 \alias{glmvsd}
 \title{Variable Selection Deviation (VSD)}
 \description{
-The package calculate the variable selection deviation (VSD) to measure the uncertainty of the selection in terms of inclusion of predictors in the model.
+The package calculates the variable selection deviation (VSD) to measure the uncertainty of the selection in terms of inclusion of predictors in the model.
 }
 \usage{
 glmvsd(x, y, n_train = ceiling(n/2), no_rep = 100,

@@ -5,7 +5,7 @@ Please find below the list of the various changes and improvements that were par
 * [improved] Logistic function calculation and parallel processing for mixing.
 * [added] Use bias-corrected logistic regression for fitting the binomial case.
 * [improved] Users now can multiple check models in a matrix.
-
+* [added] Now the instability test for the binomial family is added.
 
 1.3:
 * [added] Now AIC weight is supported.
