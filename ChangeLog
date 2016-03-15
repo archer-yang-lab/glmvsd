@@ -1,6 +1,9 @@
 CHANGELOG - Record of Changes for glmvsd
 Please find below the list of the various changes and improvements that were part of each successive update.
  
+1.5
+* TO DO: stability test modelfit.R should be further modified with the addition of the picasso (potentially add the cv routines)
+ 
 1.4:
 * [improved] Logistic function calculation and parallel processing for mixing.
 * [added] Use bias-corrected logistic regression for fitting the binomial case.

@@ -1,3 +1,3 @@
-import("stats","glmnet","ncvreg","MASS","parallel","brglm")
+import("stats","glmnet","ncvreg","MASS","parallel","brglm","picasso")
 export(glmvsd)
 export(stability.test)

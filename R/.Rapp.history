@@ -1,339 +1,58 @@
-library(HDtweedie)
-example(HDtweedie)
-install.packages("gcdnet")
-example("gcdnet")
-## The file has code for rejection sampling examples#
+setwd('/Users/yiyang/Dropbox/Research/prog_project/glmvsd/R')
+library(glmnet)#
+library(ncvreg)#
+library(picasso)#
+n = 100#
+d = 400#
+x = matrix(rnorm(n*d), n, d)#
+beta = c(3,2,0,1.5,rep(0,d-4))#
+## Generate response using Gaussian noise, and fit sparse linear models#
+noise = rnorm(n)#
+y = x%*%beta + noise#
 #
-###########################################################
-##  Example 1, generate a realization of X ~ N(0,1)#
-##  with rejection sampling using the Cauchy trial density.#
-set.seed(5)#
-accept=FALSE#
-k=0#
-while(!accept)#
-{#
-  k=k+1#
-  ## generate realization of U_1, U_2 iid Unif(0,1)#
-  u=runif(2)#
-  ## generate realization of Z ~ Cauchy#
-  z=tan(pi*(u[1]-0.5))#
-  ## Check if the accept event occured#
-  accept= u[2] <= exp(-0.5*z^2)*(1+z^2)*exp(1/2)*0.5#
-}#
+m1 <- glmnet(x = x, y = y, family = "gaussian", alpha = 1, maxit = 1e+06)#
+m2 <- ncvreg(X = x, y = y, family = "gaussian", penalty = "SCAD", #
+                  warn = FALSE, max.iter = 1e+04)#
+m3 <- ncvreg(X = x, y = y, family = "gaussian", penalty = "MCP", #
+                 warn = FALSE, max.iter = 1e+04)#
+m4 <- picasso(X = x , Y = y, family = "gaussian", nlambda=100, method="scad")#
+m5 <- picasso(X = x, Y = y, family = "gaussian", nlambda=100, method="mcp")#
 #
-## the number of iterations is to is k:#
-k#
+m1.path <- as.matrix(m1$beta)#
+m2.path <- as.matrix(m2$beta[-1, ])#
+m3.path <- as.matrix(m3$beta[-1, ])#
+m4.path <- as.matrix(m4$beta)#
+m5.path <- as.matrix(m5$beta)#
 #
-## the accepted realization is#
-z#
-################################################### #
-##  Example 2, generate a realization of #
-##  X_1,..., X_n iid N(0,1) with rejection sampling#
-##  using the Cauchy trial density.#
-set.seed(5)#
+beta.path <- t(cbind(m1.path, m2.path, m3.path, m4.path, m5.path))#
+candidate_models <- (1 - (beta.path == 0))
+setwd('/Users/yiyang/Dropbox/Research/prog_project/glmvsd/R')
+library(glmnet)#
+library(ncvreg)#
+library(picasso)#
+n = 100#
+d = 10#
+x = matrix(rnorm(n*d), n, d)#
+beta = c(3,2,0,1.5,rep(0,d-4))#
+## Generate response using Gaussian noise, and fit sparse linear models#
+noise = rnorm(n)#
+y = x%*%beta + noise#
 #
-n=1000#
+m1 <- glmnet(x = x, y = y, family = "gaussian", alpha = 1, maxit = 1e+06)#
+m2 <- ncvreg(X = x, y = y, family = "gaussian", penalty = "SCAD", #
+                  warn = FALSE, max.iter = 1e+04)#
+m3 <- ncvreg(X = x, y = y, family = "gaussian", penalty = "MCP", #
+                 warn = FALSE, max.iter = 1e+04)#
+m4 <- picasso(X = x , Y = y, family = "gaussian", nlambda=100, method="scad")#
+m5 <- picasso(X = x, Y = y, family = "gaussian", nlambda=100, method="mcp")#
 #
-## x.list is the vector that stores #
-## realization of X_1,..., X_n#
-x.list=rep(0, n)#
+m1.path <- as.matrix(m1$beta)#
+m2.path <- as.matrix(m2$beta[-1, ])#
+m3.path <- as.matrix(m3$beta[-1, ])#
+m4.path <- as.matrix(m4$beta)#
+m5.path <- as.matrix(m5$beta)#
 #
-## k.list is the vector of#
-## the number of iterations it took for #
-## rejection sampling to accept, one for #
-## each element in x.list#
-k.list=rep(0, n)#
-#
-for(i in 1:n)#
-{#
-  accept=FALSE#
-  k=0#
-  while(!accept)#
-  {#
-    k=k+1#
-    ## generate realization of U_1, U_2 iid Unif(0,1)#
-    u=runif(2)#
-    ## generate realization of Z ~ Cauchy#
-    z=tan(pi*(u[1]-0.5))#
-    ## Check if the accept event occured#
-    accept= u[2] <= exp(-0.5*z^2)*(1+z^2)*exp(1/2)*0.5#
-  }#
-  x.list[i]=z#
-  k.list[i]=k#
-}#
-#
-## compare the sample quantiles to the standard normal quantiles#
-qqplot(qnorm(ppoints(length(x.list))), x.list)#
-abline(0,1)#
-## generate n iid draws from N(0,1) with Box Muller:#
-n=1e4#
-## suppose n is even#
-u1=runif(n/2)#
-u2=runif(n/2)#
-tmp=sqrt(-2*log(u1))#
-x1=tmp*cos(2*pi*u2)#
-x2=tmp*sin(2*pi*u2)#
-x=c(x1,x2)#
-## compare the sample quantiles to the standard normal quantiles#
-qqplot(qnorm(ppoints(length(x))), x)#
-abline(0,1)#
-#
-## generate approximate iid draws from N(0,1) using CLT:#
-n=1e4#
-z=apply(matrix(runif(n*12), nrow=n, ncol=12), 1, sum) - 6#
-## compare the sample quantiles to the standard normal quantiles#
-qqplot(qnorm(ppoints(length(z))), z)#
-abline(0,1)#
-################################################### #
-##  Example 3, generate a realization of #
-##  X_1,..., X_n iid TruncatedNormal(mu, sigma^2) #
-##  with rejection sampling#
-##  using the N(mu, sigma^2) trial density.#
-mu=5#
-sigma=3#
-a=0#
-b=10#
-#
-set.seed(5)#
-n=1000#
-## x.list is the vector that stores #
-## realization of X_1,..., X_n#
-x.list=rep(0, n)#
-#
-## k.list is the vector of#
-## the number of iterations it took for #
-## rejection sampling to accept, one for #
-## each element in x.list#
-k.list=rep(0, n)#
-#
-for(i in 1:n)#
-{#
-  accept=FALSE#
-  k=0#
-  while(!accept)#
-  {#
-    k=k+1#
-    ## generate realization of Z~N(mu,sigma^2)#
-    z=rnorm(1, mean=mu, sd=sigma)#
-    ## check if the acceptance event occured#
-    accept=(a <= z) & (z <= b )#
-  }#
-  x.list[i]=z#
-  k.list[i]=k#
-}#
-################################################### #
-##  Example 4, generate a realization of #
-##  X_1,..., X_n iid Gamma(alpha, beta=1), alpha > 1.#
-##  with rejection sampling#
-##  using an unnamed trial density.#
-alpha=1.2#
-#
-set.seed(25)#
-n=1000#
-## x.list is the vector that stores #
-## realization of X_1,..., X_n#
-x.list=rep(0, n)#
-#
-## k.list is the vector of#
-## the number of iterations it took for #
-## rejection sampling to accept, one for #
-## each element in x.list#
-k.list=rep(0, n)#
-#
-lambda=sqrt(2*alpha-1)#
-lambda.inv=1/lambda#
-#
-alpha.lambda.expr=-log(4) + alpha - (lambda+alpha)*log(alpha)#
-alpha.to.lambda=alpha^lambda#
-alpha.minus.lambda = alpha-lambda#
-for(i in 1:n)#
-{#
-  accept=FALSE#
-  k=0#
-  while(!accept)#
-  {#
-    k=k+1#
-    ## generate realization of U_1, U_2 iid Unif(0,1)#
-    u=runif(2)#
-    ## generate realization of Z from the unnamed distribution#
-    z=alpha*(u[1]/(1-u[1]))^lambda.inv#
-    ## check if the acceptance event occured#
-    logf.over.tilde.g = alpha.minus.lambda*log(z) - z #
-    logf.over.tilde.g = logf.over.tilde.g + 2*log(alpha.to.lambda + z^lambda) + alpha.lambda.expr#
-    accept= log(u[2]) < logf.over.tilde.g#
-  }#
-  x.list[i]=z#
-  k.list[i]=k#
-}#
-#
-## compare the sample quantiles to the Gamma(alpha, beta=1) quantiles#
-qqplot(qgamma(ppoints(length(x.list)), shape=alpha, scale=1), x.list)#
-abline(0,1)#
-################################################### #
-##  Example 5, #
-set.seed(5)#
-#
-n=500#
-mu=1+10*runif(1)#
-## generate n iid draws from Exp(mu)#
-x.list=-mu*log(runif(n))#
-#
-nm=1e3#
-## m.list is the vector that stores #
-## the iid draws from (M|X_1=x_1,...X_n=x_n)#
-m.list=rep(0, nm)#
-#
-## k.list is the vector of#
-## the number of iterations it took for #
-## rejection sampling to accept, one for #
-## each element in m.list#
-k.list=rep(0, nm)#
-#
-xbar=mean(x.list)#
-if( (1 <= xbar) & (xbar <= 11) )#
-{  #
-  const=-n*log(xbar)-n #
-} else if ( xbar > 11)#
-{#
-  const=-n*log(11)-n*xbar/11#
-} else#
-{#
-  const=-n*xbar#
-}#
-for(i in 1:nm)#
-{#
-  accept=FALSE#
-  k=0#
-  while(!accept)#
-  {#
-    k=k+1#
-    ## generate realization of U_1, U_2 iid Unif(0,1)#
-    u=runif(2)#
-    ## generate realization of Z from the Unif(1,11)#
-    z=1+10*u[1]#
-    ## check if the acceptance event occured #
-    accept= log(u[2]) <  (-n*log(z) - n*xbar / z - const)#
-  }#
-  m.list[i]=z#
-  k.list[i]=k#
-}#
-#
-plot(density(m.list))
-1+2
-1+2#
-1+1
-1+2#
-1+1#
-#
-1+1
-set.seed(1)
-set.seed(1)#
-n=100#
-p=8#
-#
-## Define the true parameter values#
-## the error precision#
-omega.star=2
-source("rlasso.r")
-set.seed(1)#
-n=100#
-p=8
-## compute the square root of the covariance
-## matrix for the random predictors
-eo=eigen(sigma, symmetric=TRUE)
-sigma.sqrt=eo$vec%*%diag(eo$val^0.5)%*%t(eo$vec)
-## generate a realization of the random predictor matrix
-## the rows are independent draws from N_{p-1}(0, sigma)
-predictor.matrix=matrix(rnorm(n*(p-1)), nrow=n, ncol=(p-1))%*%sigma.sqrt
-## create the design matrix
-X=cbind(1, predictor.matrix)
-## generate the response vector
-y=X%*%beta.star + rnorm(n, mean=0, sd=sqrt(1/omega.star))
-##  Compare three functions to compute the solution:
-##  pick a positive value for lam
-lam=0.5
-1+1
-sqrt(0.1)
-?options()
-options(latexcmd ="/Library/TeX/texbin/")
-options(R_LATEXCMD ="/Library/TeX/texbin/")
-getOption(’tikzLatex’)
-getOption('tikzLatex')
-getOption('R_LATEXCMD')
-options(R_LATEXCMD ='/Library/TeX/texbin/')
-options(tikzLatex = '/Library/TeX/texbin/')
-setwd('/Users/yiyang/Dropbox/collaborator/ChenglongYe/final_simu_need to run/linear case/plot')
-setwd('/Users/yiyang')
-options(tikzLatex = '/Library/TeX/texbin/latex')
-require(tikzDevice)
-a@1
-?@
-@
-load("/Users/yiyang/Dropbox/collaborator/ChenglongYe/final_simu_need to run/linear case/output_li_simu_1_zeromean.rda")
-ls()
-100/6
-15*5
-17*5
-library(Rcpp)
-library(glmvsd)#
-load("colon.rda")#
-#
-# generate simulation data#
-y=1/2*y+1/2#
-colon=cbind(y,x)#
-colon=data.frame(colon)#
-n<-nrow(x)#
-p=ncol(x)#
-ins_seq <- stability.test(x, y, method = "bs", #
-family="binomial",#
-penalty = "SCAD", nrep = 5, nfolds = 5)#
-#
-ins_seq <- stability.test(x, y, method = "bs", #
-family="binomial",#
-penalty = "LASSO", nrep = 5, nfolds = 5)#
-ins_seq <- stability.test(x, y, method = "bs", #
-family="binomial",#
-penalty = "MCP", nrep = 5, nfolds = 5)
-ins_seq
-setwd('/Users/yiyang/Dropbox/collaborator/ChenglongYe/realdata/colon')
-library(glmvsd)#
-load("colon.rda")#
-#
-# generate simulation data#
-y=1/2*y+1/2#
-colon=cbind(y,x)#
-colon=data.frame(colon)#
-n<-nrow(x)#
-p=ncol(x)
-modelfit <- function(x, y, nfolds, #
-	penalty = c("LASSO", "SCAD", "MCP"),#
-	family=c("gaussian","binomial")) {#
-  penalty <- match.arg(penalty)#
-  family <- match.arg(family)#
-  y <- drop(y)#
-  y <- as.numeric(y)#
-  x <- as.matrix(x)#
-  if(penalty == "LASSO"){					#
-    cvfit <- cv.glmnet(x=x,y=y,nfolds=nfolds,alpha=1,#
-	    		type.measure="deviance",maxit=1e6,family=family)#
-    coefit<-coef(cvfit,s="lambda.min")#
-	}#
-  if(penalty == "MCP" || penalty == "SCAD"){#
-    cvfit<-cv.ncvreg(X=x,y=y,nfolds=nfolds,penalty=penalty,#
-	    		family=family,max.iter=1e4)#
-    coefit<-cvfit$fit$beta[,cvfit$min]#
-	}#
-  modelfit <- 1-(coefit[-1]==0)#
-  list(coefit = coefit, modelfit = modelfit)#
-}
-penalty="LASSO"
-family="binomial"
-nfolds=5
-full <- modelfit(x, y, nfolds, penalty, family)
-fitted <- drop(cbind(rep(1,n),x)%*%full$coefit)
-fitted
-rbinom(n, 1, exp(fitted)/(1+exp(fitted)))
-setwd('/Users/yiyang/Dropbox/Research/googleproject/glmvsd/R')
-y.star <- rbinom(n, 1, exp(fitted)/(1+exp(fitted)))
-y.star
-''
+beta.path <- t(cbind(m1.path, m2.path, m3.path, m4.path, m5.path))#
+candidate_models <- (1 - (beta.path == 0))
+setwd('/Users/yiyang/Dropbox/Research/prog_project/glmvsd/R')
+candidate_models
