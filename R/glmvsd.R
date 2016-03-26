@@ -84,6 +84,7 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100,
 	  Gmeasure <- rep(NA, no_checkmod)
 	  # size of m0
 	  model_check_size <- rowSums(model_check)
+	  if(any(model_check_size==0)) warning("The Model under check is a null model. F- and G-measure results will be NA")
 	  # size of mk
 	  candidate_models_size <- rowSums(candidate_models)
 	  # start the loop
@@ -98,10 +99,10 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100,
 	    VSD_plus[mindex] <- sum(weight*diff_plus)  # false negative 
 	    VSD_minus[mindex] <- sum(weight*diff_minus)  # false positive
 	    # compute F measure and G measure using precision and recall
-	    Prcision <- (model_check_size[mindex]-diff_minus)/model_check_size[mindex]
-	    Recall <- (model_check_size[mindex]-diff_minus)/candidate_models_size
-	    Fmeasure_tmp <- 2*(Prcision*Recall)/(Prcision+Recall)
-	    Gmeasure_tmp <- sqrt(Prcision*Recall)
+	    # Prcision <- (model_check_size[mindex]-diff_minus)/model_check_size[mindex]
+	    # Recall <- (model_check_size[mindex]-diff_minus)/candidate_models_size
+	    Fmeasure_tmp <- (model_check_size[mindex]-diff_minus)/(model_check_size[mindex]+candidate_models_size)
+	    Gmeasure_tmp <- 0.5*(model_check_size[mindex]-diff_minus)/sqrt(model_check_size[mindex]*candidate_models_size)
 	    Fmeasure[mindex] <- sum(weight*Fmeasure_tmp, na.rm = TRUE)
 	    Gmeasure[mindex] <- sum(weight*Gmeasure_tmp, na.rm = TRUE)
 	  }
