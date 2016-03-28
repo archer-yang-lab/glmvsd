@@ -101,8 +101,8 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100,
 	    # compute F measure and G measure using precision and recall
 	    # Prcision <- (model_check_size[mindex]-diff_minus)/model_check_size[mindex]
 	    # Recall <- (model_check_size[mindex]-diff_minus)/candidate_models_size
-	    Fmeasure_tmp <- (model_check_size[mindex]-diff_minus)/(model_check_size[mindex]+candidate_models_size)
-	    Gmeasure_tmp <- 0.5*(model_check_size[mindex]-diff_minus)/sqrt(model_check_size[mindex]*candidate_models_size)
+	    Fmeasure_tmp <- 2*(model_check_size[mindex]-diff_minus)/(model_check_size[mindex]+candidate_models_size)
+	    Gmeasure_tmp <- (model_check_size[mindex]-diff_minus)/sqrt(model_check_size[mindex]*candidate_models_size)
 	    Fmeasure[mindex] <- sum(weight*Fmeasure_tmp, na.rm = TRUE)
 	    Gmeasure[mindex] <- sum(weight*Gmeasure_tmp, na.rm = TRUE)
 	  }

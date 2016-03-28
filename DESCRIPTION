@@ -2,7 +2,7 @@ Package: glmvsd
 Type: Package
 Title: Variable Selection Deviation Measures and Instability Tests for
         High-Dimensional Generalized Linear Models
-Version: 1.4
+Version: 1.5
 Date: 2016-01-06
 Author: Ying Nan <nanx0006@gmail.com>, Yanjia Yu <yuxxx748@umn.edu>, Yi Yang <yi.yang6@mcgill.ca>, Yuhong Yang <yyang@stat.umn.edu> 
 Maintainer: Yi Yang <yi.yang6@mcgill.ca>
