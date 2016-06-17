@@ -1,15 +1,77 @@
-model_check=c(1,1,1,1,1,0)
-rowSums(model_check)
-if(is.vector(model_check)) model_check <- matrix(model_check,nrow=1)
-model_check
-rowSums(model_check)
-model_check=rbind(model_check, model_check)
-model_check
-model_check
+setwd('/Users/yiyang/Dropbox/Collaborator/Yanjia')
+library(glmnet)#
+## Fake data with sparse true relationship#
+x<-matrix(rnorm(100*20),100,20)#
+y<-x[,1]+x[,2]+x[,3]+rnorm(100)#
+## The adaptive lasso needs a first stage that is consistent. #
+## Zou (2006) recommends OLS or ridge#
+theridge.cv<-cv.glmnet(x,y,alpha=0) ## first stage ridge#
+## Second stage weights from the coefficients of the first stage#
+bhat<-as.matrix(coef(theridge.cv,s="lambda.min"))[-1,1] ## coef() is a sparseMatrix#
+if(all(bhat==0)){#
+  ## if bhat is all zero then assign very close to zero weight to all.#
+  ## Amounts to penalizing all of the second stage to zero.#
+  bhat<-rep(.Machine$double.eps*2,length(bhat))#
+}#
+adpen<-(1/pmax(abs(bhat),.Machine$double.eps)) ## the adaptive lasso weight#
+## Second stage lasso (the adaptive lasso)#
+thelasso.cv<-cv.glmnet(x,y,alpha=1,#
+                   exclude=which(bhat==0),#
+                   penalty.factor=adpen)#
+## Extract resulting coefs#
+adcoef<-coef(thelasso.cv,s="lambda.min")#
+adcoef[nonzeroCoef(adcoef),]
+setwd('/Users/yiyang/Dropbox/Collaborator/Yanjia')
+y<-x[,1]+x[,2]+x[,3]+rnorm(100)
+y
+setwd('/Users/yiyang/Dropbox/Collaborator/Yanjia')
+library(glmnet)#
+## Fake data with sparse true relationship#
+x<-matrix(rnorm(100*20),100,20)#
+y<-x[,1]+x[,2]+x[,3]+rnorm(100)
+setwd('/Users/yiyang/Dropbox/Collaborator/Yanjia')
+theridge.cv<-cv.glmnet(x,y,alpha=0) ## first stage ridge
+bhat<-as.matrix(coef(theridge.cv,s="lambda.min"))[-1,1] ## coef() is a sparseMatrix
+bhat<-as.matrix(coef(theridge.cv,s="lambda.1se"))[-1,1] ## coef() is a sparseMatrix#
+if(all(bhat==0)){#
+  ## if bhat is all zero then assign very close to zero weight to all.#
+  ## Amounts to penalizing all of the second stage to zero.#
+  bhat<-rep(.Machine$double.eps*2,length(bhat))#
+}
+adpen<-(1/pmax(abs(bhat),.Machine$double.eps)) ## the adaptive lasso weight
+bhat
+adpen<-(1/pmax(abs(bhat),.Machine$double.eps)) ## the adaptive lasso weight
+adpen
+## Second stage lasso (the adaptive lasso)#
+thelasso.cv<-cv.glmnet(x,y,alpha=1,#
+                   exclude=which(bhat==0),#
+                   penalty.factor=adpen)#
+## Extract resulting coefs#
+adcoef<-coef(thelasso.cv,s="lambda.1se")#
+adcoef[nonzeroCoef(adcoef),]
+setwd('/Users/yiyang/Dropbox/Collaborator/Yanjia')
+x<-matrix(rnorm(100*20),100,20)#
+y<-x[,1]+x[,2]+x[,3]+rnorm(100)
 setwd('/Users/yiyang/Dropbox/Research/prog_project/glmvsd/R')
-model_check_size <- rowSums(model_check)
+m1 <- glmnet(x = x, y = y, family = "gaussian", alpha = 1, maxit = 1e+06)
+m1
 setwd('/Users/yiyang/Dropbox/Research/prog_project/glmvsd/R')
-rowSums
-rowSums(model_check)
+m1.path <- as.matrix(m1$beta)
 setwd('/Users/yiyang/Dropbox/Research/prog_project/glmvsd/R')
-any(model_check_size==0)
+m1.path
+setwd('/Users/yiyang/Dropbox/Research/prog_project/glmvsd/R')
+theridge.cv<-cv.glmnet(x,y,alpha=0) ## first stage ridge#
+  ## Second stage weights from the coefficients of the first stage#
+  bhat<-as.matrix(coef(theridge.cv,s="lambda.1se"))[-1,1] ## coef() is a sparseMatrix#
+  if(all(bhat==0)){#
+    ## if bhat is all zero then assign very close to zero weight to all.#
+    ## Amounts to penalizing all of the second stage to zero.#
+    bhat<-rep(.Machine$double.eps*2,length(bhat))#
+  }#
+  adpen<-(1/pmax(abs(bhat),.Machine$double.eps)) ## the adaptive lasso weight#
+  ## Second stage lasso (the adaptive lasso)#
+  m4 <- glmnet(x,y,alpha=1, exclude=which(bhat==0),penalty.factor=adpen)
+setwd('/Users/yiyang/Dropbox/Research/prog_project/glmvsd/R')
+m4.path <- as.matrix(m4$beta)
+setwd('/Users/yiyang/Dropbox/Research/prog_project/glmvsd/R')
+m4.path
