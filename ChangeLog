@@ -1,6 +1,8 @@
 CHANGELOG - Record of Changes for glmvsd
 Please find below the list of the various changes and improvements that were part of each successive update.
 
+1.5
+* [added] added the adaptive lasso for instrumental models.
  
 1.4:
 * [improved] Logistic function calculation and parallel processing for mixing.
