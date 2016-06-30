@@ -8,9 +8,9 @@ binomialfit <- function(x, y) {
 	## adaptive lasso routine	##			   
 	## The adaptive lasso needs a first stage that is consistent. 
 	## Zou (2006) recommends OLS or ridge
-	theridge.cv<-cv.glmnet(x,y,family = "binomial",alpha=0) ## first stage ridge
+	thelasso.cv<-cv.glmnet(x,y,family = "binomial",alpha=1) ## first stage ridge
 	## Second stage weights from the coefficients of the first stage
-	bhat<-as.matrix(coef(theridge.cv,s="lambda.1se"))[-1,1] ## coef() is a sparseMatrix
+	bhat<-as.matrix(coef(thelasso.cv,s="lambda.1se"))[-1,1] ## coef() is a sparseMatrix
 	if(all(bhat==0)){
 	 ## if bhat is all zero then assign very close to zero weight to all.
 	 ## Amounts to penalizing all of the second stage to zero.
