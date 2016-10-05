@@ -84,6 +84,8 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100,
 	  Recall <- matrix(NA, no_checkmod, length(weight))
 	  Fmeasure <- rep(NA, no_checkmod)
 	  Gmeasure <- rep(NA, no_checkmod)
+	  sd.F <- rep(NA, no_checkmod)
+	  sd.G <- rep(NA, no_checkmod)
 	  # size of m0
 	  model_check_size <- rowSums(model_check)
 	  if(any(model_check_size==0)) warning("The Model under check is a null model. F- and G-measure results will be NA")
@@ -107,11 +109,14 @@ glmvsd <- function(x, y, n_train = ceiling(n/2), no_rep = 100,
 	    Gmeasure_tmp <- (model_check_size[mindex]-diff_minus)/sqrt(model_check_size[mindex]*candidate_models_size)
 	    Fmeasure[mindex] <- sum(weight*Fmeasure_tmp, na.rm = TRUE)
 	    Gmeasure[mindex] <- sum(weight*Gmeasure_tmp, na.rm = TRUE)
+		 sd.F[mindex] <- sqrt(sum(weight*(Fmeasure_tmp-Fmeasure[mindex])^2, na.rm = TRUE))
+		 sd.G[mindex] <- sqrt(sum(weight*(Gmeasure_tmp-Gmeasure[mindex])^2, na.rm = TRUE))
 	  }
     # output 
     object <- list(candidate_models_cleaned = candidate_models, VSD = VSD, VSD_minus = VSD_minus, VSD_plus = VSD_plus,
 					Precision = Precision, Recall = Recall,
 	    			Fmeasure = Fmeasure, Gmeasure = Gmeasure,
+					sd.F = sd.F, sd.G = sd.G,
               weight = weight)
     class(object) <- "glmvsd"
     object
