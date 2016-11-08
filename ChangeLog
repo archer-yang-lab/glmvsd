@@ -3,7 +3,8 @@ Please find below the list of the various changes and improvements that were par
 
 1.5
 * [added] added the adaptive lasso for instrumental models.
- 
+* [added] added estimated standard deviation for F and G measures.
+
 1.4:
 * [improved] Logistic function calculation and parallel processing for mixing.
 * [added] Use bias-corrected logistic regression for fitting the binomial case.
