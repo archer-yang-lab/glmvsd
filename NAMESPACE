@@ -1,3 +1,6 @@
 import("parallel","glmnet","ncvreg","brglm", "MASS")
 export(glmvsd)
 export(stability.test)
+
+importFrom("stats", "binomial", "coef", "extractAIC", "glm", "lm",
+             "rbinom", "rnorm", "sd")

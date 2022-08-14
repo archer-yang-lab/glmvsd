@@ -16,13 +16,13 @@ lsARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE) {
           lw_num[j] <- -Inf
         } else {
           dk <- sum((y[-tindex] - cbind(1, x[-tindex, varindex]) %*% glmfit$coef)^2)
-		  lw_num[j] <- (-n/2) * log(sigma_k) - ((sigma_k)^(-2)) * dk/2
+		  lw_num[j] <- -(n-n_train) * log(sigma_k) - ((sigma_k)^(-2)) * dk/2
         }
       }
     } else {
       dk <- sum((y[-tindex] - mean(y[tindex]))^2)
       sigma_k <- sd(y[tindex])
-	  lw_num[1] <- (-n/2) * log(sigma_k) - ((sigma_k)^(-2)) * dk/2
+	  lw_num[1] <- -(n-n_train) * log(sigma_k) - ((sigma_k)^(-2)) * dk/2
       for (j in seq(2, n_mo)) {
         varindex <- (candidate_models[j, ] == 1)
         glmfit <- lm(y[tindex] ~ x[tindex, varindex])
@@ -31,7 +31,7 @@ lsARM <- function(x, y, candidate_models, n_train, no_rep, psi, prior = TRUE) {
           lw_num[j] <- -Inf
         } else {
           dk <- sum((y[-tindex] - cbind(1, x[-tindex, varindex]) %*% glmfit$coef)^2)
-		  lw_num[j] <- (-n/2) * log(sigma_k) - ((sigma_k)^(-2)) * dk/2
+		  lw_num[j] <- -(n-n_train) * log(sigma_k) - ((sigma_k)^(-2)) * dk/2
         }
       }
     }

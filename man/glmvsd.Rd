@@ -57,7 +57,6 @@ A "glmvsd" object is retured. The components are:
 
 \references{
 Nan, Y. and Yang, Y. (2013), "Variable Selection Diagnostics Measures for High-dimensional Regression," \emph{Journal of Computational and Graphical Statistics}, 23:3, 636-656.\cr
-\url{http://dx.doi.org/10.1080/10618600.2013.829780}\cr
 BugReport: \url{https://github.com/emeryyi/glmvsd}\cr
 }
 
